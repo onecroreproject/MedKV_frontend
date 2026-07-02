@@ -102,7 +102,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
       rating: 5.0,
       price: c.price || 0,
       originalPrice: c.originalPrice || null,
-      difficulty: c.level || 'Beginner',
+      difficulty: c.level || '',
       imageType: getFallbackImage(c.category?.name || c.category)
     })).filter((course) => {
       // Search Match
@@ -470,9 +470,11 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                   <div className="p-6 flex-grow flex flex-col justify-between text-left space-y-4">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-accent bg-accent/5 border border-accent/10 px-2 py-0.5 rounded">
-                          {course.difficulty}
-                        </span>
+                        {course.difficulty ? (
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-accent bg-accent/5 border border-accent/10 px-2 py-0.5 rounded">
+                            {course.difficulty}
+                          </span>
+                        ) : <div />}
                         {/* Star Ratings */}
                         <div className="flex items-center space-x-1">
                           <svg className="w-3.5 h-3.5 text-accent fill-accent" viewBox="0 0 20 20">

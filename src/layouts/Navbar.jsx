@@ -187,6 +187,10 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar }) {
                   <a
                     href={link.href}
                     onClick={(e) => {
+                      if (link.comingSoon) {
+                        e.preventDefault();
+                        return;
+                      }
                       if (link.label === 'Courses') {
                         if (onViewChange) {
                           e.preventDefault();
@@ -211,7 +215,12 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar }) {
                       {LINK_ICONS[link.label]}
                     </span>
                     <span>{link.label}</span>
-                    {hasSubMenu && (
+                    {link.comingSoon && (
+                      <span className="ml-2 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-accent/80 rounded-sm">
+                        Coming Soon
+                      </span>
+                    )}
+                    {hasSubMenu && !link.comingSoon && (
                       <svg className="w-3.5 h-3.5 ml-1.5 text-accent opacity-70 transition-transform duration-300 group-hover/nav:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
@@ -410,6 +419,10 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar }) {
                   <a
                     href={link.href}
                     onClick={(e) => {
+                      if (link.comingSoon) {
+                        e.preventDefault();
+                        return;
+                      }
                       setMobileMenuOpen(false);
                       if (link.label === 'Courses') {
                         if (onViewChange) {
@@ -435,9 +448,14 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar }) {
                       {LINK_ICONS[link.label]}
                     </span>
                     <span>{link.label}</span>
+                    {link.comingSoon && (
+                      <span className="ml-2 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-accent/80 rounded-sm">
+                        Coming Soon
+                      </span>
+                    )}
                   </a>
 
-                  {hasSubMenu && (
+                  {hasSubMenu && !link.comingSoon && (
                     <button
                       onClick={(e) => toggleMobileSubMenu(link.label, e)}
                       className="text-accent focus:outline-none p-3 hover:bg-[#0F224A] rounded-xl transition-all"

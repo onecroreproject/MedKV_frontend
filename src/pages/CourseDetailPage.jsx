@@ -21,6 +21,15 @@ const getFallbackImage = (category) => {
   return 'neuro';
 };
 
+const getFullUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+    : 'http://localhost:5000';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSession }) {
   // Navigation and Authentication States
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -62,7 +71,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             students: '100+',
             duration: 'Self-Paced',
             lessons: data.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0,
-            difficulty: data.level || 'All Levels',
+            difficulty: data.level || '',
             price: data.price || 0,
             originalPrice: data.originalPrice || null,
             previewVideoUrl: data.previewVideoUrl || null,
@@ -249,9 +258,11 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                   <span className="bg-accent text-[#050E24] text-[9.5px] font-black px-3.5 py-1.5 rounded-lg uppercase tracking-wider">
                     {course.category}
                   </span>
-                  <span className="bg-white/10 text-white text-[9.5px] font-bold px-3 py-1.5 rounded-lg border border-white/10 uppercase tracking-widest">
-                    {course.difficulty}
-                  </span>
+                  {course.difficulty && (
+                    <span className="bg-white/10 text-white text-[9.5px] font-bold px-3 py-1.5 rounded-lg border border-white/10 uppercase tracking-widest">
+                      {course.difficulty}
+                    </span>
+                  )}
                 </div>
 
                 <h1 className="text-white font-black text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-tight">
@@ -897,7 +908,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                 />
               ) : (
                 <video 
-                  src={previewVideo} 
+                  src={getFullUrl(previewVideo)} 
                   controls 
                   autoPlay 
                   className="absolute inset-0 w-full h-full object-contain"
