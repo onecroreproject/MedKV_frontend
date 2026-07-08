@@ -88,7 +88,7 @@ const INITIAL_SUB_MENUS = {
   ]
 };
 
-export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar }) {
+export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ongoingLiveClass }) {
   const { platformSettings } = usePlatform();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -525,6 +525,27 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar }) {
               </Button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Live Class Banner perfectly attached to the bottom of the Navbar */}
+      {userSession && ongoingLiveClass && (
+        <div className="absolute top-full left-0 right-0 w-full bg-red-600/95 backdrop-blur-md text-white px-4 py-2 flex items-center justify-center gap-3 shadow-lg border-t border-white/20 z-40">
+          <span className="flex h-3 w-3 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+          </span>
+          <p className="text-sm font-semibold">
+            Live Class Ongoing: {ongoingLiveClass.title}
+          </p>
+          <button 
+            onClick={() => {
+              if (onViewChange) onViewChange('dashboard');
+            }}
+            className="ml-4 px-4 py-1 bg-white text-red-600 rounded-full text-xs font-bold hover:bg-red-50 transition-colors shadow-sm"
+          >
+            Join Now
+          </button>
         </div>
       )}
     </nav>

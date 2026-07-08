@@ -3,15 +3,33 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { webrtcService } from '../../services/webrtcService';
 import { Mic, MicOff, Video, VideoOff, MonitorUp, SquareSquare, PhoneOff, MessageSquare, Hand, Users, Circle, Square, Maximize, Minimize } from 'lucide-react';
 import axios from 'axios';
+import { getMe } from '../../services/userService';
 
 export default function WebRTCRoom() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // We should pass user context via state or fetch from auth provider
-  const user = location.state?.user || JSON.parse(localStorage.getItem('user')) || {};
-  const isTeacher = user.role === 'Faculty' || user.role === 'admin';
+  const [user, setUser] = useState(location.state?.user || null);
+  const [isTeacher, setIsTeacher] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(!location.state?.user);
+
+  useEffect(() => {
+    if (!user) {
+      getMe().then(res => {
+        if (res?.data) {
+          setUser(res.data);
+          setIsTeacher(res.data.role === 'Faculty' || res.data.role === 'admin' || res.data.role === 'teacher');
+        }
+      }).catch(err => {
+        console.error('Failed to fetch user', err);
+      }).finally(() => {
+        setLoadingUser(false);
+      });
+    } else {
+      setIsTeacher(user.role === 'Faculty' || user.role === 'admin' || user.role === 'teacher');
+    }
+  }, [user]);
 
   const [stream, setStream] = useState(null);
   const [remoteStreams, setRemoteStreams] = useState({});
@@ -30,9 +48,15 @@ export default function WebRTCRoom() {
   const mainVideoWrapperRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  const [participants, setParticipants] = useState([
-    { id: user._id || 'local', name: user.name + (isTeacher ? ' (Teacher)' : ' (You)'), role: user.role }
-  ]);
+  const [participants, setParticipants] = useState([]);
+
+  useEffect(() => {
+    if (user && participants.length === 0) {
+      setParticipants([
+        { id: user._id || 'local', name: (user.name || 'Unknown') + (isTeacher ? ' (Teacher)' : ' (You)'), role: user.role }
+      ]);
+    }
+  }, [user, isTeacher]);
 
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
@@ -282,6 +306,15 @@ export default function WebRTCRoom() {
   const raiseHand = () => {
     webrtcService.raiseHand();
   };
+
+  if (loadingUser) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-6">
+        <div className="w-12 h-12 border-4 border-slate-600 border-t-primary rounded-full animate-spin my-6"></div>
+        <p className="text-slate-400">Loading user profile...</p>
+      </div>
+    );
+  }
 
   if (!hasJoined || isWaiting) {
     return (

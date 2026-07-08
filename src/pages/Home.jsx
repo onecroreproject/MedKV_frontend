@@ -48,35 +48,10 @@ export function Home({ userSession, onViewChange }) {
       <div className="absolute top-[3200px] right-10 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px] pointer-events-none z-0" />
 
       {/* STICKY PREMIUM NAVBAR */}
-      <Navbar userSession={userSession} onLoginClick={() => navigate('/student/login')} onViewChange={onViewChange} />
+      <Navbar userSession={userSession} onLoginClick={() => navigate('/student/login')} onViewChange={onViewChange} ongoingLiveClass={ongoingLiveClass} />
 
       {/* MAIN CONTAINER */}
       <main className="flex-grow z-10">
-        
-        {/* Live Class Banner */}
-        {ongoingLiveClass && (
-          <div className="w-full bg-red-600 text-white px-4 py-2 flex items-center justify-center gap-3 relative z-20 shadow-md">
-            <span className="flex h-3 w-3 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-            </span>
-            <p className="text-sm font-semibold">
-              Live Class Ongoing: {ongoingLiveClass.title}
-            </p>
-            <button 
-              onClick={() => {
-                if (userSession) {
-                  onViewChange('dashboard');
-                } else {
-                  navigate('/student/login');
-                }
-              }}
-              className="ml-4 px-4 py-1 bg-white text-red-600 rounded-full text-xs font-bold hover:bg-red-50 transition-colors shadow-sm"
-            >
-              Join Now
-            </button>
-          </div>
-        )}
         
         {/* 1. Hero Section */}
         <HeroSection />
