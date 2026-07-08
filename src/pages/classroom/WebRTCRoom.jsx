@@ -104,6 +104,37 @@ export default function WebRTCRoom() {
       setMessages(prev => [...prev, { senderId: 'system', name: 'System', role: 'system', message: `${data.name} raised hand!`, timestamp: new Date() }]);
     };
 
+    webrtcService.onClassEnded = () => {
+      alert("The host has ended this class.");
+      webrtcService.disconnect();
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      navigate(-1);
+    };
+
+    webrtcService.onForceKick = () => {
+      alert("You have been removed from the class by the host.");
+      webrtcService.disconnect();
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      navigate(-1);
+    };
+
+    webrtcService.onForceMute = () => {
+      if (stream) {
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack && audioTrack.enabled) {
+          audioTrack.enabled = false;
+          setIsMuted(true);
+          const videoTrack = stream.getVideoTracks()[0];
+          const vOff = videoTrack ? !videoTrack.enabled : true;
+          webrtcService.updateMediaState(true, vOff);
+        }
+      }
+    };
+
+    webrtcService.onParticipantMediaState = (data) => {
+      setParticipants(prev => prev.map(p => p.id === data.socketId ? { ...p, isMuted: data.isMuted, isVideoOff: data.isVideoOff } : p));
+    };
+
     if (isTeacher) {
       webrtcService.initTeacher(stream, (studentData) => {
         setParticipants(prev => [...prev, { id: studentData.socketId, name: studentData.name, role: 'student' }]);
@@ -121,6 +152,10 @@ export default function WebRTCRoom() {
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsMuted(!audioTrack.enabled);
+        
+        const videoTrack = stream.getVideoTracks()[0];
+        const vOff = videoTrack ? !videoTrack.enabled : true;
+        webrtcService.updateMediaState(!audioTrack.enabled, vOff);
       }
     }
   };
@@ -131,6 +166,10 @@ export default function WebRTCRoom() {
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoOff(!videoTrack.enabled);
+        
+        const audioTrack = stream.getAudioTracks()[0];
+        const mOff = audioTrack ? !audioTrack.enabled : true;
+        webrtcService.updateMediaState(mOff, !videoTrack.enabled);
       }
     }
   };

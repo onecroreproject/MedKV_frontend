@@ -14,13 +14,35 @@ class WebRTCService {
     this.onChat = null;
     this.onHandRaise = null;
     this.onParticipantsUpdate = null;
+    this.onClassEnded = null;
+    this.onForceKick = null;
+    this.onForceMute = null;
+    this.onParticipantMediaState = null;
+    this.userName = '';
   }
 
   connect(roomId, userId, userRole, name) {
+    this.userName = name;
     this.socket = io(SOCKET_URL, { transports: ['websocket'] });
     
     this.socket.on('connect', () => {
       this.socket.emit('join-room', { roomId, userId, userRole, name });
+    });
+
+    this.socket.on('class-ended', () => {
+      if (this.onClassEnded) this.onClassEnded();
+    });
+
+    this.socket.on('force-kick', () => {
+      if (this.onForceKick) this.onForceKick();
+    });
+
+    this.socket.on('force-mute', () => {
+      if (this.onForceMute) this.onForceMute();
+    });
+
+    this.socket.on('participant-media-state', (data) => {
+      if (this.onParticipantMediaState) this.onParticipantMediaState(data);
     });
 
     this.socket.on('receive-chat', (data) => {
@@ -140,7 +162,25 @@ class WebRTCService {
 
   raiseHand() {
     if (this.socket) {
-      this.socket.emit('raise-hand');
+      this.socket.emit('raise-hand', { name: this.userName });
+    }
+  }
+
+  endClass() {
+    if (this.socket) this.socket.emit('end-class');
+  }
+
+  kickParticipant(targetId) {
+    if (this.socket) this.socket.emit('kick-participant', { targetId });
+  }
+
+  muteParticipant(targetId) {
+    if (this.socket) this.socket.emit('force-mute', { targetId });
+  }
+
+  updateMediaState(isMuted, isVideoOff) {
+    if (this.socket) {
+      this.socket.emit('media-state-changed', { isMuted, isVideoOff });
     }
   }
 
