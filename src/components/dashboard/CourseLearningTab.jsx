@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCourseById } from '../../services/courseService';
 import { getRecordings } from '../../services/recordingService';
 import { getMe, logStudyTime, markLessonComplete } from '../../services/userService';
@@ -353,6 +354,7 @@ function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }) {
+  const navigate = useNavigate();
   const [courseData, setCourseData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -778,11 +780,17 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
                           </div>
                         </div>
                         {sess.status === 'Scheduled' || sess.status === 'Ongoing' ? (
-                          <a href={sess.zoomLink} target="_blank" rel="noopener noreferrer">
-                            <button className="shrink-0 bg-accent hover:bg-[#A07C2E] text-[#050E24] font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
-                              Join Zoom
-                            </button>
-                          </a>
+                          <button 
+                            onClick={() => {
+                              if (sess.meetingProvider === 'webrtc') {
+                                navigate(`/webrtc/${sess._id || sess.roomId}`);
+                              } else {
+                                window.open(sess.zoomLink, '_blank');
+                              }
+                            }}
+                            className="shrink-0 bg-accent hover:bg-[#A07C2E] text-[#050E24] font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
+                            Join Class
+                          </button>
                         ) : (
                           <button onClick={() => setActiveTab('recorded')} className="shrink-0 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
                             Watch Recording

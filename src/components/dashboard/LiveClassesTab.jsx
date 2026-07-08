@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getLiveClasses } from '../../services/liveClassService';
 import { getRecordings } from '../../services/recordingService';
 
@@ -244,8 +245,9 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
       try {
         const [liveRes, recRes] = await Promise.all([getLiveClasses(), getRecordings()]);
         
+        let filteredLive = [];
         if (liveRes.success) {
-          const filteredLive = liveRes.data.filter(s => {
+          filteredLive = liveRes.data.filter(s => {
              // 1. Is it available to all?
              if (s.accessControl === 'all') return true;
              // 2. Is course free?
@@ -278,6 +280,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
               duration: s.duration + 'm',
               status: s.status === 'Scheduled' ? 'upcoming' : (s.status === 'Live Now' ? 'live' : 'completed'),
               zoomLink: s.zoomLink,
+              meetingProvider: s.meetingProvider,
               participants: Math.floor(Math.random() * 50) + 10,
               emoji: '📡',
               totalMin: s.duration,
@@ -470,7 +473,14 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
     return schedule;
   }, [sessions]);
 
+  const navigate = useNavigate(); // Need to import this at top
+
   const handleJoinSession = (cls) => {
+    if (cls.meetingProvider === 'webrtc') {
+      navigate(`/webrtc/${cls.id || cls.roomId}`);
+      return;
+    }
+
     if (!cls.zoomLink) {
       setJoinMessage({ type: 'error', text: 'Zoom link has not been provided yet.' });
       return;
@@ -607,12 +617,12 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
               </div>
             </div>
             <div className="shrink-0">
-              <a href={extractUrl(liveSession.zoomLink)} target="_blank" rel="noopener noreferrer">
-                <button className="w-full md:w-auto bg-rose-500 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded-xl shadow-lg shadow-rose-500/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center space-x-2">
+                <button 
+                  onClick={() => handleJoinSession(liveSession)}
+                  className="w-full md:w-auto bg-rose-500 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded-xl shadow-lg shadow-rose-500/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center space-x-2">
                   <span className="h-2 w-2 bg-white rounded-full animate-ping" />
                   <span>Join Live Now</span>
                 </button>
-              </a>
             </div>
           </div>
         </section>
@@ -698,12 +708,14 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-medium">
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-medium mt-4">
                   <div className="flex items-center space-x-1.5"><span>📅</span><span>{cls.date}</span></div>
                   <div className="flex items-center space-x-1.5"><span>⏱️</span><span>{cls.time}</span></div>
                   <div className="flex items-center space-x-1.5"><span>👥</span><span>{cls.participants} students</span></div>
                   <div className="flex items-center space-x-1.5">
-                    <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">Zoom</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${cls.meetingProvider === 'webrtc' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {cls.meetingProvider === 'webrtc' ? 'WebRTC' : 'Zoom'}
+                    </span>
                   </div>
                 </div>
 
@@ -756,7 +768,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
                   )}
                   {cls.status === 'live' && (
                     <button
-                      onClick={() => cls.zoomLink ? window.open(extractUrl(cls.zoomLink), '_blank') : alert('Zoom link has not been provided yet.')}
+                      onClick={() => handleJoinSession(cls)}
                       className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest py-3 rounded-xl shadow-md shadow-rose-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center space-x-2"
                     >
                       <span className="h-1.5 w-1.5 bg-white rounded-full animate-ping" />

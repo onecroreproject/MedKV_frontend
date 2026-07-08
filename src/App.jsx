@@ -8,6 +8,7 @@ import EnrollmentReview from './pages/payment/EnrollmentReview';
 import SecurePayment from './pages/payment/SecurePayment';
 import PaymentProcessing from './pages/payment/PaymentProcessing';
 import PaymentResult from './pages/payment/PaymentResult';
+import WebRTCRoom from './pages/classroom/WebRTCRoom';
 
 import StudentLogin from './pages/auth/StudentLogin';
 import StudentRegister from './pages/auth/StudentRegister';
@@ -200,6 +201,7 @@ function App() {
           <Route path="/student/register" element={<StudentRegister />} />
           <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
           <Route path="/student/reset-password/:token" element={<StudentResetPassword />} />
+          <Route path="/webrtc/:roomId" element={<WebRTCRoom />} />
           <Route path="/policy/:type" element={<PolicyPage />} />
           <Route path="/*" element={<MainApp userSession={userSession} setUserSession={setUserSession} view={view} setView={setView} />} />
         </Routes>
