@@ -18,6 +18,8 @@ class WebRTCService {
     this.onForceKick = null;
     this.onForceMute = null;
     this.onParticipantMediaState = null;
+    this.onJoinedWaitingRoom = null;
+    this.onAdmitted = null;
     this.userName = '';
   }
 
@@ -51,6 +53,14 @@ class WebRTCService {
 
     this.socket.on('student-raised-hand', (data) => {
       if (this.onHandRaise) this.onHandRaise(data);
+    });
+
+    this.socket.on('joined-waiting-room', () => {
+      if (this.onJoinedWaitingRoom) this.onJoinedWaitingRoom();
+    });
+
+    this.socket.on('admitted', () => {
+      if (this.onAdmitted) this.onAdmitted();
     });
   }
 

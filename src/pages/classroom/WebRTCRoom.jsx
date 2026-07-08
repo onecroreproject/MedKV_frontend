@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { webrtcService } from '../../services/webrtcService';
-import { Mic, MicOff, Video, VideoOff, MonitorUp, SquareSquare, PhoneOff, MessageSquare, Hand, Users, Circle, Square } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, MonitorUp, SquareSquare, PhoneOff, MessageSquare, Hand, Users, Circle, Square, Maximize, Minimize } from 'lucide-react';
 import axios from 'axios';
 
 export default function WebRTCRoom() {
@@ -20,11 +20,15 @@ export default function WebRTCRoom() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   
   const [hasJoined, setHasJoined] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [mediaError, setMediaError] = useState('');
   
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  
+  const mainVideoWrapperRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const [participants, setParticipants] = useState([
     { id: user._id || 'local', name: user.name + (isTeacher ? ' (Teacher)' : ' (You)'), role: user.role }
@@ -36,6 +40,28 @@ export default function WebRTCRoom() {
 
   const myVideoRef = useRef();
   const mainVideoRef = useRef(); // Usually the teacher's video for students
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (mainVideoWrapperRef.current?.requestFullscreen) {
+        mainVideoWrapperRef.current.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     // 1. Get local media for lobby preview
@@ -125,25 +151,29 @@ export default function WebRTCRoom() {
           audioTrack.enabled = false;
           setIsMuted(true);
           const videoTrack = stream.getVideoTracks()[0];
-          const vOff = videoTrack ? !videoTrack.enabled : true;
-          webrtcService.updateMediaState(true, vOff);
-        }
+        stream.getAudioTracks().forEach(t => t.enabled = false);
+        webrtcService.emitMediaState(true, isVideoOff);
       }
     };
 
-    webrtcService.onParticipantMediaState = (data) => {
-      setParticipants(prev => prev.map(p => p.id === data.socketId ? { ...p, isMuted: data.isMuted, isVideoOff: data.isVideoOff } : p));
+    webrtcService.onJoinedWaitingRoom = () => {
+      setIsWaiting(true);
+    };
+
+    webrtcService.onAdmitted = () => {
+      setIsWaiting(false);
+      // Initialize WebRTC now that we are admitted
+      webrtcService.initStudent(stream, (teacherData) => {
+        setParticipants(prev => [...prev, { id: teacherData.socketId, name: teacherData.name, role: 'teacher' }]);
+      });
     };
 
     if (isTeacher) {
       webrtcService.initTeacher(stream, (studentData) => {
         setParticipants(prev => [...prev, { id: studentData.socketId, name: studentData.name, role: 'student' }]);
       });
-    } else {
-      webrtcService.initStudent(stream, (teacherData) => {
-        setParticipants(prev => [...prev, { id: teacherData.socketId, name: teacherData.name, role: 'teacher' }]);
-      });
     }
+    // Student initialization happens when admitted
   };
 
   const toggleMute = () => {
@@ -257,57 +287,66 @@ export default function WebRTCRoom() {
     webrtcService.raiseHand();
   };
 
-  if (!hasJoined) {
+  if (!hasJoined || isWaiting) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-6">
         <div className="bg-slate-800 p-8 rounded-2xl shadow-xl max-w-2xl w-full flex flex-col items-center">
-          <h1 className="text-3xl font-bold mb-6">Ready to join?</h1>
-          
-          <div className="w-full max-w-md bg-black rounded-xl overflow-hidden aspect-video relative mb-6 border border-slate-700">
-            {stream ? (
-              <video 
-                ref={el => {
-                  myVideoRef.current = el;
-                  if (el && stream) el.srcObject = stream;
-                }} 
-                autoPlay playsInline muted className="w-full h-full object-cover" 
-              />
-            ) : mediaError ? (
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-red-400 bg-red-950/30">
-                <VideoOff size={48} className="mb-4 opacity-50" />
-                <p>{mediaError}</p>
+          {isWaiting ? (
+            <div className="flex flex-col items-center">
+              <h1 className="text-2xl font-bold mb-4 text-center">Please wait, the meeting host will let you in soon.</h1>
+              <div className="w-12 h-12 border-4 border-slate-600 border-t-primary rounded-full animate-spin my-6"></div>
+              <p className="text-slate-400">Classroom: {roomId}</p>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold mb-6">Ready to join?</h1>
+              <div className="w-full max-w-md bg-black rounded-xl overflow-hidden aspect-video relative mb-6 border border-slate-700">
+                {stream ? (
+                  <video 
+                    ref={el => {
+                      myVideoRef.current = el;
+                      if (el && stream) el.srcObject = stream;
+                    }} 
+                    autoPlay playsInline muted className="w-full h-full object-cover" 
+                  />
+                ) : mediaError ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-red-400 bg-red-950/30">
+                    <VideoOff size={48} className="mb-4 opacity-50" />
+                    <p>{mediaError}</p>
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-slate-400 animate-pulse">Requesting permissions...</span>
+                  </div>
+                )}
+                
+                {stream && (
+                   <div className="absolute bottom-4 flex w-full justify-center gap-4">
+                      <button onClick={toggleMute} className={`p-3 rounded-full ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-600 hover:bg-slate-500'} transition`}>
+                        {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+                      </button>
+                      <button onClick={toggleVideo} className={`p-3 rounded-full ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-600 hover:bg-slate-500'} transition`}>
+                        {isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
+                      </button>
+                   </div>
+                )}
               </div>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-slate-400 animate-pulse">Requesting permissions...</span>
-              </div>
-            )}
-            
-            {stream && (
-               <div className="absolute bottom-4 flex w-full justify-center gap-4">
-                  <button onClick={toggleMute} className={`p-3 rounded-full ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-600 hover:bg-slate-500'} transition`}>
-                    {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-                  </button>
-                  <button onClick={toggleVideo} className={`p-3 rounded-full ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-600 hover:bg-slate-500'} transition`}>
-                    {isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
-                  </button>
-               </div>
-            )}
-          </div>
-          
-          <button 
-            onClick={handleJoin}
-            disabled={!stream && !mediaError}
-            className={`px-8 py-3 rounded-full font-bold text-lg transition ${
-              !stream && !mediaError ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover text-white'
-            }`}
-          >
-            {mediaError ? 'Join Without Media' : 'Join Class'}
-          </button>
-          
-          <button onClick={() => navigate(-1)} className="mt-4 text-slate-400 hover:text-white transition">
-            Cancel
-          </button>
+              
+              <button 
+                onClick={handleJoin}
+                disabled={!stream && !mediaError}
+                className={`px-8 py-3 rounded-full font-bold text-lg transition ${
+                  !stream && !mediaError ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover text-white'
+                }`}
+              >
+                {mediaError ? 'Join Without Media' : 'Join Class'}
+              </button>
+              
+              <button onClick={() => navigate(-1)} className="mt-4 text-slate-400 hover:text-white transition">
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -330,7 +369,7 @@ export default function WebRTCRoom() {
         <div className="flex-1 flex flex-col p-4 relative">
           
           {/* Main Video View (Teacher for Students, or Active Speaker) */}
-          <div className="flex-1 bg-black rounded-xl overflow-hidden relative border border-slate-700">
+          <div ref={mainVideoWrapperRef} className="flex-1 bg-black rounded-xl overflow-hidden relative border border-slate-700">
             {isTeacher ? (
                // Teacher sees their own main video
                <video 
@@ -355,34 +394,52 @@ export default function WebRTCRoom() {
             <div className="absolute bottom-4 left-4 bg-black/60 px-3 py-1 rounded-md text-sm">
               {isTeacher ? 'You (Broadcasting)' : 'Teacher'}
             </div>
+            <button 
+              onClick={toggleFullscreen} 
+              className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 rounded-md transition text-slate-300 hover:text-white"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
+              {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+            </button>
           </div>
 
           {/* Picture in Picture / Grid of other students (Only for Teacher mainly, or self view for student) */}
-          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 h-32">
+          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 h-36">
              {!isTeacher && (
-                <div className="w-48 bg-black rounded-lg overflow-hidden relative border border-slate-600">
-                  <video 
-                    ref={el => {
-                      myVideoRef.current = el;
-                      if (el && stream) el.srcObject = stream;
-                    }} 
-                    autoPlay playsInline muted className="w-full h-full object-cover" 
-                  />
-                  <span className="absolute bottom-1 left-1 bg-black/60 text-xs px-1 rounded">You</span>
+                <div className="w-48 flex flex-col bg-slate-800 rounded-lg overflow-hidden border border-slate-600 shadow-lg">
+                  <div className="flex-1 bg-black relative">
+                    <video 
+                      ref={el => {
+                        myVideoRef.current = el;
+                        if (el && stream) el.srcObject = stream;
+                      }} 
+                      autoPlay playsInline muted className="w-full h-full absolute inset-0 object-cover" 
+                    />
+                  </div>
+                  <div className="px-2 py-1.5 text-center text-xs text-slate-300 font-medium truncate bg-slate-800 border-t border-slate-700">
+                    You
+                  </div>
                 </div>
              )}
              
-             {isTeacher && Object.keys(remoteStreams).map(socketId => (
-                <div key={socketId} className="w-48 bg-black rounded-lg overflow-hidden relative border border-slate-600">
-                  <video 
-                    autoPlay 
-                    playsInline 
-                    className="w-full h-full object-cover" 
-                    ref={el => { if (el) el.srcObject = remoteStreams[socketId] }} 
-                  />
-                  <span className="absolute bottom-1 left-1 bg-black/60 text-xs px-1 rounded">Student</span>
-                </div>
-             ))}
+             {isTeacher && Object.keys(remoteStreams).map(socketId => {
+                const participant = participants.find(p => p.id === socketId);
+                return (
+                  <div key={socketId} className="w-48 flex flex-col bg-slate-800 rounded-lg overflow-hidden border border-slate-600 shadow-lg">
+                    <div className="flex-1 bg-black relative">
+                      <video 
+                        autoPlay 
+                        playsInline 
+                        className="w-full h-full absolute inset-0 object-cover" 
+                        ref={el => { if (el) el.srcObject = remoteStreams[socketId] }} 
+                      />
+                    </div>
+                    <div className="px-2 py-1.5 text-center text-xs text-slate-300 font-medium truncate bg-slate-800 border-t border-slate-700">
+                      {participant ? participant.name : 'Student'}
+                    </div>
+                  </div>
+                );
+             })}
           </div>
         </div>
 
