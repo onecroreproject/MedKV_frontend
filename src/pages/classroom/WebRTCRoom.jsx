@@ -145,12 +145,8 @@ export default function WebRTCRoom() {
     };
 
     webrtcService.onForceMute = () => {
+      setIsMuted(true);
       if (stream) {
-        const audioTrack = stream.getAudioTracks()[0];
-        if (audioTrack && audioTrack.enabled) {
-          audioTrack.enabled = false;
-          setIsMuted(true);
-          const videoTrack = stream.getVideoTracks()[0];
         stream.getAudioTracks().forEach(t => t.enabled = false);
         webrtcService.emitMediaState(true, isVideoOff);
       }
