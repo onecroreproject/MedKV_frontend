@@ -2,19 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { usePlatform } from '../../context/PlatformContext';
+import { buildPasswordSchema, getPasswordRequirementsList } from '../../utils/passwordValidation';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { validateResetToken, resetPasswordStudent } from '../../services/authService';
 import { CheckCircle2, Circle } from 'lucide-react';
 import dark_logo from '../../assets/dark_logo_transparent.png';
 import company_name from '../../assets/company_name_transparent.png';
 
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/;
-
-const schema = yup.object().shape({
-  password: yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .matches(passwordRegex, 'Please meet all password requirements')
-    .required('Password is required'),
+const getResetSchema = (authSettings) => yup.object().shape({
+  password: buildPasswordSchema(authSettings),
   confirmPassword: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match').required('Confirm Password is required'),
 });
 
@@ -27,19 +24,17 @@ export default function StudentResetPassword() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
+  const { platformSettings } = usePlatform();
+  const authSettings = platformSettings?.auth;
+
+  const schema = React.useMemo(() => getResetSchema(authSettings), [authSettings]);
+
   const { register, handleSubmit, formState: { errors }, watch } = useForm({
     resolver: yupResolver(schema),
   });
 
   const passwordValue = watch('password', '');
-  
-  const passwordRequirements = [
-    { label: 'At least 8 characters', met: passwordValue.length >= 8 },
-    { label: 'One uppercase letter', met: /[A-Z]/.test(passwordValue) },
-    { label: 'One lowercase letter', met: /[a-z]/.test(passwordValue) },
-    { label: 'One number', met: /\d/.test(passwordValue) },
-    { label: 'One special character', met: /[^a-zA-Z0-9]/.test(passwordValue) },
-  ];
+  const passwordRequirements = getPasswordRequirementsList(authSettings, passwordValue);
 
   useEffect(() => {
     const checkToken = async () => {
@@ -106,18 +101,22 @@ export default function StudentResetPassword() {
         <div className="text-center mb-8">
           <div className="w-full flex items-center justify-center space-x-3 mb-6 bg-[#0B1F4D] p-4 rounded-xl shadow-md mx-auto max-w-sm">
             <img
-              src={dark_logo}
+              src={platformSettings?.general?.logoUrl || dark_logo}
               alt="Platform Logo"
               className="h-10 w-auto object-contain"
             />
             <div className="flex flex-col justify-center text-left">
-              <img
-                src={company_name}
-                alt="Typography"
-                className="h-6 w-auto object-contain"
-              />
+              {platformSettings?.general?.websiteName ? (
+                <span className="text-white font-bold text-lg">{platformSettings.general.websiteName}</span>
+              ) : (
+                <img
+                  src={company_name}
+                  alt="Typography"
+                  className="h-6 w-auto object-contain"
+                />
+              )}
               <span className="text-[#C89B3C] text-[6px] font-extrabold tracking-[0.16em] uppercase mt-0.5 whitespace-nowrap">
-                LEARN • UNDERSTAND • EXCEL • SERVE
+                {platformSettings?.general?.tagline || 'LEARN • UNDERSTAND • EXCEL • SERVE'}
               </span>
             </div>
           </div>

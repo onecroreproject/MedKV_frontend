@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { setSecuritySettings } from '../utils/securitySettings';
 
 const PlatformContext = createContext();
 
@@ -13,9 +14,9 @@ export const PlatformProvider = ({ children }) => {
         const data = await response.json();
         if (data.success) {
           setPlatformSettings(data.data);
-          // Apply security settings globally if needed
+          // Sync security settings globally
           if (data.data.security) {
-            applySecuritySettings(data.data.security);
+            setSecuritySettings(data.data.security);
           }
         }
       } catch (error) {
@@ -28,22 +29,22 @@ export const PlatformProvider = ({ children }) => {
     fetchSettings();
   }, []);
 
-  const applySecuritySettings = (security) => {
-    if (security.enableRightClickProtection) {
-      document.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
-    if (security.enableCopyPasteProtection) {
-      document.addEventListener('copy', (e) => e.preventDefault());
-      document.addEventListener('paste', (e) => e.preventDefault());
-      document.addEventListener('cut', (e) => e.preventDefault());
-      document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && (e.key === 'c' || e.key === 'x' || e.key === 'p' || e.key === 'u' || e.key === 'I')) {
-          e.preventDefault();
+  useEffect(() => {
+    if (platformSettings?.general) {
+      if (platformSettings.general.websiteName) {
+        document.title = platformSettings.general.websiteName;
+      }
+      if (platformSettings.general.faviconUrl) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
         }
-      });
+        link.href = platformSettings.general.faviconUrl;
+      }
     }
-    // other features like watermarking can be injected here or within specific components
-  };
+  }, [platformSettings]);
 
   return (
     <PlatformContext.Provider value={{ platformSettings, isLoading }}>

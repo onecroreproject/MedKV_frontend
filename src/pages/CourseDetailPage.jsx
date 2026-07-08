@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginForm, RegisterForm, ResetPasswordForm } from '../features/auth';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import { usePurchase } from '../context/PurchaseContext';
-import { getCourseById } from '../services/courseService';
+import { getCourseById, getPublishedCourses } from '../services/courseService';
 import { getMe } from '../services/userService';
 
 // Fallback dummy images mapping since we don't have them in backend
@@ -48,6 +48,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
   const isPurchased = hasPurchased(courseId);
 
   const [course, setCourse] = useState(null);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Profile completion state
@@ -56,6 +57,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
   useEffect(() => {
     const fetchCourse = async () => {
+      setIsLoading(true);
       try {
         const res = await getCourseById(courseId);
         const data = res.data;
@@ -82,8 +84,22 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             pacsCases: data.pacsCases || [],
             mockExams: data.mockExams || [],
             testimonials: data.testimonials || [],
-            faqs: data.faqs || []
+            faqs: data.faqs || [],
+            languages: data.languages || []
           });
+        }
+
+        const pubRes = await getPublishedCourses();
+        if (pubRes && pubRes.data) {
+          const others = pubRes.data.filter(c => c._id !== courseId).slice(0, 3);
+          setRecommendedCourses(others.map(c => ({
+            id: c._id,
+            title: c.title,
+            price: c.price || 0,
+            originalPrice: c.originalPrice || null,
+            imageType: getFallbackImage(c.category?.name || c.category),
+            categoryName: c.category?.name || c.category || 'radiodiagnosis'
+          })));
         }
       } catch (err) {
         console.error(err);
@@ -300,12 +316,16 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-slate-400 text-[10.5px] uppercase tracking-wider font-semibold">
                   <span>Duration: {course.duration}</span>
-                  <span>•</span>
-                  <span>Lessons: {course.lessons} Lectures</span>
+                  {course.lessons > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>Lessons: {course.lessons} Lectures</span>
+                    </>
+                  )}
                   <span>•</span>
                   <span>Last Updated: 05/2026</span>
                   <span>•</span>
-                  <span>Language: English</span>
+                  <span>Language: {course.languages && course.languages.length > 0 ? course.languages.join(', ') : 'English'}</span>
                 </div>
 
                 {/* Mobile specific buy button (Hidden on Desktop) */}
@@ -371,77 +391,40 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
               </section>
             )}
 
-            {/* 5. COURSE CURRICULUM SECTION (Very Important collapsible accordions) */}
+            {/* 5. COURSE CURRICULUM SECTION */}
             <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase">
                   Course Curriculum
                 </h3>
                 <span className="text-blue-gray text-xs font-semibold">
-                  {course.modules?.length || 0} Modules • {course.lessons} Lectures
+                  {course.modules?.length || 0} Modules
                 </span>
               </div>
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {course.modules?.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No modules have been added to this course yet.</p>
-                ) : course.modules?.map((mod, idx) => {
-                  const isOpen = !!openModules[idx];
-
-                  return (
-                    <div
-                      key={idx}
-                      className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
-                    >
-                      <button
-                        onClick={() => toggleModule(idx)}
-                        className="w-full text-left px-5.5 py-4 flex items-center justify-between text-primary font-bold text-sm sm:text-base hover:bg-soft-gray focus:outline-none transition-colors cursor-pointer bg-soft-gray/30"
-                      >
-                        <div className="pr-4">
-                          <h4 className="font-extrabold text-sm sm:text-base text-primary uppercase tracking-wide">
-                            {mod.title}
-                          </h4>
-                          <p className="text-blue-gray text-[11px] font-normal leading-relaxed mt-0.5">
-                            {mod.description || 'Module content'}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-3 text-accent shrink-0">
-                          <span className="text-xs text-blue-gray font-medium hidden sm:inline">{mod.lessons?.length || 0} Lectures</span>
-                          <svg className={`w-4 h-4 text-accent transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </button>
-
-                      {isOpen && (
-                        <div className="px-5.5 py-3.5 border-t border-slate-100 bg-white divide-y divide-slate-100 text-xs">
-                          {mod.lessons?.length === 0 ? (
-                            <p className="text-gray-500 text-xs py-2">No lessons available.</p>
-                          ) : mod.lessons?.map((lec, lIdx) => (
-                            <div 
-                              key={lIdx} 
-                              onClick={() => handleLessonClick(lec)}
-                              className={`py-3 flex items-center justify-between hover:bg-soft-gray/45 px-2.5 rounded-lg transition-colors ${lec.isFreePreview ? 'cursor-pointer group' : 'opacity-80'}`}
-                            >
-                              <div className="flex items-center space-x-3 text-left">
-                                <span className="text-blue-gray text-[10px] font-bold">0{lIdx + 1}.</span>
-                                <span className="font-semibold text-primary">{lec.title}</span>
-                              </div>
-                              <div className="flex items-center space-x-3 shrink-0">
-                                <span className="text-[10px] text-blue-gray font-medium">{lec.duration || '00:00'}</span>
-                                {lec.isFreePreview ? (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-200">Free Preview</span>
-                                ) : (
-                                  <span className="text-blue-gray opacity-60">🔒</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                  <p className="text-gray-500 text-sm col-span-2">No modules have been added to this course yet.</p>
+                ) : course.modules?.map((mod, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 border border-slate-200 rounded-xl bg-soft-gray/30 flex items-center space-x-3 text-sm"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-xs shrink-0">
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-primary uppercase tracking-wide">
+                        {mod.title}
+                      </h4>
+                      {mod.description && (
+                        <p className="text-blue-gray text-[11px] font-normal leading-relaxed mt-0.5">
+                          {mod.description}
+                        </p>
                       )}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -776,11 +759,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
               </h4>
 
               <div className="space-y-4">
-                {[
-                  { id: 'frcr-1', title: 'FRCR Part 1 Prep', price: '₹349', imageType: 'physics' },
-                  { id: 'frcr-2b', title: 'FRCR Part 2B Masterclass', price: '₹599', imageType: 'viva' },
-                  { id: 'anatomy-mod', title: 'Anatomy Specialty Module', price: '₹199', imageType: 'anatomy' }
-                ].map((rec) => (
+                {recommendedCourses.map((rec) => (
                   <div
                     key={rec.id}
                     onClick={() => {
@@ -797,11 +776,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                         <div className="text-primary group-hover:text-accent transition-colors font-extrabold truncate max-w-[140px] uppercase tracking-wide">
                           {rec.title}
                         </div>
-                        <div className="text-[10px] text-blue-gray mt-0.5">radiodiagnosis</div>
+                        <div className="text-[10px] text-blue-gray mt-0.5">{rec.categoryName}</div>
                       </div>
                     </div>
 
-                    <span className="text-primary font-black text-xs">{rec.price}</span>
+                    <div className="text-right shrink-0">
+                      <div className="text-primary font-black">₹{rec.price}</div>
+                      {rec.originalPrice && <div className="text-[9px] text-slate-400 line-through">₹{rec.originalPrice}</div>}
+                    </div>
                   </div>
                 ))}
               </div>

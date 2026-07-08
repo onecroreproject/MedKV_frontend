@@ -460,7 +460,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                     </div>
 
                     <div className="relative z-10 flex items-center justify-between text-slate-300 text-[10px] tracking-wider uppercase font-bold">
-                      <span>{course.duration}</span>
+                      <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : course.duration}</span>
                       <span>•</span>
                       <span>{course.lessons} Lectures</span>
                     </div>

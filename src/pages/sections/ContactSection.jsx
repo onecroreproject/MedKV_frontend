@@ -6,8 +6,10 @@ import {
   CONTACT_PHONE, 
   CONTACT_ADDRESS 
 } from '../../config/constants';
+import { usePlatform } from '../../context/PlatformContext';
 
 export default function ContactSection() {
+  const { platformSettings } = usePlatform();
   // Contact Form Submission Mock state
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [contactName, setContactName] = useState('');
@@ -155,19 +157,6 @@ export default function ContactSection() {
               
               <div className="space-y-6">
                 
-                {/* Channel 1 */}
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 p-2.5 bg-accent/15 border border-accent/30 text-accent rounded-xl">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white font-bold text-xs uppercase tracking-wider">Head Office Address</div>
-                    <div className="text-slate-300 text-xs mt-1 leading-relaxed font-light">{CONTACT_ADDRESS}</div>
-                  </div>
-                </div>
 
                 {/* Channel 2 */}
                 <div className="flex items-start space-x-4">
@@ -178,7 +167,7 @@ export default function ContactSection() {
                   </div>
                   <div>
                     <div className="text-white font-bold text-xs uppercase tracking-wider">Academic Support Email</div>
-                    <div className="text-slate-300 text-xs mt-1 font-mono">{CONTACT_EMAIL}</div>
+                    <div className="text-slate-300 text-xs mt-1 font-mono">{platformSettings?.contact?.publicEmail || CONTACT_EMAIL}</div>
                   </div>
                 </div>
 
@@ -191,29 +180,14 @@ export default function ContactSection() {
                   </div>
                   <div>
                     <div className="text-white font-bold text-xs uppercase tracking-wider">Administrative Phone</div>
-                    <div className="text-slate-300 text-xs mt-1 font-mono">{CONTACT_PHONE}</div>
+                    <div className="text-slate-300 text-xs mt-1 font-mono">{platformSettings?.contact?.primaryPhone || CONTACT_PHONE}</div>
                   </div>
                 </div>
 
               </div>
             </div>
 
-            {/* Map Frame Card - Aligned, Rounded and Highlighted */}
-            <div className="bg-[#0A1733]/90 border border-accent/20 hover:border-accent/40 rounded-3xl overflow-hidden aspect-[16/10] relative flex items-center justify-center shadow-2xl group transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#030919] to-primary/20 opacity-70 z-0" />
-              <div className="absolute inset-0 bg-[radial-gradient(#C89B3C_0.5px,transparent_0.5px)] [background-size:16px_16px] opacity-25 z-0" />
-              
-              <div className="z-10 text-center space-y-3.5 p-6">
-                <span className="text-3xl filter drop-shadow">🗺️</span>
-                <h5 className="text-white font-bold text-xs uppercase tracking-widest">Interactive Campus Navigator</h5>
-                <p className="text-[10px] text-slate-300 max-w-[240px] mx-auto leading-relaxed font-light">
-                  Located adjacent to the prestigious New York City Health & Imaging Wing Campus.
-                </p>
-                <span className="inline-block text-[9px] text-accent border border-accent/40 bg-[#0F224A]/80 px-3.5 py-1.5 rounded-full uppercase tracking-wider group-hover:bg-accent group-hover:text-white transition-all duration-300 cursor-pointer shadow-md">
-                  LAUNCH CLINICAL DIRECTIONS
-                </span>
-              </div>
-            </div>
+
 
           </div>
 

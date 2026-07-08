@@ -8,11 +8,11 @@ export default function FacultySection() {
   // Dummy data for 8 faculty members with varying bio lengths
   const facultyMembers = [
     {
-      name: "Dr. Sarah Johnson",
-      role: "Chief Radiologist",
-      specialization: "Neuroradiology",
-      experience: "18+ Years Experience",
-      bio: "Pioneer in advanced brain imaging techniques and former board examiner."
+      name: "Sam Reefath Radiologist",
+      role: "Lead Instructor",
+      specialization: "Radiology",
+      experience: "15+ Years Experience",
+      bio: "Lead instructor for all comprehensive radiology and imaging modules."
     },
     {
       name: "Dr. Michael Chen",

@@ -201,7 +201,7 @@ export default function CoursesSection({ onViewChange }) {
               <CardBody className="p-6 space-y-4 flex-grow flex flex-col justify-between bg-white text-left">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-[10px] text-accent font-bold uppercase tracking-wider">
-                    <span>{course.duration || 'Flexible Timeline'}</span>
+                    <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : (course.duration || 'Flexible Timeline')}</span>
                     <span className="text-primary bg-soft-gray px-2 py-0.5 rounded border border-slate-200/40">ONLINE</span>
                   </div>
                   <h4 

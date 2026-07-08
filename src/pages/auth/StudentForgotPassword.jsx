@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { Link } from 'react-router-dom';
 
 import { forgotPasswordStudent } from '../../services/authService';
+import { usePlatform } from '../../context/PlatformContext';
 import dark_logo from '../../assets/dark_logo_transparent.png';
 import company_name from '../../assets/company_name_transparent.png';
 
@@ -16,6 +17,7 @@ export default function StudentForgotPassword() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { platformSettings } = usePlatform();
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
   });
@@ -39,18 +41,22 @@ export default function StudentForgotPassword() {
         <div className="text-center mb-8">
           <div className="w-full flex items-center justify-center space-x-3 mb-6 bg-[#0B1F4D] p-4 rounded-xl shadow-md mx-auto max-w-sm">
             <img
-              src={dark_logo}
+              src={platformSettings?.general?.logoUrl || dark_logo}
               alt="Platform Logo"
               className="h-10 w-auto object-contain"
             />
             <div className="flex flex-col justify-center text-left">
-              <img
-                src={company_name}
-                alt="Typography"
-                className="h-6 w-auto object-contain"
-              />
+              {platformSettings?.general?.websiteName ? (
+                <span className="text-white font-bold text-lg">{platformSettings.general.websiteName}</span>
+              ) : (
+                <img
+                  src={company_name}
+                  alt="Typography"
+                  className="h-6 w-auto object-contain"
+                />
+              )}
               <span className="text-[#C89B3C] text-[6px] font-extrabold tracking-[0.16em] uppercase mt-0.5 whitespace-nowrap">
-                LEARN • UNDERSTAND • EXCEL • SERVE
+                {platformSettings?.general?.tagline || 'LEARN • UNDERSTAND • EXCEL • SERVE'}
               </span>
             </div>
           </div>

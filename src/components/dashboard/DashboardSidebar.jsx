@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePlatform } from '../../context/PlatformContext';
 
 export function DashboardSidebar({
   sidebarCollapsed,
@@ -13,6 +14,7 @@ export function DashboardSidebar({
   unreadNotificationCount = 0,
   hasOngoingLiveClass = false
 }) {
+  const { platformSettings } = usePlatform();
   return (
     <aside className={`shrink-0 border-r border-slate-200/60 bg-gradient-to-b from-[#050C1F] to-[#0B1F4D] text-white transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) z-40 relative flex flex-col justify-between ${
       sidebarCollapsed ? 'w-20' : 'w-72'
@@ -21,12 +23,16 @@ export function DashboardSidebar({
       <div className="pt-6">
         {/* Logo Header */}
         <div className={`flex items-center px-5 space-x-3.5 mb-7 transition-all duration-300 ${sidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
-          <img src={dark_logo} alt="Emblem" className="h-10 w-auto shrink-0" />
+          <img src={platformSettings?.general?.logoUrl || dark_logo} alt="Emblem" className="h-10 w-auto shrink-0" />
           {!sidebarCollapsed && (
             <div className="flex flex-col text-left">
-              <img src={company_name} alt="Typography" className="h-6 w-auto shrink-0" />
+              {platformSettings?.general?.websiteName ? (
+                <span className="text-white font-bold text-sm leading-tight">{platformSettings.general.websiteName}</span>
+              ) : (
+                <img src={company_name} alt="Typography" className="h-6 w-auto shrink-0" />
+              )}
               <span className="text-accent text-[5.5px] font-black tracking-[0.18em] uppercase mt-0.5 whitespace-nowrap">
-                LEARN • UNDERSTAND • EXCEL • SERVE
+                {platformSettings?.general?.tagline || 'LEARN • UNDERSTAND • EXCEL • SERVE'}
               </span>
             </div>
           )}

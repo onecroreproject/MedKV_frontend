@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../layouts/Navbar';
 import Footer from '../layouts/Footer';
-import Button from '../components/ui/Button';
 import { getLiveClasses } from '../services/liveClassService';
 import { Radio } from 'lucide-react';
 // Section components
@@ -117,29 +116,6 @@ export function Home({ userSession, onViewChange }) {
       {/* PREMIUM ACADEMY FOOTER */}
       <Footer />
 
-      {/* INLINE PORTAL TRIGGER BUTTON */}
-      <div className="fixed bottom-6 right-6 z-40">
-        {userSession ? (
-          <div className="bg-accent text-white px-4 py-2.5 rounded-full font-bold text-xs tracking-wider shadow-lg flex items-center space-x-2 border border-white/10 animate-bounce animate-duration-1000 cursor-pointer hover:scale-105 transition-transform" onClick={() => onViewChange('dashboard')}>
-            <span className="h-2.5 w-2.5 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="uppercase text-[10px] tracking-widest">{userSession.name}'s Dashboard</span>
-            <div className="ml-2 bg-white/20 rounded-full p-1">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </div>
-          </div>
-        ) : (
-          <Button 
-            variant="secondary" 
-            size="md" 
-            onClick={() => navigate('/student/login')}
-            className="shadow-xl shadow-accent/35 rounded-full font-bold uppercase tracking-wider text-xs border border-white/10"
-          >
-            ENTER STUDENT PORTAL
-          </Button>
-        )}
-      </div>
 
     </div>
   );

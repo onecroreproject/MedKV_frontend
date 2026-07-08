@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, BookOpen, Video, Target, FileText, Award, Activity, GraduationCap, Lock, ChevronRight } from 'lucide-react';
 import { loginStudent } from '../../services/authService';
+import { usePlatform } from '../../context/PlatformContext';
 import dark_logo from '../../assets/dark_logo_transparent.png';
 import company_name from '../../assets/company_name_transparent.png';
 
@@ -24,6 +25,7 @@ export default function StudentLogin({ onLoginSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const { platformSettings } = usePlatform();
 
   const searchParams = new URLSearchParams(location.search);
   const enrollCourseId = searchParams.get('enroll');
@@ -73,18 +75,22 @@ export default function StudentLogin({ onLoginSuccess }) {
         <div className="relative z-10">
           <div className="flex items-center space-x-3 mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
             <img
-              src={dark_logo}
+              src={platformSettings?.general?.logoUrl || dark_logo}
               alt="Platform Logo"
               className="h-16 w-auto object-contain transition-transform duration-300 hover:scale-105"
             />
             <div className="flex flex-col justify-center">
-              <img
-                src={company_name}
-                alt="Dr. Sam Reefath Radiology Academy Typography"
-                className="h-10 w-auto object-contain transition-transform duration-300 hover:scale-105"
-              />
+              {platformSettings?.general?.websiteName ? (
+                <span className="text-white font-bold text-xl">{platformSettings.general.websiteName}</span>
+              ) : (
+                <img
+                  src={company_name}
+                  alt="Dr. Sam Reefath Radiology Academy Typography"
+                  className="h-10 w-auto object-contain transition-transform duration-300 hover:scale-105"
+                />
+              )}
               <span className="text-[#C89B3C] text-[8px] font-extrabold tracking-[0.16em] uppercase mt-0.5 whitespace-nowrap">
-                LEARN • UNDERSTAND • EXCEL • SERVE
+                {platformSettings?.general?.tagline || 'LEARN • UNDERSTAND • EXCEL • SERVE'}
               </span>
             </div>
           </div>
@@ -119,7 +125,7 @@ export default function StudentLogin({ onLoginSuccess }) {
         </div>
 
         <div className="relative z-10 text-sm text-blue-200/60 flex justify-between items-center animate-in fade-in duration-1000 delay-300 fill-mode-both">
-          <p>© 2026 Dr. Sam Reefath Radiology Academy</p>
+          <p>© 2026 {platformSettings?.general?.websiteName || 'Dr. Sam Reefath Radiology Academy'}</p>
           <div className="flex space-x-6">
             <Link to="/policy/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/policy/terms" className="hover:text-white transition-colors">Terms of Service</Link>
@@ -134,18 +140,22 @@ export default function StudentLogin({ onLoginSuccess }) {
         {/* Mobile Header (Hidden on Desktop) */}
         <div className="md:hidden w-full flex items-center justify-center space-x-3 mb-8 animate-in fade-in duration-500 bg-[#0B1F4D] p-4 rounded-xl shadow-md">
           <img
-            src={dark_logo}
+            src={platformSettings?.general?.logoUrl || dark_logo}
             alt="Platform Logo"
             className="h-10 w-auto object-contain"
           />
           <div className="flex flex-col justify-center">
-            <img
-              src={company_name}
-              alt="Typography"
-              className="h-6 w-auto object-contain"
-            />
+            {platformSettings?.general?.websiteName ? (
+                <span className="text-white font-bold text-lg">{platformSettings.general.websiteName}</span>
+              ) : (
+                <img
+                  src={company_name}
+                  alt="Typography"
+                  className="h-6 w-auto object-contain"
+                />
+              )}
             <span className="text-[#C89B3C] text-[6px] font-extrabold tracking-[0.16em] uppercase mt-0.5 whitespace-nowrap">
-              LEARN • UNDERSTAND • EXCEL • SERVE
+              {platformSettings?.general?.tagline || 'LEARN • UNDERSTAND • EXCEL • SERVE'}
             </span>
           </div>
         </div>
