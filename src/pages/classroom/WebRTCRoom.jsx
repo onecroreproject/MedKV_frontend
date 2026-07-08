@@ -23,7 +23,7 @@ export default function WebRTCRoom() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [mediaError, setMediaError] = useState('');
   
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(true);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   
