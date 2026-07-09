@@ -3,7 +3,7 @@ import { ACADEMY_STATISTICS } from '../../config/constants';
 
 export default function StatisticsSection() {
   return (
-    <section className="bg-primary border-t border-slate-200 py-16 relative overflow-hidden shadow-inner">
+    <section className="bg-primary border-t border-slate-200 py-10 sm:py-16 relative overflow-hidden shadow-inner">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-8">
           {ACADEMY_STATISTICS.map((item, idx) => (

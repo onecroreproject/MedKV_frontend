@@ -283,7 +283,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
             </div>
 
             {/* Select Dropdown Filters */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:w-[60%] xl:w-[50%]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 lg:w-[60%] xl:w-[50%]">
 
               {/* Category filter */}
               <div>
@@ -364,7 +364,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
         </section>
 
         {/* 4. FEATURED COURSES SECTION (Responsive grid with glow and lift hover) */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-[1536px] mx-auto text-left">
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-[1536px] mx-auto text-left">
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8.5">
             <div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import dark_logo from "../assets/dark_logo_transparent.png";
 import company_name from "../assets/company_name_transparent.png";
 import Breadcrumbs from '../components/ui/Breadcrumbs';
+import { io } from 'socket.io-client';
 
 // Import modular sub-components
 import CourseLearningTab from '../components/dashboard/CourseLearningTab';
@@ -24,12 +25,13 @@ import ProfileSettingsTab from '../components/dashboard/ProfileSettingsTab';
 import { usePurchase } from '../context/PurchaseContext';
 import { getMe, globalSearch, getNotifications, markAllNotificationsRead } from '../services/userService';
 import { getLiveClasses } from '../services/liveClassService';
+import axios from 'axios';
 
 // Removed mock data arrays
 
 export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab = 'dashboard' }) {
   // Navigation Sidebar collapsed state & active view states
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [activeCourseId, setActiveCourseId] = useState(null); // set when student opens a course
@@ -38,6 +40,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [hasOngoingLiveClass, setHasOngoingLiveClass] = useState(false);
+  const [liveClassAnalytics, setLiveClassAnalytics] = useState(null);
 
   useEffect(() => {
     if (initialTab) {
@@ -114,7 +117,79 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
     fetchProfile();
     fetchNotifications();
     fetchLiveStatus();
+
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        // User ID is derived in backend from token or passed if needed. We'll use the /my-stats approach if we had one.
+        // Actually, we added /student/:id, so we need the ID
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const studentId = storedUser._id || storedUser.id;
+        if (!studentId) return;
+
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/attendance/student/${studentId}`, {
+           headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+           setLiveClassAnalytics(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch live class analytics:", err);
+      }
+    };
+    fetchAnalytics();
+
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarCollapsed(true);
+      } else {
+        setSidebarCollapsed(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const [liveClassUpdateTrigger, setLiveClassUpdateTrigger] = useState(0);
+
+  // Socket.io Initialization for Real-Time Updates
+  useEffect(() => {
+    if (!userProfile || !userProfile._id) return;
+
+    const socket = io(import.meta.env.VITE_BASE_URL);
+
+    // Join personal user room for notifications
+    socket.emit('setup', userProfile);
+
+    socket.on('newNotification', (notif) => {
+      // Instantly show the new notification in the list without refresh
+      setNotifications(prev => [notif, ...prev]);
+      // Simple native browser alert for instant visibility (could be replaced with a toast UI)
+      alert(`New Notification: ${notif.title}`);
+    });
+
+    socket.on('liveClassUpdate', (data) => {
+      // A live class status was updated, instantly re-fetch status
+      setLiveClassUpdateTrigger(prev => prev + 1);
+      const fetchLiveStatus = async () => {
+        try {
+          const res = await getLiveClasses();
+          if (res?.success) {
+            const isOngoing = res.data.some(c => c.status === 'Live Now');
+            setHasOngoingLiveClass(isOngoing);
+          }
+        } catch (err) {
+          console.error("Failed to fetch live classes for status:", err);
+        }
+      };
+      fetchLiveStatus();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userProfile]);
 
   // Calculate dynamic profile completion percentage
   let profileCompletion = 20; // Base 20% for just having an account
@@ -280,6 +355,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
           STUDENT_PROFILE={dynamicProfile}
           unreadNotificationsCount={notifications.filter(n => !n.isRead).length}
           ENROLLED_COURSES={actualEnrolledCourses}
+          liveClassUpdateTrigger={liveClassUpdateTrigger}
         />
 
         {/* 3. DYNAMIC CONTENT SCROLL Workspace */}

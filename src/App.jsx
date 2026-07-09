@@ -9,6 +9,7 @@ import SecurePayment from './pages/payment/SecurePayment';
 import PaymentProcessing from './pages/payment/PaymentProcessing';
 import PaymentResult from './pages/payment/PaymentResult';
 import WebRTCRoom from './pages/classroom/WebRTCRoom';
+import StudentLiveClassMock from './pages/classroom/StudentLiveClassMock';
 
 import StudentLogin from './pages/auth/StudentLogin';
 import StudentRegister from './pages/auth/StudentRegister';
@@ -21,7 +22,7 @@ function MainApp({ userSession, setUserSession, view, setView }) {
   const [initialCategory, setInitialCategory] = useState('All Categories');
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [dashboardTab, setDashboardTab] = useState('dashboard');
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -30,7 +31,7 @@ function MainApp({ userSession, setUserSession, view, setView }) {
     const enrollId = params.get('enroll');
     const courseIdParam = params.get('courseId');
     const previewId = params.get('preview');
-    
+
     if (enrollId) {
       setSelectedCourseId(enrollId);
       setView('enrollment-review');
@@ -84,68 +85,68 @@ function MainApp({ userSession, setUserSession, view, setView }) {
   return (
     <>
       {view === 'home' && (
-        <Home 
+        <Home
           userSession={userSession}
-          onViewChange={handleNavigate} 
+          onViewChange={handleNavigate}
         />
       )}
       {view === 'courses' && (
-        <CoursesPage 
-          onNavigate={handleNavigate} 
-          initialCategory={initialCategory} 
-          onLoginSuccess={handleLoginSuccess} 
+        <CoursesPage
+          onNavigate={handleNavigate}
+          initialCategory={initialCategory}
+          onLoginSuccess={handleLoginSuccess}
           userSession={userSession}
         />
       )}
       {view === 'course-detail' && (
-        <CourseDetailPage 
-          onNavigate={handleNavigate} 
-          courseId={selectedCourseId} 
-          onLoginSuccess={handleLoginSuccess} 
+        <CourseDetailPage
+          onNavigate={handleNavigate}
+          courseId={selectedCourseId}
+          onLoginSuccess={handleLoginSuccess}
           userSession={userSession}
         />
       )}
       {view === 'dashboard' && (
-        <StudentDashboard 
-          userSession={userSession} 
-          onNavigate={handleNavigate} 
-          onLogout={handleLogout} 
+        <StudentDashboard
+          userSession={userSession}
+          onNavigate={handleNavigate}
+          onLogout={handleLogout}
           initialTab={dashboardTab}
         />
       )}
       {view === 'enrollment-review' && (
-        <EnrollmentReview 
-          userSession={userSession} 
+        <EnrollmentReview
+          userSession={userSession}
           courseId={selectedCourseId}
-          onNavigate={handleNavigate} 
+          onNavigate={handleNavigate}
         />
       )}
       {view === 'secure-payment' && (
-        <SecurePayment 
-          userSession={userSession} 
+        <SecurePayment
+          userSession={userSession}
           courseId={selectedCourseId}
-          onNavigate={handleNavigate} 
+          onNavigate={handleNavigate}
         />
       )}
       {view === 'payment-processing' && (
-        <PaymentProcessing 
-          onNavigate={handleNavigate} 
+        <PaymentProcessing
+          onNavigate={handleNavigate}
         />
       )}
       {view === 'payment-success' && (
-        <PaymentResult 
+        <PaymentResult
           userSession={userSession}
           status="success"
           courseId={selectedCourseId}
-          onNavigate={handleNavigate} 
+          onNavigate={handleNavigate}
         />
       )}
       {view === 'payment-failed' && (
-        <PaymentResult 
+        <PaymentResult
           userSession={userSession}
           status="failed"
           courseId={selectedCourseId}
-          onNavigate={handleNavigate} 
+          onNavigate={handleNavigate}
         />
       )}
     </>
@@ -162,16 +163,16 @@ function App() {
     if (token) {
       getMe()
         .then(res => {
-           if(res && res.data) {
-             setUserSession(res.data);
-           }
+          if (res && res.data) {
+            setUserSession(res.data);
+          }
         })
         .catch(err => {
-           console.error('Session hydration failed', err);
-           localStorage.removeItem('token');
+          console.error('Session hydration failed', err);
+          localStorage.removeItem('token');
         })
         .finally(() => {
-           setIsLoadingSession(false);
+          setIsLoadingSession(false);
         });
     } else {
       setIsLoadingSession(false);
@@ -182,7 +183,7 @@ function App() {
     setUserSession(user);
   };
 
-  if (isLoadingSession) {
+  if (isLoadingSession && window.location.pathname !== '/studlive') {
     return (
       <div className="min-h-screen bg-[#030919] flex items-center justify-center">
         <svg className="animate-spin h-10 w-10 text-[#C89B3C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -202,6 +203,7 @@ function App() {
           <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
           <Route path="/student/reset-password/:token" element={<StudentResetPassword />} />
           <Route path="/webrtc/:roomId" element={<WebRTCRoom />} />
+          <Route path="/studlive" element={<StudentLiveClassMock />} />
           <Route path="/policy/:type" element={<PolicyPage />} />
           <Route path="/*" element={<MainApp userSession={userSession} setUserSession={setUserSession} view={view} setView={setView} />} />
         </Routes>

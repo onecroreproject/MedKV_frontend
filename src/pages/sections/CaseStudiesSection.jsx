@@ -43,7 +43,7 @@ export default function CaseStudiesSection() {
   }, [visibleCards, activeIndex, maxIndex]);
 
   return (
-    <section id="cases" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-12 bg-white overflow-hidden">
+    <section id="cases" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12 bg-white overflow-hidden">
       
       {/* Header */}
       <div className="text-center space-y-3">

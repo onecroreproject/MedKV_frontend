@@ -218,7 +218,7 @@ function ProgressBar({ value, className = '' }) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES = [], userProfile }) {
+export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES = [], userProfile, liveClassUpdateTrigger, analytics }) {
   const extractUrl = (text) => {
     if (!text) return '';
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -570,6 +570,39 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
           </div>
         </div>
       </section>
+
+      {/* ── 1.5 MY LIVE CLASSES STATS ────────────────────────────────────────────── */}
+      {analytics && (
+        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-xl shadow-inner shadow-accent/5">
+              📊
+            </div>
+            <div>
+              <h2 className="text-[#0B1F4D] font-black text-xl">My Live Class Performance</h2>
+              <p className="text-slate-500 text-xs font-medium">Your interactive metrics across all attended live sessions</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-center shadow-sm">
+               <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-2">Classes Attended</p>
+               <p className="text-3xl font-black text-[#0B1F4D]">{analytics.stats?.totalClasses || 0}</p>
+             </div>
+             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-center shadow-sm">
+               <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-2">Watch Time</p>
+               <p className="text-3xl font-black text-emerald-600">{analytics.stats?.totalDuration || 0}<span className="text-sm font-bold text-emerald-600/70 ml-1">min</span></p>
+             </div>
+             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-center shadow-sm">
+               <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-2">Total Chats</p>
+               <p className="text-3xl font-black text-blue-600">{analytics.stats?.totalChats || 0}</p>
+             </div>
+             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-center shadow-sm">
+               <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-2">Hand Raises</p>
+               <p className="text-3xl font-black text-accent">{analytics.stats?.totalHandRaises || 0}</p>
+             </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 2. LIVE NOW BANNER ────────────────────────────────────────────── */}
       {liveSession && (

@@ -200,7 +200,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
       <Navbar userSession={userSession} onLoginClick={() => navigate('/student/login')} onViewChange={onNavigate} />
 
       {/* Main layout with top margin for sticky header */}
-      <main className="flex-grow pt-32 max-w-[1536px] mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-10">
+      <main className="flex-grow pt-24 sm:pt-32 max-w-[1536px] mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-10">
 
         {/* INCOMPLETE PROFILE NOTICE MODAL */}
         {showIncompleteProfileModal && (

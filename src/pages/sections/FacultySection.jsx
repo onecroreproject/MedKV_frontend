@@ -74,8 +74,9 @@ export default function FacultySection() {
     const fadeInLeft = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('animate-fade-in-left');
-          observer.unobserve(entry.target);
+          entry.target.classList.remove('opacity-0', 'translate-x-[-30px]');
+          entry.target.classList.add('opacity-100', 'translate-x-0');
+          observerLeft.unobserve(entry.target);
         }
       });
     };
@@ -83,8 +84,9 @@ export default function FacultySection() {
     const fadeInRight = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('animate-fade-in-right');
-          observer.unobserve(entry.target);
+          entry.target.classList.remove('opacity-0', 'translate-x-[30px]');
+          entry.target.classList.add('opacity-100', 'translate-x-0');
+          observerRight.unobserve(entry.target);
         }
       });
     };
@@ -111,7 +113,7 @@ export default function FacultySection() {
   const rightColumnFaculty = facultyMembers.slice(4, 8);
 
   return (
-    <section id="faculty" className="bg-soft-gray border-y border-slate-200/80 py-20 relative overflow-hidden">
+    <section id="faculty" className="bg-soft-gray border-y border-slate-200/80 py-12 sm:py-20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         <div className="text-center space-y-3">
@@ -228,36 +230,6 @@ export default function FacultySection() {
 
       {/* Add these styles to your global CSS or CSS module */}
       <style>{`
-        @keyframes fadeInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes fadeInRight {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .animate-fade-in-left {
-          animation: fadeInLeft 0.7s ease-out forwards;
-        }
-
-        .animate-fade-in-right {
-          animation: fadeInRight 0.7s ease-out forwards;
-        }
-
         /* Custom scrollbar for bio section */
         .overflow-y-auto::-webkit-scrollbar {
           width: 4px;

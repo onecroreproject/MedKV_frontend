@@ -163,13 +163,13 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
             <img
               src={platformSettings?.general?.logoUrl || dark_logo}
               alt="Platform Logo"
-              className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              className="h-12 sm:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
             />
             <div className="flex flex-col justify-center">
               <img
                 src={company_name}
                 alt="Dr. Sam Reefath Radiology Academy Typography"
-                className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                className="h-8 sm:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
               <span className="text-accent text-[8px] font-extrabold tracking-[0.16em] uppercase mt-0.5 whitespace-nowrap">
                 {platformSettings?.general?.tagline || 'LEARN • UNDERSTAND • EXCEL • SERVE'}
@@ -535,7 +535,7 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
           </span>
-          <p className="text-sm font-semibold">
+          <p className="text-xs sm:text-sm font-semibold">
             Live Class Ongoing: {ongoingLiveClass.title}
           </p>
           <button 

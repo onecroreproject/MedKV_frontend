@@ -47,7 +47,7 @@ export default function ContactSection() {
   };
 
   return (
-    <section id="contact" className="relative bg-gradient-to-b from-[#0B1F4D] to-[#030919] border-t border-[#0F224D]/60 py-24 overflow-hidden text-white">
+    <section id="contact" className="relative bg-gradient-to-b from-[#0B1F4D] to-[#030919] border-t border-[#0F224D]/60 py-16 sm:py-24 overflow-hidden text-white">
       
       {/* Visual background glows to represent gold clinical ambient light */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[120px] pointer-events-none z-0" />

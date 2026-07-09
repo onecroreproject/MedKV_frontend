@@ -4,7 +4,7 @@ import { LEARNING_FEATURES } from '../../config/constants';
 
 export default function ResourcesSection() {
   return (
-    <section id="resources" className="bg-soft-gray border-y border-slate-200/80 py-20 relative overflow-hidden">
+    <section id="resources" className="bg-soft-gray border-y border-slate-200/80 py-12 sm:py-20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         <div className="text-center space-y-3">

@@ -146,6 +146,21 @@ export function ProfileSettingsTab({ STUDENT_PROFILE, ENROLLED_COURSES, onNaviga
     }
   };
 
+  const handlePreferenceChange = async (key, value) => {
+    const newPreferences = {
+      ...preferences,
+      [key]: value
+    };
+    setPreferences(newPreferences);
+    try {
+      await updatePreferences(newPreferences);
+    } catch (err) {
+      console.error("Failed to save preferences:", err);
+      // Revert on failure
+      setPreferences(preferences);
+    }
+  };
+
   const handleTwoFactorToggle = async () => {
     const newState = !twoFactorActive;
     setTwoFactorActive(newState);
@@ -713,7 +728,7 @@ export function ProfileSettingsTab({ STUDENT_PROFILE, ENROLLED_COURSES, onNaviga
                     <button
                       key={t}
                       type="button"
-                      onClick={() => setPreferences(prev => ({ ...prev, theme: t }))}
+                      onClick={() => handlePreferenceChange('theme', t)}
                       className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider cursor-pointer transition-all duration-300 ${
                         preferences.theme === t
                           ? 'bg-[#0B1F4D] text-white shadow-sm'
@@ -760,7 +775,7 @@ export function ProfileSettingsTab({ STUDENT_PROFILE, ENROLLED_COURSES, onNaviga
                 <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Language preference</label>
                 <select
                   value={preferences.language}
-                  onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
+                  onChange={(e) => handlePreferenceChange('language', e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-xs focus:bg-white focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent transition-all duration-300 font-medium"
                 >
                   <option value="English">English (United Kingdom)</option>

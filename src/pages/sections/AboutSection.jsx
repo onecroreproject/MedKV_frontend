@@ -92,8 +92,8 @@ export default function AboutSection() {
   const rightItems = WHY_CHOOSE_US.slice(4, 8);
 
   return (
-    <section id="about" className="bg-soft-gray border-y border-slate-200/80 py-20 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+    <section id="about" className="bg-soft-gray border-y border-slate-200/80 py-12 sm:py-20 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-14">
 
         {/* Header */}
         <div className="text-center space-y-3">

@@ -39,7 +39,7 @@ export function Home({ userSession, onViewChange }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-white text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden">
       
       {/* RADIAL AMBIENT GLOW EFFECTS (LIGHT THEME LUXURY GOLDS & TEALS STARTING BELOW HERO) */}
       <div className="absolute top-[650px] left-0 right-0 h-[1000px] bg-gradient-to-b from-[#F5F7FA] via-white to-transparent pointer-events-none z-0" />

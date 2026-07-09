@@ -4,7 +4,7 @@ import { LIVE_CLASSES_FEATURES } from '../../config/constants';
 
 export default function LiveClassesSection() {
   return (
-    <section id="live-classes" className="bg-soft-gray border-y border-slate-200/80 py-20 relative overflow-hidden">
+    <section id="live-classes" className="bg-soft-gray border-y border-slate-200/80 py-12 sm:py-20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
         
         {/* Left Preview Columns */}

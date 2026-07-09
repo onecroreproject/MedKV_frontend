@@ -45,7 +45,7 @@ export function Footer() {
               <img
                 src={platformSettings?.general?.logoUrl || dark_logo}
                 alt="Platform Logo"
-                className="h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                className="h-10 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
               {platformSettings?.general?.nameLogoUrl ? (
                 <img

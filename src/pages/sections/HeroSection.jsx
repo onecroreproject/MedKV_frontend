@@ -4,13 +4,13 @@ import bannerImg from '../../assets/banner.png';
 
 export default function HeroSection() {
   return (
-    <section id="home" className="relative text-white overflow-hidden min-h-[600px] lg:min-h-[680px]">
+    <section id="home" className="relative bg-[#030919] text-white overflow-hidden min-h-[600px] lg:min-h-[680px]">
 
       {/* Full-width banner background image */}
       <img
         src={bannerImg}
         alt="Dr. Sam Reefath Radiology Academy Banner"
-        className="absolute inset-0 w-full h-full object-contain object-right"
+        className="absolute inset-0 w-full h-full object-cover object-[70%_center] md:object-right"
       />
 
       {/* Dark left-side gradient overlay */}
@@ -21,10 +21,10 @@ export default function HeroSection() {
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#030919] to-transparent pointer-events-none z-10" />
 
       {/* Content */}
-      <div className="relative z-20 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-44 pb-20">
+      <div className="relative z-20 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-32 sm:pt-44 pb-16 sm:pb-20">
         <div className="max-w-2xl space-y-6">
 
-          <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-bold tracking-tight leading-[1.1] text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-bold tracking-tight leading-[1.1] text-white">
             ADVANCING RADIOLOGY <br />
             EDUCATION. <br />
             <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">

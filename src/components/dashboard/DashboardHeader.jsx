@@ -12,7 +12,8 @@ export function DashboardHeader({
   onLogout,
   STUDENT_PROFILE,
   unreadNotificationsCount,
-  ENROLLED_COURSES = []
+  ENROLLED_COURSES = [],
+  liveClassUpdateTrigger
 }) {
   const [upcomingLive, setUpcomingLive] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
@@ -49,6 +50,8 @@ export function DashboardHeader({
 
           if (upcoming.length > 0) {
             setUpcomingLive(upcoming[0]);
+          } else {
+            setUpcomingLive(null);
           }
         }
       } catch (err) {
@@ -56,7 +59,7 @@ export function DashboardHeader({
       }
     };
     fetchUpcoming();
-  }, [ENROLLED_COURSES]);
+  }, [ENROLLED_COURSES, liveClassUpdateTrigger]);
 
   // Countdown timer logic
   useEffect(() => {
