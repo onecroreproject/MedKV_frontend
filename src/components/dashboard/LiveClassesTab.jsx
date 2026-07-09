@@ -506,7 +506,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
     <div className="space-y-8 text-left animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out pb-10">
 
       {/* ── 1. HERO SECTION ───────────────────────────────────────────────── */}
-      <section className="relative bg-gradient-to-br from-[#030919] via-[#0B1F4D] to-[#0A1733] rounded-3xl p-6 sm:p-8 lg:p-10 overflow-hidden border border-accent/15 shadow-2xl">
+      <section className="relative bg-gradient-to-br from-[#030919] via-[#0B1F4D] to-[#0A1733] rounded-3xl p-4 sm:p-8 lg:p-10 overflow-hidden border border-accent/15 shadow-2xl">
         {/* Ambient glows */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/6 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-20 left-0 w-[300px] h-[300px] bg-blue-800/10 rounded-full blur-[80px] pointer-events-none" />
@@ -573,7 +573,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
 
       {/* ── 1.5 MY LIVE CLASSES STATS ────────────────────────────────────────────── */}
       {analytics && (
-        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+        <section className="bg-white rounded-3xl p-4 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
           <div className="flex items-center space-x-3 mb-6">
             <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-xl shadow-inner shadow-accent/5">
               📊
@@ -606,7 +606,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
 
       {/* ── 2. LIVE NOW BANNER ────────────────────────────────────────────── */}
       {liveSession && (
-        <section className="relative bg-gradient-to-r from-rose-950/80 via-[#0B1F4D] to-[#030919] border border-rose-500/30 rounded-3xl p-6 sm:p-8 overflow-hidden shadow-xl">
+        <section className="relative bg-gradient-to-r from-rose-950/80 via-[#0B1F4D] to-[#030919] border border-rose-500/30 rounded-3xl p-4 sm:p-8 overflow-hidden shadow-xl">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-rose-500/5 rounded-full blur-[80px] pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="flex items-start space-x-4">
@@ -687,7 +687,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
 
       {/* ── 4. SESSION CARDS GRID ─────────────────────────────────────────── */}
       {filteredSessions.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-12 text-center shadow-sm">
           <div className="text-5xl mb-4">📭</div>
           <h4 className="text-slate-800 font-black text-lg">No sessions found</h4>
           <p className="text-slate-500 text-xs mt-1">Check another filter or come back later for new sessions.</p>
@@ -837,7 +837,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
       )}
 
       {/* ── 9. NOTIFICATIONS ──────────────────────────────────────────────── */}
-      <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+      <section className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm space-y-4">
         <div className="pb-3 border-b border-slate-100">
           <h2 className="text-[#0B1F4D] font-black text-xl tracking-tight uppercase">Live Learning Alerts</h2>
         </div>
@@ -866,12 +866,12 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
             <h2 className="text-[#0B1F4D] font-black text-xl tracking-tight uppercase">Recorded Sessions</h2>
             <p className="text-slate-500 text-xs mt-0.5 font-light">Continue watching or revisit previous sessions</p>
           </div>
-          <div className="bg-slate-100 border border-slate-200 p-1 rounded-xl flex space-x-1 self-start sm:self-auto">
+          <div className="bg-slate-100 border border-slate-200 p-1 rounded-xl flex space-x-1 self-start sm:self-auto overflow-x-auto max-w-full scrollbar-none w-full sm:w-auto">
             {[['recent', 'Recently Added'], ['watching', 'Continue Watching'], ['popular', 'Most Popular']].map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => setRecordingFilter(id)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer focus:outline-none transition-all duration-300 whitespace-nowrap ${recordingFilter === id ? 'bg-[#C89B3C] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer focus:outline-none transition-all duration-300 whitespace-nowrap shrink-0 ${recordingFilter === id ? 'bg-[#C89B3C] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                   }`}
               >
                 {label}
@@ -926,7 +926,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
       </section>
 
       {/* ── 6. WEEKLY CALENDAR ────────────────────────────────────────────── */}
-      <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+      <section className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
             <h2 className="text-[#0B1F4D] font-black text-xl tracking-tight uppercase">Weekly Class Calendar</h2>
@@ -946,28 +946,30 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
-          {dynamicWeekSchedule.map((day) => (
-            <div key={day.day} className={`rounded-2xl p-2 sm:p-3 transition-all ${day.day === today ? 'bg-[#0B1F4D] text-white' : 'bg-slate-50 border border-slate-100'
-              }`}>
-              <div className={`text-center mb-2 ${day.day === today ? '' : ''}`}>
-                <div className={`text-[9px] font-black uppercase tracking-wider ${day.day === today ? 'text-accent' : 'text-slate-400'}`}>{day.day}</div>
-                <div className={`font-black text-sm ${day.day === today ? 'text-white' : 'text-slate-700'}`}>{day.date.split(' ')[0]}</div>
+        <div className="overflow-x-auto pb-2 scrollbar-none">
+          <div className="grid grid-cols-7 gap-2 min-w-[500px]">
+            {dynamicWeekSchedule.map((day) => (
+              <div key={day.day} className={`rounded-2xl p-2 sm:p-3 transition-all ${day.day === today ? 'bg-[#0B1F4D] text-white' : 'bg-slate-50 border border-slate-100'
+                }`}>
+                <div className={`text-center mb-2 ${day.day === today ? '' : ''}`}>
+                  <div className={`text-[9px] font-black uppercase tracking-wider ${day.day === today ? 'text-accent' : 'text-slate-400'}`}>{day.day}</div>
+                  <div className={`font-black text-sm ${day.day === today ? 'text-white' : 'text-slate-700'}`}>{day.date.split(' ')[0]}</div>
+                </div>
+                <div className="space-y-1.5">
+                  {day.sessions.length === 0 ? (
+                    <div className={`h-1 w-3 rounded mx-auto ${day.day === today ? 'bg-white/20' : 'bg-slate-200'}`} />
+                  ) : (
+                    day.sessions.map((sess, i) => (
+                      <div key={i} className={`rounded-lg p-1.5 border ${calColors[sess.color] || 'bg-accent/10 border-accent/20 text-accent'} text-left`}>
+                        <div className="text-[8px] font-black uppercase">{sess.time}</div>
+                        <div className="text-[8px] font-semibold leading-tight sm:block truncate text-ellipsis overflow-hidden">{sess.title}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-              <div className="space-y-1.5">
-                {day.sessions.length === 0 ? (
-                  <div className={`h-1 w-3 rounded mx-auto ${day.day === today ? 'bg-white/20' : 'bg-slate-200'}`} />
-                ) : (
-                  day.sessions.map((sess, i) => (
-                    <div key={i} className={`rounded-lg p-1.5 border ${calColors[sess.color] || 'bg-accent/10 border-accent/20 text-accent'} text-left`}>
-                      <div className="text-[8px] font-black uppercase">{sess.time}</div>
-                      <div className="text-[8px] font-semibold leading-tight hidden sm:block truncate">{sess.title}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -998,7 +1000,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
       </section>
 
       {/* ── 8. LEARNING RESOURCES ─────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-[#030919] to-[#0B1F4D] rounded-3xl p-6 sm:p-8 border border-accent/15 shadow-xl space-y-5">
+      <section className="bg-gradient-to-br from-[#030919] to-[#0B1F4D] rounded-3xl p-4 sm:p-8 border border-accent/15 shadow-xl space-y-5">
         <div className="pb-3 border-b border-white/10">
           <h2 className="text-white font-black text-xl tracking-tight uppercase">Learning Resources</h2>
           <p className="text-slate-400 text-xs mt-0.5 font-light">Quick access to session materials and references</p>

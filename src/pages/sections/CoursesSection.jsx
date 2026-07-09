@@ -62,9 +62,6 @@ export default function CoursesSection({ onViewChange }) {
       {/* Header & Slider Actions UI */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-4 border-b border-slate-100">
         <div className="space-y-3 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold tracking-widest uppercase">
-            <span>✨</span> 04. INTENSIVE CURRICULUMS
-          </div>
           <h3 className="text-3xl font-extrabold tracking-tight text-primary leading-none">
             FEATURED SPECIALIST <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">COURSES</span>
           </h3>

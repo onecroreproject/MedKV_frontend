@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getLiveClasses } from '../../services/liveClassService';
 
 export function DashboardHeader({
+  sidebarCollapsed,
+  setSidebarCollapsed,
   searchQuery,
   setSearchQuery,
   showSearchDropdown,
@@ -94,6 +96,22 @@ export function DashboardHeader({
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between shadow-sm">
       
+      {/* Mobile Hamburger Menu */}
+      <div className="lg:hidden mr-3">
+        <button 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg focus:outline-none transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {sidebarCollapsed ? (
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+            ) : (
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+            )}
+          </svg>
+        </button>
+      </div>
+
       {/* Top Navbar Left: Realtime Search Widget */}
       <div className="flex-1 max-w-lg relative mr-4">
         <div className="relative flex items-center bg-slate-100 border border-slate-200 rounded-xl px-4 py-2 focus-within:border-accent focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 transition-all duration-300 shadow-sm">

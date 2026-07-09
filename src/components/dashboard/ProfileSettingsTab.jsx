@@ -220,7 +220,7 @@ export function ProfileSettingsTab({ STUDENT_PROFILE, ENROLLED_COURSES, onNaviga
                   Active Student
                 </span>
                 <span className="bg-accent/15 border border-accent/35 text-accent text-[9px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wide">
-                  Premium Member
+                  Member
                 </span>
                 <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wide">
                   FRCR Aspirant

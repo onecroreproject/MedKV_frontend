@@ -163,13 +163,13 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden">
 
-      {/* 1. PREMIUM NAVBAR (Sticky) */}
+      {/* 1. NAVBAR (Sticky) */}
       <Navbar userSession={userSession} onLoginClick={() => navigate('/student/login')} onViewChange={onNavigate} />
 
       {/* Main content shifted down to account for sticky navbar */}
       <main className="flex-grow pt-24">
 
-        {/* 2. PREMIUM HERO BANNER */}
+        {/* 2. HERO BANNER */}
         <section className="relative bg-gradient-to-r from-[#030919] via-[#0B1F4D] to-[#0A1733] text-white py-16 lg:py-24 px-4 sm:px-6 lg:px-8 border-b border-accent/20 overflow-hidden">
           {/* Glowing Ambient Watermarks */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
@@ -226,7 +226,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
               </div>
             </div>
 
-            {/* Right Side - Premium Radiology Scanning Graphics */}
+            {/* Right Side - Radiology Scanning Graphics */}
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-full max-w-[400px] aspect-square rounded-3xl bg-[#081535]/80 border border-accent/25 shadow-2xl p-6 flex flex-col justify-between overflow-hidden group">
                 {/* Tech grid background */}
@@ -777,8 +777,8 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
           <div className="space-y-4">
             {[
               {
-                q: 'What is the duration of access for premium course modules?',
-                a: 'Enrollment in any premium target syllabus includes full, unlimited access for 12 months. This includes access to recorded video webinars, test analytics telemetry, flashcard suites, and clinical scan PACS stacks.'
+                q: 'What is the duration of access for course modules?',
+                a: 'Enrollment in any target syllabus includes full, unlimited access for 12 months. This includes access to recorded video webinars, test analytics telemetry, flashcard suites, and clinical scan PACS stacks.'
               },
               {
                 q: 'How are the live board viva mock classes scheduled?',
@@ -790,7 +790,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
               },
               {
                 q: 'Are certificates of completion issued after passing mock boards?',
-                a: 'Absolutely. Academy certificates of completion bearing accreditation values are generated automatically. This is a premium addition to support your clinical residency resumes.'
+                a: 'Absolutely. Academy certificates of completion bearing accreditation values are generated automatically. This is a addition to support your clinical residency resumes.'
               },
               {
                 q: 'What payment methods do you support for international candidates?',
@@ -871,7 +871,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
 
       </main>
 
-      {/* 10. PREMIUM ACADEMY FOOTER */}
+      {/* 10. ACADEMY FOOTER */}
       <Footer />
 
       {/* INTERACTIVE LOGIN/REGISTER/RESET MODAL OVERLAY */}

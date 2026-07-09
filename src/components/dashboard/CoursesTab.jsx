@@ -19,7 +19,7 @@ export function CoursesTab({
           </svg>
           <h4 className="text-primary font-black text-lg">No Active Enrollments</h4>
           <p className="text-blue-gray text-xs mt-1 leading-relaxed">
-            You haven't enrolled in any courses yet. Browse our premium radiology catalog to get started.
+            You haven't enrolled in any courses yet. Browse our radiology catalog to get started.
           </p>
           <button
             onClick={() => onNavigate('courses')}

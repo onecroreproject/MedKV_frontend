@@ -51,9 +51,6 @@ export default function LiveClassesSection() {
         {/* Right Side Content Column */}
         <div className="lg:col-span-6 space-y-8 text-left">
           <div className="space-y-3 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold tracking-widest uppercase">
-              <span>✨</span> 05. INTERACTIVE BROADCASTS
-            </div>
             <h3 className="text-3xl font-extrabold tracking-tight text-primary leading-none">
               LIVE & RECORDED <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">CLASSES</span>
             </h3>
@@ -63,7 +60,7 @@ export default function LiveClassesSection() {
             </p>
           </div>
 
-          {/* List features with premium checkboxes */}
+          {/* List features with checkboxes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
             {LIVE_CLASSES_FEATURES.map((feat, idx) => (
               <div key={idx} className="flex space-x-3 items-start">

@@ -47,7 +47,7 @@ export function Home({ userSession, onViewChange }) {
       <div className="absolute top-[1800px] left-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[130px] pointer-events-none z-0" />
       <div className="absolute top-[3200px] right-10 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px] pointer-events-none z-0" />
 
-      {/* STICKY PREMIUM NAVBAR */}
+      {/* STICKY NAVBAR */}
       <Navbar userSession={userSession} onLoginClick={() => navigate('/student/login')} onViewChange={onViewChange} ongoingLiveClass={ongoingLiveClass} />
 
       {/* MAIN CONTAINER */}
@@ -88,7 +88,7 @@ export function Home({ userSession, onViewChange }) {
 
       </main>
 
-      {/* PREMIUM ACADEMY FOOTER */}
+      {/* ACADEMY FOOTER */}
       <Footer />
 
 

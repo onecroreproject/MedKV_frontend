@@ -16,9 +16,20 @@ export function DashboardSidebar({
 }) {
   const { platformSettings } = usePlatform();
   return (
-    <aside className={`shrink-0 border-r border-slate-200/60 bg-gradient-to-b from-[#050C1F] to-[#0B1F4D] text-white transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) z-40 relative flex flex-col justify-between ${
-      sidebarCollapsed ? 'w-20' : 'w-72'
-    }`}>
+    <>
+      {/* Mobile Overlay */}
+      {!sidebarCollapsed && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+
+      <aside className={`shrink-0 border-r border-slate-200/60 bg-gradient-to-b from-[#050C1F] to-[#0B1F4D] text-white transition-all duration-300 z-50 flex flex-col justify-between ${
+        sidebarCollapsed 
+          ? '-translate-x-full lg:translate-x-0 fixed lg:relative lg:w-20 inset-y-0 left-0 h-screen lg:h-auto' 
+          : 'translate-x-0 fixed lg:relative inset-y-0 left-0 w-72 h-screen lg:h-auto shadow-2xl lg:shadow-none'
+      }`}>
       
       <div className="pt-6">
         {/* Logo Header */}
@@ -177,6 +188,7 @@ export function DashboardSidebar({
       </div>
 
     </aside>
+    </>
   );
 }
 

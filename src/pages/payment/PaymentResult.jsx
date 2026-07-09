@@ -4,10 +4,16 @@ import Footer from '../../layouts/Footer';
 import Button from '../../components/ui/Button';
 import { usePurchase } from '../../context/PurchaseContext';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
+import InvoiceModal from '../../components/ui/InvoiceModal';
 
 export default function PaymentResult({ status, courseId, onNavigate, userSession }) {
   const isSuccess = status === 'success';
   const { purchaseCourse } = usePurchase();
+  const [showInvoice, setShowInvoice] = React.useState(false);
+  
+  // Setup synthetic invoice data for demonstration
+  const invoiceId = React.useMemo(() => `INV-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`, []);
+  const receiptId = React.useMemo(() => `pay_${Math.random().toString(36).substring(2, 14).toLowerCase()}`, []);
 
   useEffect(() => {
     if (isSuccess && courseId) {
@@ -55,15 +61,19 @@ export default function PaymentResult({ status, courseId, onNavigate, userSessio
           
           <p className="text-blue-gray text-sm leading-relaxed mb-8">
             {isSuccess 
-              ? 'Your payment was securely processed. You now have full 12-month access to the premium curriculum and live webinars.' 
+              ? 'Your payment was securely processed. You now have full 12-month access to the curriculum and live webinars.' 
               : 'Unfortunately, your transaction could not be processed at this time. Please check your payment details and try again.'}
           </p>
 
           {isSuccess && (
             <div className="bg-soft-gray border border-slate-200 rounded-xl p-4 mb-8 text-left space-y-2 text-xs font-semibold text-slate-500">
               <div className="flex justify-between">
-                <span>Transaction ID:</span>
-                <span className="text-primary">TXN-{Math.floor(Math.random() * 100000000)}</span>
+                <span>Invoice ID:</span>
+                <span className="text-primary">{invoiceId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Payment Receipt ID:</span>
+                <span className="text-primary">{receiptId}</span>
               </div>
               <div className="flex justify-between">
                 <span>Date:</span>
@@ -80,10 +90,18 @@ export default function PaymentResult({ status, courseId, onNavigate, userSessio
             {isSuccess ? (
               <>
                 <Button 
+                  variant="primary" 
+                  size="lg" 
+                  onClick={() => setShowInvoice(true)}
+                  className="w-full uppercase tracking-widest text-xs font-black shadow-lg shadow-accent/20 bg-[#C89B3C] border-[#C89B3C] hover:bg-[#A8802E] hover:border-[#A8802E]"
+                >
+                  View Full Invoice
+                </Button>
+                <Button 
                   variant="secondary" 
                   size="lg" 
                   onClick={() => onNavigate('dashboard')}
-                  className="w-full uppercase tracking-widest text-xs font-black shadow-lg shadow-accent/20"
+                  className="w-full uppercase tracking-widest text-xs font-black"
                 >
                   Go To Dashboard →
                 </Button>
@@ -122,6 +140,23 @@ export default function PaymentResult({ status, courseId, onNavigate, userSessio
       </main>
 
       <Footer />
+      
+      {isSuccess && (
+        <InvoiceModal 
+          isOpen={showInvoice} 
+          onClose={() => setShowInvoice(false)}
+          invoiceData={{
+            invoiceId: invoiceId,
+            receiptId: receiptId,
+            date: new Date().toLocaleDateString(),
+            studentName: userSession?.name || 'Alice Johnson',
+            studentEmail: userSession?.email || 'alice.johnson@example.com',
+            courseName: courseId || 'Radiology Comprehensive Module',
+            amount: '$449.00',
+            amountWords: 'Four Hundred Forty Nine Only'
+          }}
+        />
+      )}
     </div>
   );
 }

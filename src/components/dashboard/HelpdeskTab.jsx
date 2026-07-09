@@ -158,7 +158,7 @@ export function HelpdeskTab() {
           <div className="bg-gradient-to-br from-[#0B1F4D] to-[#040812] border border-accent/25 rounded-3xl p-6 shadow-lg space-y-3 hover:shadow-xl transition-shadow duration-300">
             <span className="text-[10px] text-accent font-extrabold uppercase tracking-widest">📞 URGENT CLINICAL HELPDESK</span>
             <p className="text-slate-300 text-xs leading-relaxed font-light">
-              Premium registrars have direct access to consultant examiners via live private channels.
+              registrars have direct access to consultant examiners via live private channels.
             </p>
             <div className="pt-2 text-xs font-extrabold text-white leading-relaxed">
               Email: support@samreefath.com <br />

@@ -9,9 +9,7 @@ export default function FaqSection() {
     <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12 bg-white">
       
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold tracking-widest uppercase">
-          <span>✨</span> 11. QUESTIONS & ANSWERS
-        </div>
+        
         <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-primary leading-none">
           FREQUENTLY ASKED <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">QUESTIONS</span>
         </h3>

@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Reusable premium button component matching the brand guide styles.
+ * Reusable button component matching the brand guide styles.
  */
 export function Button({
   children,
@@ -12,7 +12,7 @@ export function Button({
   iconPosition = 'left',
   ...props
 }) {
-  // Base classes for premium micro-animations and transition states
+  // Base classes for micro-animations and transition states
   const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent/50 active:scale-98 cursor-pointer select-none';
 
   // Variant mapping using Poppins & precise HEX values

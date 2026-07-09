@@ -9,7 +9,7 @@ export function OverviewTab({
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
-      {/* Premium Welcome Hero Card */}
+      {/* Welcome Hero Card */}
       <div className="bg-gradient-to-br from-[#0B1F4D] to-[#040817] border border-accent/20 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl text-left transition-all duration-300 hover:shadow-2xl">
         {/* Tech grid mesh overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(200,155,60,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(200,155,60,0.04)_1px,transparent_1px)] bg-[size:15px_15px] pointer-events-none" />

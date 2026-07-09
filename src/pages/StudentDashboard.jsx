@@ -217,7 +217,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
     email: userProfile?.email || userSession?.email || '',
     mobile: userProfile?.phoneNumber || '',
     specialty: userProfile?.specialization || 'Radiology',
-    badge: userProfile?.role || userSession?.role || 'Premium Fellow',
+    badge: userProfile?.role || userSession?.role || 'Fellow',
     avatar: renderAvatar(userProfile?.profileImage),
     overallProgress: profileCompletion,
     streak: userProfile?.streakDays || 0,
@@ -344,6 +344,8 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
         
         {/* Sticky Top Header */}
         <DashboardHeader 
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           showSearchDropdown={showSearchDropdown}
@@ -359,7 +361,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
         />
 
         {/* 3. DYNAMIC CONTENT SCROLL Workspace */}
-        <main className="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto max-h-[calc(100vh-68px)] scroll-smooth relative z-10 text-left">
+        <main className="flex-grow p-3 sm:p-6 lg:p-8 overflow-y-auto max-h-[calc(100vh-68px)] scroll-smooth relative z-10 text-left">
           
           {/* Dynamic Breadcrumbs */}
           <div className="mb-6">
@@ -522,9 +524,9 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
 
         </main>
 
-        {/* Minimal Premium Footer */}
+        {/* Minimal Footer */}
         <footer className="bg-white border-t border-slate-200/80 py-4 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 z-20">
-          <div className="font-medium">© 2026 Dr. Sam Reefath Radiology Academy. All Access Premium Student Portal.</div>
+          <div className="font-medium">© 2026 Dr. Sam Reefath Radiology Academy. All Access Student Portal.</div>
           <div className="flex space-x-4 mt-2 sm:mt-0 font-bold">
             <Link to="/policy/privacy" className="hover:text-slate-600 focus:outline-none cursor-pointer transition-colors duration-200">Privacy Policy</Link>
             <Link to="/policy/terms" className="hover:text-slate-600 focus:outline-none cursor-pointer transition-colors duration-200">Terms of Service</Link>

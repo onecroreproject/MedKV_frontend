@@ -259,7 +259,7 @@ export const LEARNING_FEATURES = [
 
 export const ACADEMY_STATISTICS = [
   { count: '10,000+', label: 'Students Enrolled' },
-  { count: '24+', label: 'Premium Courses' },
+  { count: '24+', label: 'Courses' },
   { count: '15+', label: 'Faculty & Mentors' },
   { count: '5,000+', label: 'Case Studies' },
   { count: '98.4%', label: 'Success Rate' }
@@ -276,7 +276,7 @@ export const FAQS = [
   },
   {
     question: 'What is the duration of access for the Pathology Library?',
-    answer: 'Enrollment in any premium course includes 12 months of full, unlimited access to the entire Pathology Library. Self-paced standalone library subscriptions can also be renewed annually.'
+    answer: 'Enrollment in any course includes 12 months of full, unlimited access to the entire Pathology Library. Self-paced standalone library subscriptions can also be renewed annually.'
   },
   {
     question: 'Are there group discounts available for radiology departments?',

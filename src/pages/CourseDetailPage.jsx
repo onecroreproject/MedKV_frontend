@@ -196,7 +196,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden relative">
       
-      {/* 1. PREMIUM NAVBAR (Sticky with Navigation State Callbacks) */}
+      {/* 1. NAVBAR (Sticky with Navigation State Callbacks) */}
       <Navbar userSession={userSession} onLoginClick={() => navigate('/student/login')} onViewChange={onNavigate} />
 
       {/* Main layout with top margin for sticky header */}
@@ -252,7 +252,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             {/* LEFT CONTENT AREA (Col span 8) */}
             <div className="lg:col-span-8 space-y-10">
               
-              {/* 2. PREMIUM COURSE HERO SECTION */}
+              {/* 2. COURSE HERO SECTION */}
               <section className="bg-gradient-to-br from-[#030919] to-[#0A1733] text-white p-6 sm:p-10 rounded-3xl border border-accent/20 relative overflow-hidden shadow-xl text-left">
                 {/* Radial glow details */}
                 <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
@@ -795,7 +795,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
         )}
       </main>
 
-      {/* 14. PREMIUM FOOTER */}
+      {/* 14. FOOTER */}
       <Footer />
 
       {/* INTERACTIVE LOGIN/REGISTER/RESET MODAL OVERLAY */}

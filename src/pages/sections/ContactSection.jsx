@@ -57,9 +57,6 @@ export default function ContactSection() {
         
         {/* Header - Perfect Gold and Navy Blue typography pairing */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold tracking-widest uppercase">
-            <span>✨</span> 12. ACADEMIC ENQUIRIES
-          </div>
           <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
             GET IN TOUCH WITH <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">US</span>
           </h3>
@@ -69,7 +66,7 @@ export default function ContactSection() {
           </p>
         </div>
 
-        {/* Alignment Grid - Standardized Heights, Premium Gold Borders, and Navy Blue Forms */}
+        {/* Alignment Grid - Standardized Heights, Gold Borders, and Navy Blue Forms */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
           
           {/* Left Contact Form Panel - Deep Navy Blue with Gold Highlights */}
