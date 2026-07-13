@@ -21,7 +21,7 @@ export default function HeroSection() {
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#030919] to-transparent pointer-events-none z-10" />
 
       {/* Content */}
-      <div className="relative z-20 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-32 sm:pt-44 pb-16 sm:pb-20">
+      <div className="relative z-20 max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-24 sm:pt-32 pb-16 sm:pb-20">
         <div className="max-w-2xl space-y-6">
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-bold tracking-tight leading-[1.1] text-white">

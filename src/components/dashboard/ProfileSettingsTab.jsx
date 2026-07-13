@@ -12,10 +12,10 @@ export function ProfileSettingsTab({ STUDENT_PROFILE, ENROLLED_COURSES, onNaviga
     dob: '1995-08-24',
     qualification: STUDENT_PROFILE.specialty,
     specialization: 'Diagnostic Neuroradiology',
-    country: 'United Kingdom',
-    state: 'Greater London',
-    city: 'London',
-    address: 'Flat 4B, 12 Park Lane, Westminster'
+    country: 'India',
+    state: 'Tamil Nadu',
+    city: 'Chennai',
+    address: 'Flat 4B, 12 Park Road, Anna Nagar'
   });
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [personalSavedAlert, setPersonalSavedAlert] = useState(false);
@@ -58,10 +58,10 @@ export function ProfileSettingsTab({ STUDENT_PROFILE, ENROLLED_COURSES, onNaviga
             dob: user.dob ? user.dob.split('T')[0] : '1995-08-24',
             qualification: user.qualification || STUDENT_PROFILE.specialty,
             specialization: user.specialization || 'Diagnostic Neuroradiology',
-            country: user.country || 'United Kingdom',
-            state: user.state || 'Greater London',
-            city: user.city || 'London',
-            address: user.address || 'Flat 4B, 12 Park Lane, Westminster'
+            country: user.country || 'India',
+            state: user.state || 'Tamil Nadu',
+            city: user.city || 'Chennai',
+            address: user.address || 'Flat 4B, 12 Park Road, Anna Nagar'
           });
           if (user.preferences) {
             setPreferences({

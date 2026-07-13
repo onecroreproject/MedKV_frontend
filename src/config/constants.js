@@ -1,9 +1,22 @@
 // Full copy configurations and constants for Dr. Sam Reefath Radiology Academy
 
+export const ABOUT_US_CONTENT = {
+  description: "Dr SamReefath Radiology Academy is an advanced online radiology learning platform dedicated to students preparing for MDRD, DNB, DMRD, FRCR, and other radiology examinations. The academy focuses on simplifying complex radiology concepts and helping students build strong reporting skills, diagnostic confidence, and academic excellence.",
+  mission: "To provide high-quality, concept-oriented, and exam-focused radiology education through interactive teaching sessions, case discussions, image-based learning, and mentorship by experienced radiologists.",
+  vision: "To build a trusted and academically strong radiology education platform that empowers students and young radiologists globally through quality teaching and practical learning.",
+  services: [
+    "Live & recorded radiology classes",
+    "Case-based discussions",
+    "Exam-oriented preparation modules",
+    "Spotters & image interpretation sessions",
+    "Mentorship & guidance programs",
+    "Mock tests and academic resources"
+  ]
+};
 export const BRAND_NAME = 'Dr. Sam Reefath Radiology Academy';
 export const CONTACT_EMAIL = 'info@samreefathradiology.com';
-export const CONTACT_PHONE = '+1 (800) 555-XRAY';
-export const CONTACT_ADDRESS = '100 Medical Center Parkway, Imaging Wing Suite A, New York, NY';
+export const CONTACT_PHONE = '+91 98400 12345';
+export const CONTACT_ADDRESS = '12, Academy Street, Adyar, Chennai - 600020, Tamil Nadu, India';
 
 export const NAVIGATION_LINKS = [
   { label: 'Home', href: '#home' },
@@ -64,7 +77,7 @@ export const FEATURED_COURSES = [
     description: 'Comprehensive mastery of clinical physics and anatomy. Includes mock exams and interactive hot seats.',
     duration: '12 Weeks Program',
     imageType: 'physics',
-    price: '$349',
+    price: '₹25,999',
     rating: 4.9
   },
   {
@@ -73,7 +86,7 @@ export const FEATURED_COURSES = [
     description: 'Deep dive into systemic radiology. Advanced modular questions matching the RCR guidelines.',
     duration: '16 Weeks Program',
     imageType: 'systemic',
-    price: '$499',
+    price: '₹35,999',
     rating: 4.8
   },
   {
@@ -82,7 +95,7 @@ export const FEATURED_COURSES = [
     description: 'Rapid reporting, long cases, and intense mock viva-voce exams with real-time advisor feedback.',
     duration: '8 Weeks Intensive',
     imageType: 'viva',
-    price: '$599',
+    price: '₹45,999',
     rating: 5.0
   },
   {
@@ -91,7 +104,7 @@ export const FEATURED_COURSES = [
     description: 'Tailored specifically for local board postgraduates. High-yield theory summaries and clinical cases.',
     duration: '24 Weeks Comprehensive',
     imageType: 'board',
-    price: '$449',
+    price: '₹34,999',
     rating: 4.9
   },
   {
@@ -100,7 +113,7 @@ export const FEATURED_COURSES = [
     description: 'Detailed imaging anatomy of the brain, spine, chest, abdomen, pelvis, and musculoskeletal systems.',
     duration: '6 Weeks Focused',
     imageType: 'anatomy',
-    price: '$199',
+    price: '₹15,999',
     rating: 4.7
   },
   {
@@ -109,7 +122,7 @@ export const FEATURED_COURSES = [
     description: 'Correlating diagnostic signs with pathophysiological schemas. Over 1,200 curated cases.',
     duration: 'Self-Paced Library',
     imageType: 'pathology',
-    price: '$299',
+    price: '₹22,999',
     rating: 4.9
   }
 ];
@@ -168,49 +181,49 @@ export const CASE_STUDIES = [
 
 export const FACULTY_MEMBERS = [
   {
-    name: 'Dr. Sam Reefath',
-    role: 'Founder & Chief Radiodiagnosis Mentor',
-    specialization: 'Neuroradiology & Body Imaging Specialist',
-    experience: '15+ Years Clinical & Academic Experience',
-    bio: 'Pioneer in clinical radiology prep with over a decade of experience guiding thousands of residents to secure top ranks globally.'
+    name: 'Dr. V Krishnaveni',
+    role: 'Founder & Chief Executive Officer (CEO)',
+    specialization: 'Fetal, Breast, Women’s & MSK Imaging',
+    experience: 'Consultant Radiologist',
+    bio: 'Consultant Radiologist at MGM Malar Hospital, Chennai. Specializes in Fetal, Breast, Women’s, and Musculoskeletal Radiology with advanced fellowship training. Dedicated to building a high-quality academic platform focused on structured, clinically relevant, and exam-oriented radiology education for postgraduate students.'
   },
   {
-    name: 'Dr. Sarah Jenkins',
-    role: 'Senior Academic Consultant',
-    specialization: 'Pediatric Radiology & Musculoskeletal Imaging',
-    experience: '12+ Years Clinical Practice',
-    bio: 'Former FRCR examiner dedicated to clarifying core physics, anatomy parameters, and rapid-reporting strategies.'
+    name: 'Dr. Sam Reefath Jabaraj',
+    role: 'Co-Founder & Academic Director',
+    specialization: 'Concept-oriented Radiology Teaching',
+    experience: 'Dedicated Educator & Mentor',
+    bio: 'A dedicated radiology educator with a strong passion for academic teaching, case-based learning, and exam-oriented radiology training for MDRD, DNB, DMRD & FRCR aspirants. Mentoring postgraduate aspirants and simplifying complex radiological concepts.'
   },
   {
-    name: 'Prof. Marcus Vance',
-    role: 'Lead Physics Instructor',
-    specialization: 'Medical Imaging Physics & Dosimetry',
-    experience: '20+ Years Research & Teaching',
-    bio: 'Author of prominent radiology physics digests, specializing in simplifying complex electromagnetic and nuclear magnetic theories.'
+    name: 'Dr. Sanjay P Yadav',
+    role: 'Director – Partnerships & Growth',
+    specialization: 'Strategic Growth & Collaborations',
+    experience: 'Leadership & Development',
+    bio: 'Leading strategic partnerships and growth initiatives for the academy to ensure broad reach and impactful educational collaborations globally.'
   }
 ];
 
 export const STUDENT_TESTIMONIALS = [
   {
-    name: 'Dr. Amit Patel',
-    role: 'FRCR Part 2B Graduate (Gold Medalist)',
-    quote: 'The case-based live viva-voce webinars were identical to the real board exams. The mentors detailed exactly how to structure reports under high stress.',
+    name: 'Dr. Karthik Rajan',
+    role: 'DNB Radiology Resident',
+    quote: 'The case-based live viva-voce webinars by Dr. Sam Reefath were identical to the real board exams. The mentors detailed exactly how to structure reports under high stress, which immensely helped me clear my DNB exams.',
     rating: 5,
-    location: 'London, UK'
+    location: 'Chennai, India'
   },
   {
-    name: 'Dr. Clara Thorne',
-    role: 'Diagnostic Radiology Resident',
-    quote: 'Having the high-definition recording library was a lifesaver. I could review complex neuroradiology scans right before my clinical reporting shifts.',
+    name: 'Dr. Priya Sharma',
+    role: 'MDRD Postgraduate',
+    quote: 'Having the high-definition recording library was a lifesaver. Dr. Krishnaveni’s sessions on Fetal and Breast Imaging helped me build a strong conceptual foundation right before my clinical reporting shifts.',
     rating: 5,
-    location: 'Melbourne, Australia'
+    location: 'Bangalore, India'
   },
   {
-    name: 'Dr. Kareem Al-Farsi',
-    role: 'DNB Radiology Consultant',
-    quote: 'The Pathology Interactive Library helped me clear my theory exams with flying colors. Highly recommended for any serious radiology postgraduate.',
+    name: 'Dr. Vignesh Kumar',
+    role: 'FRCR Aspirant',
+    quote: 'The exam-oriented preparation modules and the Pathology Interactive Library helped me clear my FRCR Part 1 with flying colors. Highly recommended for any serious radiology postgraduate aiming for academic excellence.',
     rating: 5,
-    location: 'Dubai, UAE'
+    location: 'Coimbatore, India'
   }
 ];
 

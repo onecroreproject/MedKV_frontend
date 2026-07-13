@@ -81,7 +81,7 @@ export default function PaymentResult({ status, courseId, onNavigate, userSessio
               </div>
               <div className="flex justify-between">
                 <span>Amount Paid:</span>
-                <span className="text-primary">$449.00</span>
+                <span className="text-primary">₹34,999</span>
               </div>
             </div>
           )}
@@ -152,8 +152,8 @@ export default function PaymentResult({ status, courseId, onNavigate, userSessio
             studentName: userSession?.name || 'Alice Johnson',
             studentEmail: userSession?.email || 'alice.johnson@example.com',
             courseName: courseId || 'Radiology Comprehensive Module',
-            amount: '$449.00',
-            amountWords: 'Four Hundred Forty Nine Only'
+            amount: '₹34,999',
+            amountWords: 'Thirty Four Thousand Nine Hundred Ninety Nine Only'
           }}
         />
       )}

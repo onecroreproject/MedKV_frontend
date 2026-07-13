@@ -100,9 +100,9 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
                 <div className="w-1/3 p-4 border-r border-gray-300">
                    <h1 className="font-bold text-base mb-1">Dr. Sam Reefath Radiology Academy</h1>
                    <p>Academic Head Office</p>
-                   <p>123 Medical Avenue, Ground Floor</p>
-                   <p>London, UK W1G 0BJ</p>
-                   <p>United Kingdom</p>
+                   <p>12, Academy Street, Adyar</p>
+                   <p>Chennai - 600020, Tamil Nadu</p>
+                   <p>India</p>
                 </div>
                 <div className="w-1/3 p-4 flex items-end justify-end">
                    <h2 className="text-3xl font-light text-gray-500 tracking-wide">TAX INVOICE</h2>
@@ -185,7 +185,7 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
               <div className="flex border-b border-gray-300">
                 <div className="w-[60%] p-3 border-r border-gray-300">
                   <p className="text-gray-500 mb-1">Total In Words</p>
-                  <p className="font-bold italic">Dollar {invoiceData.amountWords || 'Four Hundred Forty Nine Only'}</p>
+                  <p className="font-bold italic">Rupees {invoiceData.amountWords || 'Thirty Four Thousand Nine Hundred Ninety Nine Only'}</p>
                   
                   <div className="mt-4">
                     <p className="font-bold text-gray-500 mb-1">Notes</p>
@@ -203,7 +203,7 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
                    </div>
                    <div className="flex justify-between p-2 border-b border-gray-300 font-bold bg-gray-50">
                      <span>Balance Due</span>
-                     <span>$0.00</span>
+                     <span>₹0</span>
                    </div>
                    
                    <div className="p-4 flex flex-col items-center justify-center flex-1">

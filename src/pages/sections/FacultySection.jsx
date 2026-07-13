@@ -1,69 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import Card, { CardBody } from '../../components/ui/Card';
+import { FACULTY_MEMBERS } from '../../config/constants';
 
 export default function FacultySection() {
   const leftCardsRef = useRef([]);
   const rightCardsRef = useRef([]);
-
-  // Dummy data for 8 faculty members with varying bio lengths
-  const facultyMembers = [
-    {
-      name: "Sam Reefath Radiologist",
-      role: "Lead Instructor",
-      specialization: "Radiology",
-      experience: "15+ Years Experience",
-      bio: "Lead instructor for all comprehensive radiology and imaging modules."
-    },
-    {
-      name: "Dr. Michael Chen",
-      role: "Professor of Radiology",
-      specialization: "Musculoskeletal Imaging",
-      experience: "15+ Years Experience",
-      bio: "Internationally recognized for innovative approaches to sports medicine imaging."
-    },
-    {
-      name: "Dr. Emily Rodriguez",
-      role: "Clinical Director",
-      specialization: "Pediatric Radiology",
-      experience: "12+ Years Experience",
-      bio: "Dedicated to reducing radiation exposure in children through advanced protocols."
-    },
-    {
-      name: "Dr. James Wilson",
-      role: "Senior Consultant",
-      specialization: "Cardiothoracic Imaging",
-      experience: "20+ Years Experience",
-      bio: "Leading expert in cardiac MRI and CT angiography with numerous publications."
-    },
-    {
-      name: "Dr. Priya Patel",
-      role: "Research Director",
-      specialization: "Breast Imaging",
-      experience: "14+ Years Experience",
-      bio: "Award-winning researcher in early breast cancer detection technologies."
-    },
-    {
-      name: "Dr. Robert Taylor",
-      role: "Interventional Lead",
-      specialization: "Interventional Radiology",
-      experience: "16+ Years Experience",
-      bio: "Specializes in minimally invasive procedures and image-guided therapies."
-    },
-    {
-      name: "Dr. Lisa Anderson",
-      role: "Education Head",
-      specialization: "Abdominal Imaging",
-      experience: "13+ Years Experience",
-      bio: "Passionate educator training next generation of radiology specialists."
-    },
-    {
-      name: "Dr. David Kim",
-      role: "Nuclear Medicine Chief",
-      specialization: "Molecular Imaging",
-      experience: "17+ Years Experience",
-      bio: "Expert in PET/CT and theranostics for personalized cancer treatment."
-    }
-  ];
 
   useEffect(() => {
     const observerOptions = {
@@ -108,9 +49,9 @@ export default function FacultySection() {
     };
   }, []);
 
-  // Split 8 faculty members: 4 on left, 4 on right
-  const leftColumnFaculty = facultyMembers.slice(0, 4);
-  const rightColumnFaculty = facultyMembers.slice(4, 8);
+  // Split faculty members into two columns dynamically
+  const leftColumnFaculty = FACULTY_MEMBERS.slice(0, Math.ceil(FACULTY_MEMBERS.length / 2));
+  const rightColumnFaculty = FACULTY_MEMBERS.slice(Math.ceil(FACULTY_MEMBERS.length / 2));
 
   return (
     <section id="faculty" className="bg-soft-gray border-y border-slate-200/80 py-12 sm:py-20 relative overflow-hidden">
@@ -118,11 +59,11 @@ export default function FacultySection() {
         
         <div className="text-center space-y-3">
           <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-primary leading-none">
-            BOARD ELITE FACULTY <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">MEMBERS</span>
+            LEADERSHIP <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">TEAM</span>
           </h3>
           <div className="h-[2px] w-20 bg-gradient-to-r from-transparent via-accent to-transparent mx-auto mt-4" />
           <p className="text-blue-gray text-xs sm:text-sm max-w-lg mx-auto font-light leading-relaxed">
-            Train under international radiology leaders, accredited professors, and board exam advisers committed to your success.
+            Meet the visionary founders and esteemed educators driving the academy's mission to empower the next generation of radiologists globally.
           </p>
         </div>
 

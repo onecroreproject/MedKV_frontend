@@ -7,7 +7,7 @@ import Breadcrumbs from '../../components/ui/Breadcrumbs';
 export default function SecurePayment({ userSession, courseId, onNavigate }) {
   const [selectedMethod, setSelectedMethod] = useState('card');
 
-  const finalAmount = 449.00; // Mock amount
+  const finalAmount = 34999; // Mock amount
 
   const handlePay = () => {
     onNavigate('payment-processing', courseId);
@@ -35,7 +35,7 @@ export default function SecurePayment({ userSession, courseId, onNavigate }) {
             </div>
           <div className="text-right hidden sm:block">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Payable</span>
-            <div className="text-3xl font-black text-primary">${finalAmount.toFixed(2)}</div>
+            <div className="text-3xl font-black text-primary">₹{finalAmount.toLocaleString('en-IN')}</div>
           </div>
         </div>
 
@@ -105,15 +105,15 @@ export default function SecurePayment({ userSession, courseId, onNavigate }) {
               <div className="space-y-4 text-sm relative z-10 mb-6">
                 <div className="flex justify-between">
                   <span className="text-slate-300">Amount</span>
-                  <span className="font-bold">${499.00.toFixed(2)}</span>
+                  <span className="font-bold">₹{(40000).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-300">Discount</span>
-                  <span className="font-bold text-accent">-${50.00.toFixed(2)}</span>
+                  <span className="font-bold text-accent">-₹{(5001).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-300">Taxes</span>
-                  <span className="font-bold">$0.00</span>
+                  <span className="font-bold">₹0</span>
                 </div>
               </div>
 
@@ -123,7 +123,7 @@ export default function SecurePayment({ userSession, courseId, onNavigate }) {
                 onClick={handlePay}
                 className="w-full py-4 uppercase tracking-widest text-xs font-black shadow-lg shadow-accent/20 relative z-10 hover:scale-105 transition-transform"
               >
-                Pay ${finalAmount.toFixed(2)} Securely
+                Pay ₹{finalAmount.toLocaleString('en-IN')} Securely
               </Button>
 
               <p className="text-center text-[10px] text-slate-400 font-medium relative z-10 pt-6 flex items-center justify-center gap-2">

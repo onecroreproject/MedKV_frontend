@@ -170,7 +170,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
       <main className="flex-grow pt-24">
 
         {/* 2. HERO BANNER */}
-        <section className="relative bg-gradient-to-r from-[#030919] via-[#0B1F4D] to-[#0A1733] text-white py-16 lg:py-24 px-4 sm:px-6 lg:px-8 border-b border-accent/20 overflow-hidden">
+        <section className="relative bg-gradient-to-r from-[#030919] via-[#0B1F4D] to-[#0A1733] text-white pt-8 pb-16 lg:pt-10 lg:pb-24 px-4 sm:px-6 lg:px-8 border-b border-accent/20 overflow-hidden">
           {/* Glowing Ambient Watermarks */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
           <div className="absolute -bottom-10 left-0 w-[400px] h-[400px] bg-blue-gray/5 rounded-full blur-[100px] pointer-events-none" />

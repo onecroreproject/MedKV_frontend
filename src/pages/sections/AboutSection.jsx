@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { WHY_CHOOSE_US } from '../../config/constants';
+import { WHY_CHOOSE_US, ABOUT_US_CONTENT } from '../../config/constants';
 
 const ICONS = {
   faculty: (
@@ -94,6 +94,55 @@ export default function AboutSection() {
   return (
     <section id="about" className="bg-soft-gray border-y border-slate-200/80 py-12 sm:py-20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-14">
+
+        {/* About Academy Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16 sm:mb-24">
+          <div className="space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-primary leading-none">
+              ABOUT <span className="bg-gradient-to-r from-accent to-[#EED393] bg-clip-text text-transparent">US</span>
+            </h2>
+            <div className="h-[2px] w-20 bg-gradient-to-r from-accent to-transparent" />
+            <p className="text-blue-gray text-sm md:text-base leading-relaxed">
+              {ABOUT_US_CONTENT.description}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 hover:shadow-md transition-all">
+                <h4 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
+                  <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  Our Mission
+                </h4>
+                <p className="text-blue-gray text-sm leading-relaxed">{ABOUT_US_CONTENT.mission}</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 hover:shadow-md transition-all">
+                <h4 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
+                  <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  </div>
+                  Our Vision
+                </h4>
+                <p className="text-blue-gray text-sm leading-relaxed">{ABOUT_US_CONTENT.vision}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 lg:pl-8">
+            <h3 className="text-2xl font-bold text-primary">Services <span className="text-accent">Planned</span></h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {ABOUT_US_CONTENT.services.map((service, idx) => (
+                <div key={idx} className="flex items-start gap-3 bg-white p-4 rounded-xl shadow-sm border border-slate-200/50 hover:border-accent/30 hover:shadow-md transition-all">
+                  <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <span className="text-sm font-medium text-blue-gray leading-snug">{service}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full h-px bg-slate-200/80 mb-16 sm:mb-24" />
 
         {/* Header */}
         <div className="text-center space-y-3">
