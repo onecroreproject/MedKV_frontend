@@ -250,9 +250,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
           filteredLive = liveRes.data.filter(s => {
              // 1. Is it available to all?
              if (s.accessControl === 'all') return true;
-             // 2. Is course free?
-             if (s.course && s.course.price === 0) return true;
-             // 3. Enrolled?
+             // 2. Enrolled?
              if (s.course && ENROLLED_COURSES.some(c => String(c.id) === String(s.course._id || s.course))) return true;
              // Default false
              return false;
@@ -297,9 +295,6 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
              if (r.isPublished === false) return false;
              // Is lesson free?
              if (r.lesson && r.lesson.isFreePreview) return true;
-             // Is course free?
-             if (r.course && r.course.price === 0) return true;
-             if (r.liveClass && r.liveClass.course && r.liveClass.course.price === 0) return true;
              // Is enrolled?
              const cId = r.course?._id || r.course || r.liveClass?.course?._id || r.liveClass?.course;
              if (cId && ENROLLED_COURSES.some(c => String(c.id) === String(cId))) return true;

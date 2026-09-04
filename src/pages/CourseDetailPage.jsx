@@ -44,7 +44,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
   const [openFaq, setOpenFaq] = useState(null);
 
-  const { hasPurchased } = usePurchase();
+  const { hasPurchased, purchaseCourse, enrollFreeCourse } = usePurchase();
   const isPurchased = hasPurchased(courseId);
 
   const [course, setCourse] = useState(null);
@@ -160,15 +160,22 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
     }
   };
 
-  const handleEnrollClick = () => {
+  const handleEnrollClick = async () => {
     if (isPurchased) {
       onNavigate('dashboard');
     } else if (userSession) {
       if (profileCompletion < 100) {
         setShowIncompleteProfileModal(true);
       } else {
-        // Use course.id (MongoDB _id) not the slug prop
-        onNavigate('enrollment-review', course?.id || courseId);
+        if (course?.price === 0) {
+          const success = await enrollFreeCourse(course?.id || courseId);
+          if (success) {
+            onNavigate('dashboard');
+          }
+        } else {
+          // Use course.id (MongoDB _id) not the slug prop
+          onNavigate('enrollment-review', course?.id || courseId);
+        }
       }
     } else {
       navigate(`/student/login?enroll=${courseId}`);
@@ -340,7 +347,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                     onClick={handleEnrollClick}
                     className={`w-full uppercase tracking-widest text-xs font-black py-4 shadow-lg ${isPurchased ? 'shadow-primary/25' : 'shadow-accent/25'}`}
                   >
-                    {isPurchased ? 'Continue Learning →' : 'Enroll Now'}
+                    {isPurchased ? 'Continue Learning →' : (course.price === 0 ? 'Enroll for Free' : 'Enroll Now')}
                   </Button>
                 </div>
               </div>
@@ -732,7 +739,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                   onClick={handleEnrollClick}
                   className={`w-full rounded-xl uppercase tracking-widest text-xs font-black py-4 shadow-lg hover:scale-102 transition-transform duration-300 ${isPurchased ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'shadow-accent/20'}`}
                 >
-                  {isPurchased ? 'Continue Learning →' : 'Enroll In Course'}
+                  {isPurchased ? 'Continue Learning →' : (course.price === 0 ? 'Enroll for Free' : 'Enroll In Course')}
                 </Button>
 
                 {!isPurchased && course.previewVideoUrl && (

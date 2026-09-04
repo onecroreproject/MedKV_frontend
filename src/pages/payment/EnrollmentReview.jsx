@@ -8,7 +8,7 @@ import { getCourseById } from '../../services/courseService';
 
 export default function EnrollmentReview({ userSession, courseId, onNavigate }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const { purchaseCourse } = usePurchase();
+  const { purchaseCourse, enrollFreeCourse } = usePurchase();
   const [isProcessing, setIsProcessing] = useState(false);
   const [course, setCourse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +40,9 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
   const handleProceed = async () => {
     if (acceptedTerms) {
       setIsProcessing(true);
-      const success = await purchaseCourse(courseId);
+      const success = finalAmount === 0 
+        ? await enrollFreeCourse(courseId)
+        : await purchaseCourse(courseId);
       setIsProcessing(false);
       if (success) {
         onNavigate('dashboard');
@@ -175,7 +177,7 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                 disabled={!acceptedTerms || isProcessing}
                 onClick={handleProceed}
               >
-                {isProcessing ? 'INITIALIZING RAZORPAY...' : `PAY $${finalAmount.toFixed(2)} SECURELY`}
+                {isProcessing ? (finalAmount === 0 ? 'PROCESSING ENROLLMENT...' : 'INITIALIZING RAZORPAY...') : (finalAmount === 0 ? 'ENROLL FOR FREE' : `PAY $${finalAmount.toFixed(2)} SECURELY`)}
               </Button>
             </div>
           </div>

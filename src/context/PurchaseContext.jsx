@@ -125,12 +125,31 @@ export const PurchaseProvider = ({ children }) => {
     });
   };
 
+  const enrollFreeCourse = async (courseId) => {
+    if (!purchasedCourses.includes(courseId)) {
+      try {
+        const res = await enrollInCourse(courseId);
+        if (res.success) {
+          setPurchasedCourses(prev => [...prev, courseId]);
+          return true;
+        }
+        alert(res.message || 'Error enrolling in free course.');
+        return false;
+      } catch (error) {
+        console.error("Free enrollment error:", error);
+        alert('Error enrolling in free course.');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const hasPurchased = (courseId) => {
     return purchasedCourses.includes(courseId);
   };
 
   return (
-    <PurchaseContext.Provider value={{ purchasedCourses, purchaseCourse, hasPurchased }}>
+    <PurchaseContext.Provider value={{ purchasedCourses, purchaseCourse, enrollFreeCourse, hasPurchased }}>
       {children}
     </PurchaseContext.Provider>
   );
