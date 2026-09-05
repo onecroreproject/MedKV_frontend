@@ -250,7 +250,6 @@ export default function WebRTCRoom() {
             <div className="flex flex-col items-center">
               <h1 className="text-2xl font-bold mb-4 text-center">Please wait, the meeting host will let you in soon.</h1>
               <div className="w-12 h-12 border-4 border-slate-600 border-t-primary rounded-full animate-spin my-6"></div>
-              <p className="text-slate-400">Classroom: {roomId}</p>
             </div>
           ) : (
             <>
@@ -488,7 +487,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
           <div className="hidden md:flex items-center gap-4">
             <div className={`h-2.5 w-2.5 rounded-full ${isRecording ? 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'}`}></div>
             <div>
-              <h1 className="text-sm font-bold text-slate-100 tracking-wide">Classroom {roomId}</h1>
+              <h1 className="text-sm font-bold text-slate-100 tracking-wide">Live Classroom</h1>
               <p className="text-[10px] text-slate-400 font-medium">Role: {isTeacher ? 'Host' : 'Student'}</p>
             </div>
           </div>
