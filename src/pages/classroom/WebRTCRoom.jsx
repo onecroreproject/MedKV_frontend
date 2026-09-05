@@ -1,11 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { webrtcService } from '../../services/webrtcService';
-import { Mic, MicOff, Video, VideoOff, MonitorUp, SquareSquare, PhoneOff, MessageSquare, Hand, Users, Circle, Square, Maximize, Minimize } from 'lucide-react';
+import { VideoOff, Users, Mic, MicOff, Video } from 'lucide-react';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
 import dark_logo from '../../assets/dark_logo_transparent.png';
 import company_name from '../../assets/company_name_transparent.png';
+
+// Components
+import ChatPanel from './components/ChatPanel';
+import MainVideo from './components/MainVideo';
+import ParticipantGrid from './components/ParticipantGrid';
+import ClassroomControls from './components/ClassroomControls';
 
 const playSound = (type) => {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -92,10 +98,6 @@ export default function WebRTCRoom() {
 
   const [chatOpen, setChatOpen] = useState(true);
   const [messages, setMessages] = useState([]);
-  const [chatInput, setChatInput] = useState('');
-
-  const mainVideoWrapperRef = useRef(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [participants, setParticipants] = useState([]);
 
@@ -109,32 +111,10 @@ export default function WebRTCRoom() {
 
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
-  const recordedChunks = useRef([]);
+  const recordingSessionIdRef = useRef(null);
+  const chunkIndexRef = useRef(0);
 
   const myVideoRef = useRef();
-  const mainVideoRef = useRef(); // Usually the teacher's video for students
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      if (mainVideoWrapperRef.current?.requestFullscreen) {
-        mainVideoWrapperRef.current.requestFullscreen().catch(err => {
-          console.error(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
 
   // Anti-recording & Piracy prevention for Students
   useEffect(() => {
@@ -170,15 +150,17 @@ export default function WebRTCRoom() {
     // 1. Get local media for lobby preview
     const initMedia = async () => {
       try {
+        // Apply Phase 2 explicit constraints
+        const videoConstraints = isTeacher 
+          ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 24 } }
+          : { width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 15 } };
+
         const userStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: videoConstraints,
           audio: true
         });
 
         setStream(userStream);
-        if (myVideoRef.current) {
-          myVideoRef.current.srcObject = userStream;
-        }
       } catch (err) {
         console.error("Failed to get local media", err);
         if (err.name === 'NotReadableError') {
@@ -188,17 +170,26 @@ export default function WebRTCRoom() {
         } else if (err.name === 'NotAllowedError') {
           setMediaError("Camera/Microphone access denied. Please allow permissions in your browser to join.");
         } else {
-          setMediaError(`Media error: ${err.message || err.name}`);
+          // Fallback to basic constraints if advanced constraints fail (OverconstrainedError)
+          try {
+             const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+             setStream(fallbackStream);
+             return;
+          } catch(fallbackErr) {
+             setMediaError(`Media error: ${err.message || err.name}`);
+          }
         }
       }
     };
 
-    initMedia();
+    if (isTeacher !== undefined && !stream && !mediaError) {
+      initMedia();
+    }
 
     return () => {
       webrtcService.disconnect();
     };
-  }, [roomId]);
+  }, [roomId, isTeacher]); // Only re-run if isTeacher is loaded
 
   const handleJoin = () => {
     if (!stream && !mediaError) return;
@@ -220,7 +211,12 @@ export default function WebRTCRoom() {
 
     webrtcService.onParticipantsUpdate = (socketId, isJoining, participant) => {
       if (isJoining) {
-        setParticipants(prev => [...prev, { id: socketId, ...participant }]);
+        setParticipants(prev => {
+          if (!prev.find(p => p.id === socketId)) {
+            return [...prev, { id: socketId, ...participant }];
+          }
+          return prev;
+        });
       } else {
         setParticipants(prev => prev.filter(p => p.id !== socketId));
         setRemoteStreams(prev => {
@@ -269,19 +265,29 @@ export default function WebRTCRoom() {
       setIsWaiting(false);
       // Initialize WebRTC now that we are admitted
       webrtcService.initStudent(stream, (teacherData) => {
-        setParticipants(prev => [...prev, { id: teacherData.socketId, name: teacherData.name, role: 'teacher' }]);
+        setParticipants(prev => {
+           if (!prev.find(p => p.id === teacherData.socketId)) {
+               return [...prev, { id: teacherData.socketId, name: teacherData.name, role: 'teacher' }];
+           }
+           return prev;
+        });
       });
     };
 
     if (isTeacher) {
       webrtcService.initTeacher(stream, (studentData) => {
-        setParticipants(prev => [...prev, { id: studentData.socketId, name: studentData.name, role: 'student' }]);
+        setParticipants(prev => {
+           if (!prev.find(p => p.id === studentData.socketId)) {
+               return [...prev, { id: studentData.socketId, name: studentData.name, role: 'student' }];
+           }
+           return prev;
+        });
       });
     }
     // Student initialization happens when admitted
   };
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     if (stream) {
       const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack) {
@@ -293,9 +299,9 @@ export default function WebRTCRoom() {
         webrtcService.updateMediaState(!audioTrack.enabled, vOff);
       }
     }
-  };
+  }, [stream, isVideoOff]);
 
-  const toggleVideo = () => {
+  const toggleVideo = useCallback(() => {
     if (stream) {
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
@@ -307,90 +313,113 @@ export default function WebRTCRoom() {
         webrtcService.updateMediaState(mOff, !videoTrack.enabled);
       }
     }
-  };
+  }, [stream, isMuted]);
 
-  const toggleScreenShare = async () => {
+  const toggleScreenShare = useCallback(async () => {
     if (!isScreenSharing) {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        if (myVideoRef.current) myVideoRef.current.srcObject = screenStream;
         webrtcService.setLocalStream(screenStream);
         setIsScreenSharing(true);
+        setStream(screenStream);
 
         screenStream.getVideoTracks()[0].onended = () => {
-          if (myVideoRef.current) myVideoRef.current.srcObject = stream;
           webrtcService.setLocalStream(stream);
           setIsScreenSharing(false);
+          setStream(stream); // revert
         };
       } catch (err) {
         console.error("Screen share failed", err);
       }
     } else {
-      if (myVideoRef.current) myVideoRef.current.srcObject = stream;
       webrtcService.setLocalStream(stream);
       setIsScreenSharing(false);
     }
-  };
+  }, [isScreenSharing, stream]);
 
-  const toggleRecording = () => {
+  // Phase 3 chunked uploading implementation
+  const toggleRecording = useCallback(async () => {
     if (!isRecording) {
-      recordedChunks.current = [];
-      // Combine screen and audio if sharing, else standard stream
-      const streamToRecord = myVideoRef.current.srcObject || stream;
+      recordingSessionIdRef.current = `sess-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      chunkIndexRef.current = 0;
+      
+      try {
+        await axios.post(`${import.meta.env.VITE_API_URL}/webrtc/recording/start`, {
+          recordingSessionId: recordingSessionIdRef.current,
+          roomId,
+          teacherId: user._id
+        });
+      } catch (err) {
+        console.error("Failed to start recording session", err);
+        alert("Failed to start recording on server.");
+        return;
+      }
+
+      const streamToRecord = stream;
       mediaRecorderRef.current = new MediaRecorder(streamToRecord, { mimeType: 'video/webm' });
 
-      mediaRecorderRef.current.ondataavailable = (e) => {
-        if (e.data.size > 0) recordedChunks.current.push(e.data);
-      };
+      mediaRecorderRef.current.ondataavailable = async (e) => {
+        if (e.data.size > 0) {
+           const chunkBlob = e.data;
+           const formData = new FormData();
+           formData.append('chunk', chunkBlob, `chunk.webm`);
+           formData.append('recordingSessionId', recordingSessionIdRef.current);
+           formData.append('chunkIndex', chunkIndexRef.current);
+           
+           const currentIndex = chunkIndexRef.current;
+           chunkIndexRef.current++;
 
-      mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(recordedChunks.current, { type: 'video/webm' });
-        const formData = new FormData();
-        formData.append('recording', blob, `recording-${roomId}.webm`);
-        formData.append('roomId', roomId);
-        formData.append('teacherId', user._id);
-
-        try {
-          await axios.post(`${import.meta.env.VITE_API_URL}/webrtc/upload-recording`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-          alert('Recording uploaded successfully!');
-        } catch (err) {
-          console.error("Failed to upload recording", err);
-          alert('Failed to upload recording to server.');
-          // Fallback: download locally
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `backup-recording-${roomId}.webm`;
-          a.click();
+           try {
+             await axios.post(`${import.meta.env.VITE_API_URL}/webrtc/recording/chunk`, formData, {
+               headers: { 'Content-Type': 'multipart/form-data' }
+             });
+           } catch (err) {
+             console.error("Failed to upload chunk", currentIndex, err);
+           }
         }
       };
 
-      mediaRecorderRef.current.start();
+      mediaRecorderRef.current.onstop = async () => {
+        try {
+          // Wait briefly for the last ondataavailable to fire and upload
+          setTimeout(async () => {
+             await axios.post(`${import.meta.env.VITE_API_URL}/webrtc/recording/finalize`, {
+               recordingSessionId: recordingSessionIdRef.current
+             });
+             alert('Recording finalized and saved successfully!');
+          }, 1000);
+        } catch (err) {
+          console.error("Failed to finalize recording", err);
+          alert('Failed to finalize recording on server.');
+        }
+      };
+
+      // Generate a chunk every 10 seconds (10000ms)
+      mediaRecorderRef.current.start(10000); 
       setIsRecording(true);
     } else {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
-  };
+  }, [isRecording, stream, roomId, user]);
 
-  const leaveRoom = () => {
+  const leaveRoom = useCallback(() => {
     webrtcService.disconnect();
     if (stream) stream.getTracks().forEach(t => t.stop());
     navigate(-1);
-  };
+  }, [stream, navigate]);
 
-  const sendChat = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-    webrtcService.sendChat(chatInput);
-    setChatInput('');
-  };
+  const sendChat = useCallback((text) => {
+    webrtcService.sendChat(text);
+  }, []);
 
-  const raiseHand = () => {
+  const raiseHand = useCallback(() => {
     webrtcService.raiseHand();
-  };
+  }, []);
+  
+  const toggleChat = useCallback(() => {
+    setChatOpen(prev => !prev);
+  }, []);
 
   if (loadingUser) {
     return (
@@ -437,10 +466,12 @@ export default function WebRTCRoom() {
                 {stream && (
                   <div className="absolute bottom-4 flex w-full justify-center gap-4">
                     <button onClick={toggleMute} className={`p-3 rounded-full ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-600 hover:bg-slate-500'} transition`}>
-                      {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+                      <MicOff size={20} className={!isMuted ? 'hidden' : ''} />
+                      <Mic size={20} className={isMuted ? 'hidden' : ''} />
                     </button>
                     <button onClick={toggleVideo} className={`p-3 rounded-full ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-600 hover:bg-slate-500'} transition`}>
-                      {isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
+                      <VideoOff size={20} className={!isVideoOff ? 'hidden' : ''} />
+                      <Video size={20} className={isVideoOff ? 'hidden' : ''} />
                     </button>
                   </div>
                 )}
@@ -464,6 +495,9 @@ export default function WebRTCRoom() {
       </div>
     );
   }
+
+  // Calculate Main Video Stream (Teacher for students, Self for teacher)
+  const mainStream = isTeacher ? stream : (Object.keys(remoteStreams).length > 0 ? Object.values(remoteStreams)[0] : null);
 
   return (
     <div className="h-screen w-full bg-[#030919] text-white flex flex-col font-sans overflow-hidden">
@@ -498,194 +532,45 @@ export default function WebRTCRoom() {
         {/* Video Area */}
         <div className={`flex flex-col p-2 md:p-4 relative bg-[#01040A] transition-all duration-300 ${chatOpen && !isTeacher ? 'h-[35%] md:h-auto md:flex-1' : 'flex-1'}`}>
 
-          {/* Main Video View (Teacher for Students, or Active Speaker) */}
-          <div ref={mainVideoWrapperRef} className="flex-1 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800 shadow-2xl group">
-            {isTeacher ? (
-              // Teacher sees their own main video
-              <video
-                ref={el => {
-                  myVideoRef.current = el;
-                  if (el && stream) el.srcObject = stream;
-                }}
-                autoPlay playsInline muted className="w-full h-full object-contain"
-              />
-            ) : (
-              // Student sees the teacher's video
-              <video
-                ref={el => {
-                  mainVideoRef.current = el;
-                  if (el && Object.keys(remoteStreams).length > 0) {
-                    el.srcObject = Object.values(remoteStreams)[0];
-                  }
-                }}
-                autoPlay playsInline className="w-full h-full object-contain"
-              />
-            )}
-            <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-white/10 shadow-lg flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-              {isTeacher ? 'You (Broadcasting)' : 'Teacher'}
-            </div>
-            <button
-              onClick={toggleFullscreen}
-              className="absolute top-4 right-4 p-2.5 bg-black/50 hover:bg-black/80 rounded-lg transition-all text-slate-300 hover:text-white backdrop-blur-sm opacity-0 group-hover:opacity-100"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-            >
-              {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-            </button>
+          {/* Main Video View */}
+          <MainVideo stream={mainStream} isTeacher={isTeacher} user={user} />
 
-            {/* Dynamic Forensic Watermark for Students */}
-            {!isTeacher && user && (
-              <div className="absolute inset-0 pointer-events-none z-[100] overflow-hidden">
-                 <div className="absolute text-white/30 text-2xl font-black uppercase tracking-widest whitespace-nowrap animate-watermark mix-blend-overlay drop-shadow-md">
-                    {user?.email} • {user?._id?.substring(0, 8)}
-                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Picture in Picture / Grid of other students (Only for Teacher mainly, or self view for student) */}
-          <div className={!isTeacher ? "absolute bottom-4 right-4 md:bottom-8 md:right-8 w-24 md:w-48 aspect-video bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700 shadow-2xl z-20 group" : "flex gap-2 mt-4 overflow-x-auto pb-2 h-36"}>
-            {!isTeacher && (
-                <div className="w-full h-full bg-black relative">
-                  <video
-                    ref={el => {
-                      myVideoRef.current = el;
-                      if (el && stream) el.srcObject = stream;
-                    }}
-                    autoPlay playsInline muted className="w-full h-full absolute inset-0 object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 backdrop-blur-sm">
-                    You
-                    {isMuted && <MicOff size={10} className="text-red-400" />}
-                  </div>
-                </div>
-            )}
-
-            {isTeacher && Object.keys(remoteStreams).map(socketId => {
-              const participant = participants.find(p => p.id === socketId);
-              return (
-                <div key={socketId} className="w-48 flex flex-col bg-slate-900 rounded-lg overflow-hidden border border-slate-700 shadow-lg shrink-0">
-                  <div className="flex-1 bg-black relative">
-                    <video
-                      autoPlay
-                      playsInline
-                      className="w-full h-full absolute inset-0 object-cover"
-                      ref={el => { if (el) el.srcObject = remoteStreams[socketId] }}
-                    />
-                  </div>
-                  <div className="px-2 py-1.5 text-center text-xs text-slate-300 font-medium truncate bg-slate-800 border-t border-slate-700">
-                    {participant ? participant.name : 'Student'}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {/* Picture in Picture / Grid of other students */}
+          <ParticipantGrid 
+            isTeacher={isTeacher} 
+            remoteStreams={remoteStreams} 
+            participants={participants} 
+            stream={stream} 
+            isMuted={isMuted} 
+          />
         </div>
 
         {/* Sidebar (Chat / Participants) */}
         {chatOpen && (
-          <div className="w-full md:w-80 flex-1 md:flex-none bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col shadow-[-10px_0_20px_rgba(0,0,0,0.2)] z-10 overflow-hidden">
-            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-              <h2 className="font-bold text-sm tracking-wide text-slate-100 flex items-center gap-2">
-                <MessageSquare size={16} className="text-accent" /> Class Chat
-              </h2>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex flex-col ${m.senderId === 'system' ? 'items-center' : (m.senderId === user._id || m.senderId === webrtcService.socket?.id) ? 'items-end' : 'items-start'}`}>
-                  {m.senderId === 'system' ? (
-                    <span className="bg-accent/10 text-accent border border-accent/20 text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-wider my-2">
-                      {m.message || m.text}
-                    </span>
-                  ) : (
-                    <div className={`max-w-[85%] ${(m.senderId === user._id || m.senderId === webrtcService.socket?.id) ? 'items-end' : 'items-start'}`}>
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-[10px] font-bold text-slate-300">{m.name}</span>
-                        <span className="text-[9px] text-slate-500">{new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                      </div>
-                      <div className={`p-2.5 rounded-2xl text-xs leading-relaxed ${
-                        (m.senderId === user._id || m.senderId === webrtcService.socket?.id)
-                          ? 'bg-accent text-[#030919] rounded-tr-sm font-medium' 
-                          : m.role === 'teacher'
-                            ? 'bg-blue-600/20 border border-blue-500/30 text-blue-100 rounded-tl-sm'
-                            : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-sm'
-                      }`}>
-                        {m.message || m.text}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={sendChat} className="p-4 border-t border-slate-800 bg-slate-900 flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                placeholder="Ask a question..."
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-slate-500"
-              />
-              <button type="submit" className="bg-accent hover:bg-[#A8802E] text-[#030919] p-2.5 rounded-xl transition-colors shrink-0 font-bold flex items-center justify-center">
-                <svg className="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-              </button>
-            </form>
-          </div>
+          <ChatPanel 
+            messages={messages} 
+            user={user} 
+            onSendChat={sendChat} 
+          />
         )}
       </div>
 
       {/* Control Bar */}
-      <footer className="h-16 md:h-20 bg-slate-900 border-t border-slate-800 flex items-center justify-between px-2 md:px-8 z-20 shrink-0">
-        
-        {/* Left Side Info */}
-        <div className="hidden sm:flex items-center gap-3 w-1/4">
-        </div>
-
-        {/* Center Controls */}
-        <div className="flex flex-1 sm:flex-none justify-center items-center gap-2 md:gap-4">
-          <button onClick={toggleMute} className={`p-4 rounded-full transition-all duration-300 shadow-lg ${isMuted ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700'}`} title={isMuted ? "Unmute" : "Mute"}>
-            {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
-          </button>
-
-          <button onClick={toggleVideo} className={`p-4 rounded-full transition-all duration-300 shadow-lg ${isVideoOff ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700'}`} title={isVideoOff ? "Start Video" : "Stop Video"}>
-            {isVideoOff ? <VideoOff size={22} /> : <Video size={22} />}
-          </button>
-
-          <div className="w-px h-8 bg-slate-700 mx-2 hidden md:block"></div>
-
-          {isTeacher && (
-            <button onClick={toggleScreenShare} className={`p-4 rounded-full transition-all duration-300 shadow-lg border ${isScreenSharing ? 'bg-green-500 text-white border-green-400 shadow-green-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border-slate-700'}`} title="Share Screen">
-              <MonitorUp size={22} />
-            </button>
-          )}
-
-          {isTeacher && (
-            <button onClick={toggleRecording} className={`p-4 rounded-full transition-all duration-300 shadow-lg border ${isRecording ? 'bg-red-500 animate-pulse text-white border-red-400 shadow-red-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border-slate-700'}`} title={isRecording ? 'Stop Recording' : 'Start Recording'}>
-              {isRecording ? <Square size={22} fill="white" /> : <Circle size={22} fill="white" />}
-            </button>
-          )}
-
-          {!isTeacher && (
-            <button onClick={raiseHand} className={`p-4 rounded-full transition-all duration-300 shadow-lg border bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border-slate-700`} title="Raise Hand">
-              <Hand size={22} />
-            </button>
-          )}
-
-          <div className="w-px h-8 bg-slate-700 mx-2 hidden md:block"></div>
-
-          <button onClick={leaveRoom} className="px-4 md:px-6 py-2.5 md:py-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white transition-all shadow-lg shadow-red-600/20 font-bold flex items-center gap-2 text-sm tracking-wide sm:ml-4">
-            <PhoneOff size={18} /> <span className="hidden sm:inline">{isTeacher ? 'End Class' : 'Leave'}</span>
-          </button>
-        </div>
-
-        {/* Right Controls */}
-        <div className="flex justify-end gap-3 sm:w-1/4">
-          <button onClick={() => setChatOpen(!chatOpen)} className={`p-2.5 md:p-3.5 rounded-xl transition-all border ${chatOpen ? 'bg-accent/10 text-accent border-accent/20' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border-slate-700'}`} title="Toggle Chat">
-            <MessageSquare size={20} />
-          </button>
-        </div>
-      </footer>
+      <ClassroomControls 
+        isTeacher={isTeacher}
+        isMuted={isMuted}
+        isVideoOff={isVideoOff}
+        isScreenSharing={isScreenSharing}
+        isRecording={isRecording}
+        chatOpen={chatOpen}
+        onToggleMute={toggleMute}
+        onToggleVideo={toggleVideo}
+        onToggleScreenShare={toggleScreenShare}
+        onToggleRecording={toggleRecording}
+        onRaiseHand={raiseHand}
+        onLeaveRoom={leaveRoom}
+        onToggleChat={toggleChat}
+      />
     </div>
   );
 }

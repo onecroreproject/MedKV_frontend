@@ -5,6 +5,19 @@ const SOCKET_URL = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
   : 'http://localhost:5000';
 
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:global.stun.twilio.com:3478' }
+];
+
+if (import.meta.env.VITE_TURN_URL) {
+  ICE_SERVERS.push({
+    urls: import.meta.env.VITE_TURN_URL,
+    username: import.meta.env.VITE_TURN_USERNAME,
+    credential: import.meta.env.VITE_TURN_CREDENTIAL
+  });
+}
+
 class WebRTCService {
   constructor() {
     this.socket = null;
@@ -74,12 +87,13 @@ class WebRTCService {
         trickle: false,
         stream: this.localStream,
         config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ]
+          iceServers: ICE_SERVERS
         }
       });
+
+      peer.on('connect', () => console.log('Peer connected to student:', name));
+      peer.on('close', () => console.log('Peer connection closed:', name));
+      peer.on('error', (err) => console.error('Peer error with student:', name, err));
 
       peer.on('signal', (data) => {
         this.socket.emit('offer', { target: socketId, sdp: data });
@@ -118,12 +132,13 @@ class WebRTCService {
         trickle: false,
         stream: this.localStream, // Optional: student can send mic/cam back
         config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ]
+          iceServers: ICE_SERVERS
         }
       });
+
+      peer.on('connect', () => console.log('Peer connected to teacher:', name));
+      peer.on('close', () => console.log('Peer connection to teacher closed'));
+      peer.on('error', (err) => console.error('Peer error with teacher:', err));
 
       peer.on('signal', (data) => {
         this.socket.emit('answer', { target: caller, sdp: data });
