@@ -98,6 +98,14 @@ export default function WebRTCRoom() {
 
   const [chatOpen, setChatOpen] = useState(true);
   const [messages, setMessages] = useState([]);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  const chatOpenRef = useRef(chatOpen);
+  useEffect(() => { chatOpenRef.current = chatOpen; }, [chatOpen]);
+
+  useEffect(() => {
+    if (chatOpen) setUnreadChatCount(0);
+  }, [chatOpen]);
 
   const [participants, setParticipants] = useState([]);
 
@@ -202,6 +210,9 @@ export default function WebRTCRoom() {
       setMessages(prev => [...prev, data]);
       if (data.senderId !== user._id) {
         playSound('message');
+        if (!chatOpenRef.current) {
+          setUnreadChatCount(prev => prev + 1);
+        }
       }
     };
 
@@ -252,7 +263,7 @@ export default function WebRTCRoom() {
       setIsMuted(true);
       if (stream) {
         stream.getAudioTracks().forEach(t => t.enabled = false);
-        webrtcService.emitMediaState(true, isVideoOff);
+        webrtcService.updateMediaState(true, isVideoOff);
       }
     };
 
@@ -570,6 +581,7 @@ export default function WebRTCRoom() {
         onRaiseHand={raiseHand}
         onLeaveRoom={leaveRoom}
         onToggleChat={toggleChat}
+        unreadChatCount={unreadChatCount}
       />
     </div>
   );
