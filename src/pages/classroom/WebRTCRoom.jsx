@@ -332,6 +332,36 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const participants = useParticipants();
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: false });
 
+  const [isTabFocused, setIsTabFocused] = useState(true);
+
+  // Tab Focus Anti-Recording mechanism
+  useEffect(() => {
+    if (isTeacher) return;
+
+    const handleFocusChange = () => {
+      // document.hidden covers switching tabs/minimizing
+      // !document.hasFocus() covers clicking on another window/monitor
+      if (document.hidden || !document.hasFocus()) {
+        setIsTabFocused(false);
+      } else {
+        setIsTabFocused(true);
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleFocusChange);
+    window.addEventListener('blur', handleFocusChange);
+    window.addEventListener('focus', handleFocusChange);
+
+    // Initial check
+    handleFocusChange();
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleFocusChange);
+      window.removeEventListener('blur', handleFocusChange);
+      window.removeEventListener('focus', handleFocusChange);
+    };
+  }, [isTeacher]);
+
   const [chatOpen, setChatOpen] = useState(true);
   const [messages, setMessages] = useState([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -480,7 +510,29 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const mainTrack = teacherScreen || teacherCam;
 
   return (
-    <div className="h-screen w-full bg-[#030919] text-white flex flex-col font-sans overflow-hidden">
+    <div className="h-screen w-full bg-[#030919] text-white flex flex-col font-sans overflow-hidden relative">
+      
+      {/* Anti-Recording Blackout Overlay */}
+      {!isTeacher && !isTabFocused && (
+        <div className="absolute inset-0 bg-black z-[9999] flex flex-col items-center justify-center p-6 text-center">
+          <div className="bg-red-950/40 p-8 rounded-2xl border border-red-500/50 max-w-lg">
+            <h2 className="text-3xl font-black text-red-500 mb-4 tracking-wider">ATTENTION</h2>
+            <p className="text-xl text-slate-200 mb-2 font-medium">
+              You have clicked away from the classroom.
+            </p>
+            <p className="text-slate-400 text-sm">
+              For security and piracy prevention, the video feed has been hidden. Please click back into this window to resume the live class.
+            </p>
+            <button 
+              onClick={() => setIsTabFocused(true)}
+              className="mt-8 px-8 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition shadow-lg shadow-red-600/30"
+            >
+              Resume Class
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="h-16 bg-[#030919] border-b border-slate-800 flex items-center justify-between px-6 shadow-md z-10">
         <div className="flex items-center gap-6">
