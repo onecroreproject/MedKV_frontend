@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../layouts/Navbar';
 import Footer from '../layouts/Footer';
 import { getLiveClasses } from '../services/liveClassService';
+import { getMe } from '../services/userService';
 import { Radio } from 'lucide-react';
 // Section components
 import HeroSection from './sections/HeroSection';
@@ -20,15 +21,42 @@ import ContactSection from './sections/ContactSection';
 export function Home({ userSession, onViewChange }) {
   const navigate = useNavigate();
   const [ongoingLiveClass, setOngoingLiveClass] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!userSession) return;
+      try {
+        const response = await getMe();
+        if (response?.data) {
+          setUserProfile(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to load user profile in home:", err);
+      }
+    };
+    fetchProfile();
+  }, [userSession]);
 
   useEffect(() => {
     const fetchLiveStatus = async () => {
       try {
         const res = await getLiveClasses();
         if (res?.success) {
-          const ongoing = res.data.find(c => c.status === 'Live Now');
-          if (ongoing) {
-            setOngoingLiveClass(ongoing);
+          const ongoingList = res.data.filter(c => c.status === 'Live Now');
+          if (ongoingList.length > 0) {
+            let enrolledCoursesIds = [];
+            if (userProfile?.enrolledCourses) {
+               enrolledCoursesIds = userProfile.enrolledCourses.filter(e => e.course).map(e => String(e.course._id || e.course));
+            }
+            const accessibleOngoing = ongoingList.find(c => {
+               if (c.accessControl === 'all') return true;
+               if (!userSession) return false;
+               return enrolledCoursesIds.includes(String(c.course?._id || c.course));
+            });
+            setOngoingLiveClass(accessibleOngoing || null);
+          } else {
+            setOngoingLiveClass(null);
           }
         }
       } catch (err) {
@@ -36,7 +64,7 @@ export function Home({ userSession, onViewChange }) {
       }
     };
     fetchLiveStatus();
-  }, []);
+  }, [userProfile, userSession]);
 
   return (
     <div className="relative min-h-screen bg-white text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden">

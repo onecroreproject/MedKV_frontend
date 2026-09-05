@@ -43,7 +43,7 @@ const MainVideo = React.memo(({ stream, isTeacher, user }) => {
         autoPlay 
         playsInline 
         muted={isTeacher}
-        className="w-full h-full object-contain"
+        className={`w-full h-full object-contain ${isTeacher ? '-scale-x-100' : ''}`}
       />
       <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-white/10 shadow-lg flex items-center gap-2">
         <div className="h-2 w-2 rounded-full bg-emerald-500"></div>

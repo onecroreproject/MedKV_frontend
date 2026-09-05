@@ -39,7 +39,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [hasOngoingLiveClass, setHasOngoingLiveClass] = useState(false);
+  const [allLiveClasses, setAllLiveClasses] = useState([]);
   const [liveClassAnalytics, setLiveClassAnalytics] = useState(null);
 
   useEffect(() => {
@@ -106,9 +106,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
       try {
         const res = await getLiveClasses();
         if (res?.success) {
-          // Check if any class is currently "Live Now"
-          const isOngoing = res.data.some(c => c.status === 'Live Now');
-          setHasOngoingLiveClass(isOngoing);
+          setAllLiveClasses(res.data);
         }
       } catch (err) {
         console.error("Failed to fetch live classes for status:", err);
@@ -176,8 +174,7 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
         try {
           const res = await getLiveClasses();
           if (res?.success) {
-            const isOngoing = res.data.some(c => c.status === 'Live Now');
-            setHasOngoingLiveClass(isOngoing);
+            setAllLiveClasses(res.data);
           }
         } catch (err) {
           console.error("Failed to fetch live classes for status:", err);
@@ -190,6 +187,13 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
       socket.disconnect();
     };
   }, [userProfile]);
+
+  // Derive hasOngoingLiveClass
+  const hasOngoingLiveClass = allLiveClasses.some(c => {
+    if (c.status !== 'Live Now') return false;
+    if (c.accessControl === 'all') return true;
+    return actualEnrolledCourses.some(enrolled => String(enrolled.id) === String(c.course?._id || c.course));
+  });
 
   // Calculate dynamic profile completion percentage
   let profileCompletion = 20; // Base 20% for just having an account

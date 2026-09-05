@@ -450,7 +450,7 @@ export default function WebRTCRoom() {
                       myVideoRef.current = el;
                       if (el && stream) el.srcObject = stream;
                     }}
-                    autoPlay playsInline muted className="w-full h-full object-cover"
+                    autoPlay playsInline muted className="w-full h-full object-cover -scale-x-100"
                   />
                 ) : mediaError ? (
                   <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-red-400 bg-red-950/30">

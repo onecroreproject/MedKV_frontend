@@ -75,6 +75,12 @@ class WebRTCService {
     this.socket.on('admitted', () => {
       if (this.onAdmitted) this.onAdmitted();
     });
+
+    this.socket.on('ice-candidate', (data) => {
+      if (this.peers[data.caller]) {
+        this.peers[data.caller].signal(data.candidate);
+      }
+    });
   }
 
   initTeacher(stream, onStudentJoined) {
@@ -84,7 +90,7 @@ class WebRTCService {
       
       const peer = new Peer({
         initiator: true,
-        trickle: false,
+        trickle: true,
         stream: this.localStream,
         config: {
           iceServers: ICE_SERVERS
@@ -96,7 +102,11 @@ class WebRTCService {
       peer.on('error', (err) => console.error('Peer error with student:', name, err));
 
       peer.on('signal', (data) => {
-        this.socket.emit('offer', { target: socketId, sdp: data });
+        if (data.type === 'offer') {
+          this.socket.emit('offer', { target: socketId, sdp: data });
+        } else if (data.candidate) {
+          this.socket.emit('ice-candidate', { target: socketId, candidate: data });
+        }
       });
 
       peer.on('stream', (studentStream) => {
@@ -129,7 +139,7 @@ class WebRTCService {
       
       const peer = new Peer({
         initiator: false,
-        trickle: false,
+        trickle: true,
         stream: this.localStream, // Optional: student can send mic/cam back
         config: {
           iceServers: ICE_SERVERS
@@ -141,7 +151,11 @@ class WebRTCService {
       peer.on('error', (err) => console.error('Peer error with teacher:', err));
 
       peer.on('signal', (data) => {
-        this.socket.emit('answer', { target: caller, sdp: data });
+        if (data.type === 'answer') {
+          this.socket.emit('answer', { target: caller, sdp: data });
+        } else if (data.candidate) {
+          this.socket.emit('ice-candidate', { target: caller, candidate: data });
+        }
       });
 
       peer.on('stream', (teacherStream) => {

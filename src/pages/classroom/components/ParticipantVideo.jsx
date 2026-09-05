@@ -20,7 +20,7 @@ const ParticipantVideo = React.memo(({ stream, participant, isMuted, isLocal }) 
           autoPlay
           playsInline
           muted={isLocal}
-          className="w-full h-full absolute inset-0 object-cover"
+          className={`w-full h-full absolute inset-0 object-cover ${isLocal ? '-scale-x-100' : ''}`}
         />
       </div>
       {isLocal ? (

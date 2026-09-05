@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare } from 'lucide-react';
-import { webrtcService } from '../../../../services/webrtcService';
+import { webrtcService } from '../../../services/webrtcService';
 
 const ChatPanel = React.memo(({ messages, user, onSendChat }) => {
   const [chatInput, setChatInput] = useState('');
