@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Maximize, Minimize } from 'lucide-react';
 import { VideoTrack } from '@livekit/components-react';
 
-const MainVideo = React.memo(({ trackRef, isTeacher, user }) => {
+const MainVideo = React.memo(({ screenTrack, cameraTrack, isTeacher, user }) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -32,10 +32,19 @@ const MainVideo = React.memo(({ trackRef, isTeacher, user }) => {
 
   return (
     <div ref={wrapperRef} className="flex-1 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800 shadow-2xl group">
-      {trackRef && (
+      {/* Screen Share Track */}
+      {screenTrack && (
         <VideoTrack
-          trackRef={trackRef}
-          className={`w-full h-full object-contain ${isTeacher ? '-scale-x-100' : ''}`}
+          trackRef={screenTrack}
+          className={`w-full h-full object-contain absolute inset-0 z-10`}
+        />
+      )}
+      
+      {/* Camera Track (Hidden if Screen Share is active) */}
+      {cameraTrack && (
+        <VideoTrack
+          trackRef={cameraTrack}
+          className={`w-full h-full object-contain absolute inset-0 ${screenTrack ? 'opacity-0 pointer-events-none' : 'z-10'} ${isTeacher ? '-scale-x-100' : ''}`}
         />
       )}
       <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-white/10 shadow-lg flex items-center gap-2">
@@ -44,7 +53,7 @@ const MainVideo = React.memo(({ trackRef, isTeacher, user }) => {
       </div>
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 p-2.5 bg-black/50 hover:bg-black/80 rounded-lg transition-all text-slate-300 hover:text-white backdrop-blur-sm opacity-0 group-hover:opacity-100"
+        className="absolute top-4 right-4 p-2.5 bg-black/50 hover:bg-black/80 rounded-lg transition-all text-slate-300 hover:text-white backdrop-blur-sm z-[110]"
         title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
       >
         {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
@@ -61,7 +70,8 @@ const MainVideo = React.memo(({ trackRef, isTeacher, user }) => {
     </div>
   );
 }, (prevProps, nextProps) => {
-  return prevProps.trackRef?.publication?.trackSid === nextProps.trackRef?.publication?.trackSid && 
+  return prevProps.screenTrack?.publication?.trackSid === nextProps.screenTrack?.publication?.trackSid && 
+         prevProps.cameraTrack?.publication?.trackSid === nextProps.cameraTrack?.publication?.trackSid && 
          prevProps.isTeacher === nextProps.isTeacher && 
          prevProps.user?._id === nextProps.user?._id;
 });

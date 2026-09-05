@@ -7,6 +7,7 @@ const ClassroomControls = React.memo(({
   isVideoOff, 
   isScreenSharing, 
   isRecording, 
+  isHandRaised,
   chatOpen,
   onToggleMute, 
   onToggleVideo, 
@@ -48,8 +49,8 @@ const ClassroomControls = React.memo(({
         )}
 
         {!isTeacher && (
-          <button onClick={onRaiseHand} className={`p-4 rounded-full transition-all duration-300 shadow-lg border bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border-slate-700`} title="Raise Hand">
-            <Hand size={22} />
+          <button onClick={onRaiseHand} className={`p-4 rounded-full transition-all duration-300 shadow-lg border ${isHandRaised ? 'bg-yellow-500 text-white border-yellow-400 shadow-yellow-500/30 animate-pulse' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border-slate-700'}`} title={isHandRaised ? "Hand Raised!" : "Raise Hand"}>
+            <Hand size={22} className={isHandRaised ? "animate-bounce" : ""} />
           </button>
         )}
 

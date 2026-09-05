@@ -459,8 +459,15 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
     webrtcService.sendChat(text);
   }, []);
 
+  const [isHandRaised, setIsHandRaised] = useState(false);
+
   const raiseHand = useCallback(() => {
     webrtcService.raiseHand();
+    setIsHandRaised(true);
+    // Auto-lower hand after 5 seconds to allow raising again
+    setTimeout(() => {
+      setIsHandRaised(false);
+    }, 5000);
   }, []);
   
   const toggleChat = useCallback(() => {
@@ -506,7 +513,12 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
         <div className={`flex flex-col p-2 md:p-4 relative bg-[#01040A] transition-all duration-300 ${chatOpen && !isTeacher ? 'h-[35%] md:h-auto md:flex-1' : 'flex-1'}`}>
 
           {/* Main Video View */}
-          <MainVideo trackRef={mainTrack} isTeacher={isTeacher} user={user} />
+          <MainVideo 
+            screenTrack={teacherScreen} 
+            cameraTrack={teacherCam} 
+            isTeacher={isTeacher} 
+            user={user} 
+          />
 
           {/* Picture in Picture / Grid of other students */}
           <ParticipantGrid 
@@ -533,6 +545,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
         isVideoOff={!localParticipant.isCameraEnabled}
         isScreenSharing={localParticipant.isScreenShareEnabled}
         isRecording={isRecording}
+        isHandRaised={isHandRaised}
         chatOpen={chatOpen}
         onToggleMute={toggleMute}
         onToggleVideo={toggleVideo}
