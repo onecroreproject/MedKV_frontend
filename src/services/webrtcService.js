@@ -1,29 +1,12 @@
 import { io } from 'socket.io-client';
-import Peer from 'simple-peer/simplepeer.min.js'; // Use minified for browser
 
 const SOCKET_URL = import.meta.env.VITE_API_URL 
   ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
   : 'http://localhost:5000';
 
-const ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:global.stun.twilio.com:3478' }
-];
-
-if (import.meta.env.VITE_TURN_URL) {
-  ICE_SERVERS.push({
-    urls: import.meta.env.VITE_TURN_URL,
-    username: import.meta.env.VITE_TURN_USERNAME,
-    credential: import.meta.env.VITE_TURN_CREDENTIAL
-  });
-}
-
 class WebRTCService {
   constructor() {
     this.socket = null;
-    this.peers = {};
-    this.localStream = null;
-    this.onTrack = null;
     this.onChat = null;
     this.onHandRaise = null;
     this.onParticipantsUpdate = null;
@@ -75,123 +58,9 @@ class WebRTCService {
     this.socket.on('admitted', () => {
       if (this.onAdmitted) this.onAdmitted();
     });
-
-    this.socket.on('ice-candidate', (data) => {
-      if (this.peers[data.caller]) {
-        this.peers[data.caller].signal(data.candidate);
-      }
-    });
   }
 
-  initTeacher(stream, onStudentJoined) {
-    this.localStream = stream;
-    this.socket.on('student-joined', ({ socketId, name, userId }) => {
-      console.log('Student joined, creating peer:', name);
-      
-      const peer = new Peer({
-        initiator: true,
-        trickle: true,
-        stream: this.localStream,
-        config: {
-          iceServers: ICE_SERVERS
-        }
-      });
 
-      peer.on('connect', () => console.log('Peer connected to student:', name));
-      peer.on('close', () => console.log('Peer connection closed:', name));
-      peer.on('error', (err) => console.error('Peer error with student:', name, err));
-
-      peer.on('signal', (data) => {
-        if (data.type === 'offer') {
-          this.socket.emit('offer', { target: socketId, sdp: data });
-        } else if (data.candidate) {
-          this.socket.emit('ice-candidate', { target: socketId, candidate: data });
-        }
-      });
-
-      peer.on('stream', (studentStream) => {
-        if (this.onTrack) this.onTrack(socketId, studentStream);
-      });
-
-      this.peers[socketId] = peer;
-      if (onStudentJoined) onStudentJoined({ socketId, name, userId });
-    });
-
-    this.socket.on('answer', ({ caller, sdp }) => {
-      if (this.peers[caller]) {
-        this.peers[caller].signal(sdp);
-      }
-    });
-
-    this.socket.on('student-left', ({ socketId }) => {
-      if (this.peers[socketId]) {
-        this.peers[socketId].destroy();
-        delete this.peers[socketId];
-      }
-      if (this.onParticipantsUpdate) this.onParticipantsUpdate(socketId, false);
-    });
-  }
-
-  initStudent(stream, onTeacherJoined) {
-    this.localStream = stream;
-    this.socket.on('offer', ({ caller, sdp, name }) => {
-      console.log('Received offer from teacher:', name);
-      
-      const peer = new Peer({
-        initiator: false,
-        trickle: true,
-        stream: this.localStream, // Optional: student can send mic/cam back
-        config: {
-          iceServers: ICE_SERVERS
-        }
-      });
-
-      peer.on('connect', () => console.log('Peer connected to teacher:', name));
-      peer.on('close', () => console.log('Peer connection to teacher closed'));
-      peer.on('error', (err) => console.error('Peer error with teacher:', err));
-
-      peer.on('signal', (data) => {
-        if (data.type === 'answer') {
-          this.socket.emit('answer', { target: caller, sdp: data });
-        } else if (data.candidate) {
-          this.socket.emit('ice-candidate', { target: caller, candidate: data });
-        }
-      });
-
-      peer.on('stream', (teacherStream) => {
-        if (this.onTrack) this.onTrack(caller, teacherStream);
-      });
-
-      peer.signal(sdp);
-      this.peers[caller] = peer;
-      if (onTeacherJoined) onTeacherJoined({ socketId: caller, name });
-    });
-
-    this.socket.on('teacher-left', () => {
-      console.log('Teacher ended the class.');
-      Object.keys(this.peers).forEach(id => this.peers[id].destroy());
-      this.peers = {};
-      if (this.onParticipantsUpdate) this.onParticipantsUpdate('teacher', false);
-    });
-  }
-
-  setLocalStream(stream) {
-    this.localStream = stream;
-    // Replace track for existing peers
-    Object.keys(this.peers).forEach(socketId => {
-      const peer = this.peers[socketId];
-      // In simple-peer replacing tracks dynamically is slightly tricky,
-      // generally we addStream/removeStream or replaceTrack if natively implemented.
-      // For a robust implementation, it's better to negotiate or use replaceTrack on raw connection.
-      if (peer._pc) {
-        const senders = peer._pc.getSenders();
-        stream.getTracks().forEach(track => {
-          const sender = senders.find(s => s.track && s.track.kind === track.kind);
-          if (sender) sender.replaceTrack(track);
-        });
-      }
-    });
-  }
 
   sendChat(message) {
     if (this.socket) {
@@ -225,8 +94,6 @@ class WebRTCService {
 
   disconnect() {
     if (this.socket) this.socket.disconnect();
-    Object.keys(this.peers).forEach(id => this.peers[id].destroy());
-    this.peers = {};
   }
 }
 

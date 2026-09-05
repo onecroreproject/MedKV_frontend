@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@livekit/components-react": "^2.9.24",
     "@tailwindcss/vite": "^4.3.0",
     "axios": "^1.17.0",
     "events": "^3.3.0",
+    "livekit-client": "^2.22.2",
     "lucide-react": "^1.17.0",
     "process": "^0.11.10",
     "react": "^19.2.6",
