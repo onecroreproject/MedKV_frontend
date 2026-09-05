@@ -36,7 +36,7 @@ const MainVideo = React.memo(({ screenTrack, cameraTrack, isTeacher, user }) => 
       {screenTrack && (
         <VideoTrack
           trackRef={screenTrack}
-          className={`w-full h-full object-contain absolute inset-0 z-10`}
+          className={`w-full h-full object-contain absolute inset-0 z-20`}
         />
       )}
       
@@ -44,7 +44,7 @@ const MainVideo = React.memo(({ screenTrack, cameraTrack, isTeacher, user }) => 
       {cameraTrack && (
         <VideoTrack
           trackRef={cameraTrack}
-          className={`w-full h-full object-contain absolute inset-0 ${screenTrack ? 'opacity-0 pointer-events-none' : 'z-10'} ${isTeacher ? '-scale-x-100' : ''}`}
+          className={`w-full h-full object-contain absolute inset-0 ${screenTrack ? 'invisible -z-10 opacity-0 pointer-events-none' : 'z-10'} ${isTeacher ? '-scale-x-100' : ''}`}
         />
       )}
       <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-white/10 shadow-lg flex items-center gap-2">
