@@ -314,6 +314,7 @@ export default function WebRTCRoom() {
       token={token}
       serverUrl={import.meta.env.VITE_LIVEKIT_URL}
       connect={true}
+      options={{ adaptiveStream: true, dynacast: true }}
       className="flex flex-col h-screen bg-slate-900 text-white relative"
     >
       <ActiveStudentClassroom 
