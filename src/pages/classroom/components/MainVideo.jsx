@@ -6,7 +6,20 @@ const MainVideo = React.memo(({ screenTrack, cameraTrack, isTeacher, user }) => 
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [watermarkPos, setWatermarkPos] = useState({ top: '50%', left: '50%' });
 
+  // Randomize Watermark Position to prevent blurring
+  useEffect(() => {
+    if (isTeacher) return;
+    const interval = setInterval(() => {
+      setWatermarkPos({
+        top: `${Math.floor(Math.random() * 80) + 10}%`, // 10% to 90%
+        left: `${Math.floor(Math.random() * 80) + 10}%`
+      });
+    }, 4000); // Move every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [isTeacher]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -62,7 +75,10 @@ const MainVideo = React.memo(({ screenTrack, cameraTrack, isTeacher, user }) => 
       {/* Dynamic Forensic Watermark for Students */}
       {!isTeacher && user && (
         <div className="absolute inset-0 pointer-events-none z-[100] overflow-hidden">
-            <div className="absolute text-white/30 text-2xl font-black uppercase tracking-widest whitespace-nowrap animate-watermark mix-blend-overlay drop-shadow-md">
+            <div 
+              className="absolute text-white/30 text-xl md:text-2xl font-black uppercase tracking-widest whitespace-nowrap mix-blend-overlay drop-shadow-md transition-all duration-[4000ms] ease-in-out"
+              style={{ top: watermarkPos.top, left: watermarkPos.left, transform: 'translate(-50%, -50%)' }}
+            >
               {user?.email} • {user?._id?.substring(0, 8)}
             </div>
         </div>
