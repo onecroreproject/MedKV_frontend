@@ -84,33 +84,10 @@ export function OverviewTab({
           </div>
         </div>
 
-        {/* mini achievements streaks */}
-        <div className="lg:col-span-4 space-y-6 text-left">
-          <div className="pb-3.5 border-b border-slate-200">
-            <h3 className="text-[#0B1F4D] font-extrabold text-base uppercase tracking-wider">Telemetry Streaks</h3>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-md transition-all duration-300 ease-in-out transform-gpu will-change-transform">
-            <div className="flex items-center space-x-3.5">
-              <span className="text-3xl bg-slate-50 p-2.5 rounded-xl border border-accent/20">🔥</span>
-              <div>
-                <h4 className="text-[#0B1F4D] font-black text-sm">{STUDENT_PROFILE.streak}-Day Study Streak!</h4>
-                <p className="text-slate-500 text-[10.5px] font-light leading-relaxed mt-0.5">Clearing exams requires active diagnostic consistency.</p>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-accent/5 border border-accent/15 rounded-xl text-[10.5px] text-slate-600 leading-relaxed font-light">
-              🏆 <span className="font-extrabold text-accent">Award Badges Unlocked:</span> 
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['Physics Ace', 'DWI Master', 'ACR Expert'].map((badge) => (
-                  <span key={badge} className="bg-slate-100 text-slate-700 border border-accent/25 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shadow-sm">{badge}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
 
       </div>
+
+
 
     </div>
   );
