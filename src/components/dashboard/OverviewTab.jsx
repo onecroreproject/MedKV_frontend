@@ -27,20 +27,7 @@ export function OverviewTab({
               Continue your radiology learning journey with live mock boards, timed PACS diagnostic cases, and high-yield RCR mock exam series.
             </p>
 
-            {/* Miniature stats counter deck */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
-              {[
-                { label: 'Courses Enrolled', value: STUDENT_PROFILE.purchasedCourses, color: 'text-accent' },
-                { label: 'Streak Days', value: `${STUDENT_PROFILE.streak} days`, color: 'text-emerald-400' },
-                { label: 'Mock Test Score', value: `${STUDENT_PROFILE.examReadyScore}%`, color: 'text-blue-400' },
-                { label: 'Completed Lessons', value: STUDENT_PROFILE.completedLessons, color: 'text-white' }
-              ].map((item, idx) => (
-                <div key={idx} className="bg-[#050C1F]/90 border border-[#1C2C4E]/60 p-3 rounded-xl text-left shadow shadow-black/25">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.label}</div>
-                  <div className={`text-lg font-black mt-1 ${item.color}`}>{item.value}</div>
-                </div>
-              ))}
-            </div>
+
           </div>
 
           {/* Right Side vector diagnostics placeholder graphic */}
@@ -57,32 +44,6 @@ export function OverviewTab({
 
       </div>
 
-      {/* Progress Analytics deck with chart simulations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {[
-          { label: 'Learning Hours', value: `${STUDENT_PROFILE.hoursLearned} hrs`, desc: 'Total study telemetry', perc: 85, color: 'bg-[#C89B3C]' },
-          { label: 'Syllabus Mastered', value: `${STUDENT_PROFILE.overallProgress}%`, desc: 'RCR curriculum mapping', perc: STUDENT_PROFILE.overallProgress, color: 'bg-emerald-500' },
-          { label: 'Exam Readiness', value: `${STUDENT_PROFILE.examReadyScore}%`, desc: 'Average mock feedback', perc: STUDENT_PROFILE.examReadyScore, color: 'bg-blue-500' },
-          { label: 'Weekly Active Rate', value: '92%', desc: 'Consistency checklist', perc: 92, color: 'bg-indigo-500' }
-        ].map((stat, idx) => (
-          <div key={idx} className="bg-white border border-slate-200/80 rounded-2xl p-5 text-left shadow-sm relative overflow-hidden group hover:-translate-y-1 hover:scale-[1.01] hover:shadow-md transition-all duration-300 ease-in-out transform-gpu will-change-transform">
-            <div className="absolute top-0 left-0 h-1.5 w-full bg-slate-100" />
-            <div className={`absolute top-0 left-0 h-1.5 transition-all duration-1000 ${stat.color}`} style={{ width: `${stat.perc}%` }} />
-            
-            <h5 className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{stat.label}</h5>
-            <div className="text-2xl font-black mt-2 text-slate-800">{stat.value}</div>
-            <p className="text-[11px] text-slate-500 font-light mt-0.5">{stat.desc}</p>
-            
-            {/* Ring graphics simulator */}
-            <div className="mt-4 flex items-center space-x-3.5">
-              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full transition-all duration-1000 ${stat.color}`} style={{ width: `${stat.perc}%` }} />
-              </div>
-              <span className="text-[10px] text-slate-700 font-bold shrink-0">{stat.perc}%</span>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* Grid holding main tasks checklists & notification widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

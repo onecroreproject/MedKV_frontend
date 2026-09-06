@@ -18,13 +18,16 @@ import StudentResetPassword from './pages/auth/StudentResetPassword';
 import PolicyPage from './pages/PolicyPage';
 import { PlatformProvider } from './context/PlatformContext';
 import { getMe } from './services/userService';
-function MainApp({ userSession, setUserSession, view, setView }) {
+function MainApp({ userSession, setUserSession }) {
   const [initialCategory, setInitialCategory] = useState('All Categories');
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [dashboardTab, setDashboardTab] = useState('dashboard');
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const searchParams = new URLSearchParams(location.search);
+  const view = searchParams.get('view') || 'home';
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -34,52 +37,49 @@ function MainApp({ userSession, setUserSession, view, setView }) {
 
     if (enrollId) {
       setSelectedCourseId(enrollId);
-      setView('enrollment-review');
-      // Clear the query param from the URL to prevent loops
-      navigate('/', { replace: true });
-    } else if (courseIdParam && previewId) {
+      // Move to enrollment review and clear enrollId
+      navigate('?view=enrollment-review', { replace: true });
+    } else if (courseIdParam && previewId && view !== 'course-detail') {
       setSelectedCourseId(courseIdParam);
-      setView('course-detail');
-      // Don't clear it immediately so CourseDetailPage can read previewId
+      navigate(`?view=course-detail&courseId=${courseIdParam}&preview=${previewId}`, { replace: true });
     }
-  }, [location.search, navigate, setView]);
+  }, [location.search, navigate, view]);
 
   const handleNavigate = (targetView, param) => {
-    setView(targetView);
+    const params = new URLSearchParams(location.search);
+    params.set('view', targetView);
+    
     if (targetView === 'courses') {
-      if (param) {
-        setInitialCategory(param);
-      } else {
-        setInitialCategory('All Categories');
-      }
-    } else if (targetView === 'course-detail') {
-      if (param) {
-        setSelectedCourseId(param);
-      }
-    } else if (targetView === 'enrollment-review' || targetView === 'secure-payment' || targetView === 'payment-processing') {
-      if (param) {
-        setSelectedCourseId(param);
-      }
+      if (param) setInitialCategory(param);
+      else setInitialCategory('All Categories');
+    } else if (targetView === 'course-detail' || targetView === 'enrollment-review' || targetView === 'secure-payment' || targetView === 'payment-processing') {
+      if (param) setSelectedCourseId(param);
     } else if (targetView === 'dashboard') {
-      if (param) {
-        setDashboardTab(param);
-      }
+      if (param) setDashboardTab(param);
     }
+    
+    // Only keep view, preserve preview if it exists
+    const newParams = new URLSearchParams();
+    newParams.set('view', targetView);
+    if (params.has('preview')) newParams.set('preview', params.get('preview'));
+    if (params.has('courseId')) newParams.set('courseId', params.get('courseId'));
+
+    navigate(`?${newParams.toString()}`);
   };
 
   const handleLoginSuccess = (user) => {
     setUserSession(user);
     if (view === 'course-detail') {
-      setView('enrollment-review');
+      navigate('?view=enrollment-review');
     } else if (user.role === 'Student' || user.role === 'Radiology Student' || user.role === 'student') {
-      setView('dashboard');
+      navigate('?view=dashboard');
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUserSession(null);
-    setView('home');
+    navigate('?view=home');
   };
 
   return (
@@ -155,7 +155,6 @@ function MainApp({ userSession, setUserSession, view, setView }) {
 
 function App() {
   const [userSession, setUserSession] = useState(null);
-  const [view, setView] = useState('home');
   const [isLoadingSession, setIsLoadingSession] = useState(true);
 
   useEffect(() => {
@@ -205,7 +204,7 @@ function App() {
           <Route path="/webrtc/:roomId" element={<WebRTCRoom />} />
           <Route path="/studlive" element={<StudentLiveClassMock />} />
           <Route path="/policy/:type" element={<PolicyPage />} />
-          <Route path="/*" element={<MainApp userSession={userSession} setUserSession={setUserSession} view={view} setView={setView} />} />
+          <Route path="/*" element={<MainApp userSession={userSession} setUserSession={setUserSession} />} />
         </Routes>
       </Router>
     </PlatformProvider>

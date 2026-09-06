@@ -279,7 +279,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
               status: s.status === 'Scheduled' ? 'upcoming' : (s.status === 'Live Now' ? 'live' : 'completed'),
               zoomLink: s.zoomLink,
               meetingProvider: s.meetingProvider,
-              participants: Math.floor(Math.random() * 50) + 10,
+              participants: s.liveParticipants || 0,
               emoji: '📡',
               totalMin: s.duration,
               fullStartDateTime,
@@ -390,7 +390,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
     };
 
     fetchSessionsAndRecordings();
-  }, []);
+  }, [ENROLLED_COURSES, liveClassUpdateTrigger]);
 
   // Tick the live session timer
   useEffect(() => {
@@ -471,16 +471,6 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
   const navigate = useNavigate(); // Need to import this at top
 
   const handleJoinSession = (cls) => {
-    if (cls.meetingProvider === 'webrtc') {
-      navigate(`/webrtc/${cls.id || cls.roomId}`);
-      return;
-    }
-
-    if (!cls.zoomLink) {
-      setJoinMessage({ type: 'error', text: 'Zoom link has not been provided yet.' });
-      return;
-    }
-
     if (cls.fullStartDateTime) {
       const now = new Date();
       if (now < cls.fullStartDateTime) {
@@ -493,8 +483,33 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
       }
     }
 
+    if (cls.meetingProvider === 'webrtc') {
+      navigate(`/webrtc/${cls.id || cls.roomId}`);
+      return;
+    }
+
+    if (!cls.zoomLink) {
+      setJoinMessage({ type: 'error', text: 'Zoom link has not been provided yet.' });
+      return;
+    }
+
     // Fallback if time has passed or no fullStartDateTime
     window.open(extractUrl(cls.zoomLink), '_blank');
+  };
+
+  const getCountdownStr = (fullStartDateTime) => {
+    if (!fullStartDateTime) return 'Soon';
+    const diffMs = fullStartDateTime - new Date();
+    if (diffMs <= 0) return 'Any moment now';
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
+    
+    const parts = [];
+    if (diffHrs > 0) parts.push(`${diffHrs}h`);
+    if (diffMins > 0) parts.push(`${diffMins}m`);
+    parts.push(`${diffSecs}s`);
+    return parts.join(' ');
   };
 
   return (
@@ -752,7 +767,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center space-x-2">
                     <span className="text-emerald-500 text-sm">⏳</span>
                     <div>
-                      <div className="text-emerald-700 text-[10px] font-black uppercase tracking-wider">Starts in {cls.countdown}</div>
+                      <div className="text-emerald-700 text-[10px] font-black uppercase tracking-wider">Starts in {getCountdownStr(cls.fullStartDateTime)}</div>
                       <div className="text-emerald-600 text-[9px] font-medium">Add to calendar</div>
                     </div>
                   </div>
@@ -968,55 +983,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
         </div>
       </section>
 
-      {/* ── 7. FACULTY SESSIONS ───────────────────────────────────────────── */}
-      <section className="space-y-5">
-        <div className="pb-3 border-b border-slate-200">
-          <h2 className="text-[#0B1F4D] font-black text-xl tracking-tight uppercase">Faculty Sessions</h2>
-          <p className="text-slate-500 text-xs mt-0.5 font-light">Your mentors and their upcoming session count</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {FACULTY.map(f => (
-            <div key={f.name} className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col items-center text-center shadow-sm hover:-translate-y-1 hover:shadow-md hover:border-accent/30 transition-all duration-300 group">
-              <div className="h-16 w-16 rounded-2xl bg-[#0B1F4D] border-2 border-accent/20 flex items-center justify-center text-3xl mb-3 shadow-md group-hover:scale-105 transition-transform duration-300">
-                {f.avatar}
-              </div>
-              <div className="text-[9px] font-black text-accent uppercase tracking-widest mb-1">{f.tag}</div>
-              <h4 className="text-[#0B1F4D] font-black text-sm uppercase tracking-wide">{f.name}</h4>
-              <p className="text-slate-400 text-[10px] font-medium mt-0.5 leading-relaxed">{f.specialization}</p>
-              <div className="mt-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full">
-                {f.upcomingSessions} Upcoming Sessions
-              </div>
-              <button className="mt-3 w-full border-2 border-[#0B1F4D] text-[#0B1F4D] hover:bg-[#0B1F4D] hover:text-white font-black text-[10px] uppercase tracking-widest py-2 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
-                View Schedule
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ── 8. LEARNING RESOURCES ─────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-[#030919] to-[#0B1F4D] rounded-3xl p-4 sm:p-8 border border-accent/15 shadow-xl space-y-5">
-        <div className="pb-3 border-b border-white/10">
-          <h2 className="text-white font-black text-xl tracking-tight uppercase">Learning Resources</h2>
-          <p className="text-slate-400 text-xs mt-0.5 font-light">Quick access to session materials and references</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {RESOURCES.map((res, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center space-x-4 hover:bg-white/10 hover:border-accent/30 transition-all duration-300 group cursor-pointer">
-              <div className="h-11 w-11 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
-                {res.icon}
-              </div>
-              <div className="flex-grow min-w-0">
-                <h5 className="text-white font-black text-xs uppercase tracking-wide truncate">{res.title}</h5>
-                <p className="text-slate-400 text-[10px] font-light mt-0.5 truncate">{res.desc}</p>
-              </div>
-              <button className="shrink-0 border border-accent/30 text-accent hover:bg-accent hover:text-[#050E24] font-black text-[9px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all duration-300 active:scale-95 cursor-pointer">
-                {res.action}
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
 
 
 

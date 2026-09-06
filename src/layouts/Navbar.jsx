@@ -96,6 +96,12 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
   const [subMenus, setSubMenus] = useState(INITIAL_SUB_MENUS);
   const [courses, setCourses] = useState([]);
   const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [menuHidden, setMenuHidden] = useState(false);
+
+  const hideMenuTemporarily = () => {
+    setMenuHidden(true);
+    setTimeout(() => setMenuHidden(false), 150);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -229,7 +235,7 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
 
                   {/* Dropdown Menu Sub-list (Smooth fade & scale spring transition) */}
                   {hasSubMenu && link.label === 'Courses' ? (
-                    <div className="absolute top-[90%] left-1/2 -translate-x-1/2 w-[700px] bg-[#0A1733] border border-accent/20 rounded-2xl shadow-2xl opacity-0 invisible scale-95 origin-top group-hover/nav:opacity-100 group-hover/nav:visible group-hover/nav:scale-100 transition-all duration-300 ease-out z-50 flex overflow-hidden">
+                    <div className={`absolute top-[90%] left-1/2 -translate-x-1/2 w-[700px] bg-[#0A1733] border border-accent/20 rounded-2xl shadow-2xl opacity-0 invisible scale-95 origin-top group-hover/nav:opacity-100 group-hover/nav:visible group-hover/nav:scale-100 transition-all duration-300 ease-out z-50 flex overflow-hidden ${menuHidden ? '!hidden' : ''}`}>
                       {/* Left: Categories */}
                       <div className="w-[45%] bg-[#081229] p-5 flex flex-col">
                         <div className="text-accent text-[11px] font-extrabold uppercase tracking-[0.15em] mb-4 px-3 opacity-90">Categories</div>
@@ -244,6 +250,7 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
                                 onClick={(e) => {
                                   if (onViewChange) {
                                     e.preventDefault();
+                                    hideMenuTemporarily();
                                     onViewChange('courses', sub.label);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }
@@ -266,6 +273,7 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
                             onClick={(e) => { 
                               e.preventDefault(); 
                               if (onViewChange) {
+                                hideMenuTemporarily();
                                 onViewChange('courses', 'All Categories');
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                               }
@@ -296,6 +304,7 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
                                 onClick={(e) => {
                                   e.preventDefault();
                                   if (onViewChange) {
+                                    hideMenuTemporarily();
                                     onViewChange('course-detail', course._id);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }

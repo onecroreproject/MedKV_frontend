@@ -250,6 +250,12 @@ export default function WebRTCRoom() {
             <div className="flex flex-col items-center">
               <h1 className="text-2xl font-bold mb-4 text-center">Please wait, the meeting host will let you in soon.</h1>
               <div className="w-12 h-12 border-4 border-slate-600 border-t-primary rounded-full animate-spin my-6"></div>
+              <button 
+                onClick={() => navigate(-1)} 
+                className="mt-4 px-6 py-2 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           ) : (
             <>
