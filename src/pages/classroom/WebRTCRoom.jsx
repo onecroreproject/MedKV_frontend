@@ -21,7 +21,59 @@ import {
   useLocalParticipant,
   useParticipants
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import {
+  Track,
+  VideoPresets,
+  AudioPresets,
+  VideoCodec,
+} from 'livekit-client';
+
+// ─── Low-latency LiveKit room options ────────────────────────────────────────
+// These are shared between host and participant instances.
+const LOW_LATENCY_OPTIONS = {
+  // Enable adaptive bitrate (adjusts to network conditions per subscriber)
+  adaptiveStream: true,
+  // Dynacast: only encode/send layers that subscribers actually need
+  dynacast: true,
+  // Stop local tracks when unpublished so the OS releases camera/mic immediately
+  stopLocalTrackOnUnpublish: true,
+  // Reconnect quickly without full renegotiation
+  reconnectPolicy: {
+    nextRetryDelayInMs: (context) => {
+      if (context.retryCount === 0) return 300;
+      if (context.retryCount < 4)  return 1000 * context.retryCount;
+      return null; // give up after 4 retries
+    },
+  },
+  // Audio publish defaults: Opus with all processing enabled for lowest latency
+  audioCaptureDefaults: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  },
+  audioOutput: {
+    deviceId: 'default',
+  },
+  publishDefaults: {
+    // Use Opus for audio — lowest latency codec
+    audioPreset: AudioPresets.music,
+    // Prefer VP8 (widely supported) with simulcast for adaptive quality
+    videoCodec: 'vp8',
+    simulcast: true,
+    // Host broadcasts at up to 720p; participants at 360p
+    videoEncoding: {
+      maxBitrate: 1_500_000,
+      maxFramerate: 30,
+    },
+    // Screen share: high quality, no simulcast needed
+    screenShareEncoding: {
+      maxBitrate: 3_000_000,
+      maxFramerate: 30,
+    },
+    dtx: true,   // Discontinuous Transmission — saves bandwidth during silence
+    red: true,   // Redundant audio packets — recovers from packet loss
+  },
+};
 
 const playSound = (type) => {
   // same implementation
@@ -98,8 +150,8 @@ export default function WebRTCRoom() {
   }, [user]);
 
   const [lobbyStream, setLobbyStream] = useState(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);     // mic OFF by default
+  const [isVideoOff, setIsVideoOff] = useState(true); // camera OFF by default
   const [mediaError, setMediaError] = useState('');
 
   const [hasJoined, setHasJoined] = useState(false);
@@ -140,12 +192,18 @@ export default function WebRTCRoom() {
     const initMedia = async () => {
       try {
         const videoConstraints = isTeacher 
-          ? { width: { ideal: 640, max: 640 }, height: { ideal: 480, max: 480 }, frameRate: { ideal: 15, max: 15 } }
-          : { width: { ideal: 320, max: 320 }, height: { ideal: 240, max: 240 }, frameRate: { ideal: 10, max: 10 } };
+          ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
+          : { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24 } };
 
         const userStream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraints,
-          audio: true
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000,
+            channelCount: 1,
+          }
         });
 
         setLobbyStream(userStream);
@@ -212,10 +270,7 @@ export default function WebRTCRoom() {
       playSound('accept');
       setIsWaiting(false);
       
-      // Stop lobby stream
-      if (lobbyStream) lobbyStream.getTracks().forEach(t => t.stop());
-
-      // Fetch Token
+      // Fetch Token FIRST — then stop lobby (avoids camera/mic gap)
       try {
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/live-classes/token/livekit`, {
           roomId,
@@ -225,6 +280,8 @@ export default function WebRTCRoom() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         
+        // Stop lobby AFTER token is ready so LiveKit picks up immediately
+        if (lobbyStream) lobbyStream.getTracks().forEach(t => t.stop());
         setToken(response.data.token);
       } catch (err) {
         console.error("Failed to fetch LiveKit token", err);
@@ -320,7 +377,7 @@ export default function WebRTCRoom() {
       token={token}
       serverUrl={import.meta.env.VITE_LIVEKIT_URL}
       connect={true}
-      options={{ adaptiveStream: true, dynacast: true }}
+      options={LOW_LATENCY_OPTIONS}
       className="flex flex-col h-screen bg-slate-900 text-white relative"
     >
       <ActiveStudentClassroom 
@@ -328,14 +385,15 @@ export default function WebRTCRoom() {
          roomId={roomId} 
          isTeacher={isTeacher} 
       />
-      <RoomAudioRenderer />
+      {/* RoomAudioRenderer: renders all remote audio tracks with zero-delay */}
+      <RoomAudioRenderer volume={1.0} />
     </LiveKitRoom>
   );
 }
 
 function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const navigate = useNavigate();
-  const { localParticipant } = useLocalParticipant();
+  const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
   const participants = useParticipants();
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: false });
 
@@ -406,6 +464,13 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
     };
 
   }, [user._id, localParticipant]);
+
+  // Ensure mic and camera are disabled immediately on room join
+  useEffect(() => {
+    if (!localParticipant) return;
+    localParticipant.setMicrophoneEnabled(false);
+    localParticipant.setCameraEnabled(false);
+  }, [localParticipant?.sid]); // runs once when localParticipant first connects
 
   const toggleMute = useCallback(() => {
     localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled);
@@ -600,9 +665,9 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
       {/* Control Bar */}
       <ClassroomControls 
         isTeacher={isTeacher}
-        isMuted={!localParticipant.isMicrophoneEnabled}
-        isVideoOff={!localParticipant.isCameraEnabled}
-        isScreenSharing={localParticipant.isScreenShareEnabled}
+        isMuted={!isMicrophoneEnabled}
+        isVideoOff={!isCameraEnabled}
+        isScreenSharing={isScreenShareEnabled}
         isRecording={isRecording}
         isHandRaised={isHandRaised}
         chatOpen={chatOpen}
