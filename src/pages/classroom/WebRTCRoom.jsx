@@ -25,7 +25,6 @@ import {
   Track,
   VideoPresets,
   AudioPresets,
-  VideoCodec,
 } from 'livekit-client';
 
 // ─── Low-latency LiveKit room options ────────────────────────────────────────
