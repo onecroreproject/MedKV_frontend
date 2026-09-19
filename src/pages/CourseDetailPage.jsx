@@ -84,6 +84,8 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             originalPrice: data.originalPrice || null,
             previewVideoUrl: data.previewVideoUrl || null,
             imageType: getFallbackImage(data.category?.name || data.category),
+            thumbnail: data.thumbnail || null,
+            banner: data.banner || null,
             modules: data.modules || [],
             learningOutcomes: data.learningOutcomes || [],
             liveSessions: data.liveSessions || [],
@@ -267,7 +269,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             <div className="lg:col-span-8 space-y-10">
               
               {/* 2. COURSE HERO SECTION */}
-              <section className="bg-gradient-to-br from-[#030919] to-[#0A1733] text-white p-6 sm:p-10 rounded-3xl border border-accent/20 relative overflow-hidden shadow-xl text-left">
+              <section 
+                className="bg-gradient-to-br from-[#030919] to-[#0A1733] text-white p-6 sm:p-10 rounded-3xl border border-accent/20 relative overflow-hidden shadow-xl text-left"
+                style={{
+                  backgroundImage: course.banner && course.banner !== 'no-photo.jpg' ? `linear-gradient(to bottom right, rgba(3, 9, 25, 0.9), rgba(10, 23, 51, 0.85)), url(${getFullUrl(course.banner)})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
                 {/* Radial glow details */}
                 <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
                 
@@ -372,25 +381,17 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             </section>
 
             {/* 3. COURSE OVERVIEW SECTION */}
-            <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-4 shadow-sm">
-              <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
-                About This Course
-              </h3>
-              <div className="text-blue-gray text-xs sm:text-sm leading-relaxed font-light space-y-4">
-                <p>
-                  This specialist radiology preparation program is designed specifically to help postgraduates, clinical fellows, and residents master the highly challenging syllabus components of the **Royal College of Radiologists (RCR) FRCR** and local medical boards (**DNB, MDRD, DMRD**).
-                </p>
-                <p>
-                  Guided by expert active radiology advisors, candidates are introduced to an intense case-based curriculum. Unlike traditional abstract textbooks, you will learn to master radiological parameters by actively scrolling through cross-sectional scan files.
-                </p>
-                <div className="p-4 bg-soft-gray border-l-4 border-accent rounded-r-xl my-4 text-xs font-medium text-primary">
-                  🧠 "Bridging the gap between clearing your theoretical board papers and writing highly structured, confident, and professional clinical diagnostic reads under acute hospital guidelines."
-                </div>
-                <p>
-                  By completing mock boards, timed PACS reporting drills, and participating in weekly Zoom hot seat sessions, you will refine your exam pacing and diagnostic clinical logic to secure top scores.
-                </p>
-              </div>
-            </section>
+            {course.description && (
+              <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-4 shadow-sm">
+                <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
+                  About This Course
+                </h3>
+                <div 
+                  className="text-blue-gray text-xs sm:text-sm leading-relaxed font-light space-y-4 quill-content"
+                  dangerouslySetInnerHTML={{ __html: course.description }}
+                />
+              </section>
+            )}
 
             {/* 4. WHAT YOU WILL LEARN SECTION */}
             {course.learningOutcomes?.length > 0 && (
@@ -417,41 +418,41 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 5. COURSE CURRICULUM SECTION */}
-            <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-primary font-black text-xl tracking-wide uppercase">
-                  Course Curriculum
-                </h3>
-                <span className="text-blue-gray text-xs font-semibold">
-                  {course.modules?.length || 0} Modules
-                </span>
-              </div>
+            {course.modules?.length > 0 && (
+              <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-primary font-black text-xl tracking-wide uppercase">
+                    Course Curriculum
+                  </h3>
+                  <span className="text-blue-gray text-xs font-semibold">
+                    {course.modules.length} Modules
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {course.modules?.length === 0 ? (
-                  <p className="text-gray-500 text-sm col-span-2">No modules have been added to this course yet.</p>
-                ) : course.modules?.map((mod, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 border border-slate-200 rounded-xl bg-soft-gray/30 flex items-center space-x-3 text-sm"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-xs shrink-0">
-                      {idx + 1}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {course.modules.map((mod, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4 border border-slate-200 rounded-xl bg-soft-gray/30 flex items-center space-x-3 text-sm"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-xs shrink-0">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-primary uppercase tracking-wide">
+                          {mod.title}
+                        </h4>
+                        {mod.description && (
+                          <p className="text-blue-gray text-[11px] font-normal leading-relaxed mt-0.5">
+                            {mod.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-primary uppercase tracking-wide">
-                        {mod.title}
-                      </h4>
-                      {mod.description && (
-                        <p className="text-blue-gray text-[11px] font-normal leading-relaxed mt-0.5">
-                          {mod.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* 6. LIVE CLASSES & RECORDINGS SECTION */}
             {course.liveSessions?.length > 0 && (

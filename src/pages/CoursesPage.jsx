@@ -20,7 +20,14 @@ const getFallbackImage = (category) => {
   return 'neuro';
 };
 
-
+const getFullUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+    : 'http://localhost:5000';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userSession }) {
   // Navigation and Authentication States
@@ -415,6 +422,9 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                 >
                   {/* Thumbnail Banner with Discount/Status Overlay */}
                   <div className="h-52 bg-gradient-to-br from-[#0B1F4D] to-[#0A1733] relative p-5 flex flex-col justify-between overflow-hidden">
+                    {course.thumbnail && course.thumbnail !== 'no-photo.jpg' && (
+                       <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
+                    )}
                     {/* Visual abstract clinical wave */}
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,155,60,0.1)_0%,transparent_70%)] pointer-events-none" />
 
