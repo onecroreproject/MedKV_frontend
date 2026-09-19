@@ -129,7 +129,7 @@ export const FEATURED_COURSES = [
 
 export const LIVE_CLASSES_FEATURES = [
   {
-    title: 'Zoom Live Classes',
+    title: 'Live Classes',
     description: 'Join real-time webinars with interactive board mock discussions and clinical case hot seats.'
   },
   {
@@ -281,7 +281,7 @@ export const ACADEMY_STATISTICS = [
 export const FAQS = [
   {
     question: 'How are the live viva-voce mock sessions conducted?',
-    answer: 'Our live mock sessions are held weekly via private high-bandwidth Zoom integrations. Students are invited to the "hot seat" where they analyze un-labeled scans under exam-standard timers while a mentor provides real-time structured critiques.'
+    answer: 'Our live mock sessions are held weekly via private high-bandwidth Live Class integrations. Students are invited to the "hot seat" where they analyze un-labeled scans under exam-standard timers while a mentor provides real-time structured critiques.'
   },
   {
     question: 'Can I access the course resources on my mobile phone?',

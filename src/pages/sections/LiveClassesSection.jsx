@@ -18,7 +18,7 @@ export default function LiveClassesSection() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
               </span>
-              <span>ZOOM LIVE WEBINAR</span>
+              <span>LIVE WEBINAR</span>
             </div>
 
             {/* Simulated Live PACS Workstation / Screen Visual Overlay - grows to fill height */}

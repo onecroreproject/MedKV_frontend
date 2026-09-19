@@ -167,11 +167,11 @@ const RESOURCES = [
 ];
 
 const FAQS = [
-  { q: 'How do I join a live class?', a: 'Click the "Join Session" button on your upcoming session card. This redirects you to the secure Zoom learning portal automatically authenticated with your student credentials.' },
+  { q: 'How do I join a live class?', a: 'Click the "Join Session" button on your upcoming session card. This redirects you to the secure Live Class portal automatically authenticated with your student credentials.' },
   { q: 'Will recordings be available after the session?', a: 'Yes. All live sessions are recorded in HD and published to your "Recorded Sessions" library within 2 hours of the session ending.' },
   { q: 'How long can I access missed session recordings?', a: 'Missed class recordings remain accessible for the duration of your course validity.' },
-  { q: 'Can I join from a mobile device?', a: 'Absolutely. Our platform and Zoom integration are fully optimised for mobile. Install the Zoom app on iOS or Android and tap "Join Session" to attend.' },
-  { q: 'Is Zoom required to join?', a: 'Yes, a valid Zoom account (free or paid) is required. We recommend installing the desktop client for the best interactive experience during viva sessions.' },
+  { q: 'Can I join from a mobile device?', a: 'Absolutely. Our platform and Live Class integration are fully optimised for mobile.' },
+  { q: 'Is a special app required to join?', a: 'We recommend installing the desktop client for the best interactive experience during viva sessions.' },
   { q: 'What if I miss a session entirely?', a: 'You can access the full HD recording under "Missed Sessions" or "Recordings Available" within 24 hours. The recording will include all case discussions and faculty Q&A.' },
 ];
 
@@ -182,7 +182,7 @@ const NOTIFICATIONS = [
   { icon: '🧑‍⚕️', text: 'Dr. Sam Reefath updated session notes for FRCR 2A', time: 'Yesterday', type: 'update' },
 ];
 
-// ─── Helper Components ────────────────────────────────────────────────────────
+// ─── Helper Components ────────────────────────────────────────────────        
 function StatusBadge({ status }) {
   if (status === 'live') return (
     <span className="flex items-center space-x-1.5 bg-rose-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md shadow-rose-500/30 animate-pulse">
@@ -489,7 +489,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
     }
 
     if (!cls.zoomLink) {
-      setJoinMessage({ type: 'error', text: 'Zoom link has not been provided yet.' });
+      setJoinMessage({ type: 'error', text: 'Live Class link has not been provided yet.' });
       return;
     }
 
@@ -757,7 +757,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
                   <div className="flex items-center space-x-1.5"><span>👥</span><span>{cls.participants} students</span></div>
                   <div className="flex items-center space-x-1.5">
                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${cls.meetingProvider === 'webrtc' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {cls.meetingProvider === 'webrtc' ? 'WebRTC' : 'Zoom'}
+                      {cls.meetingProvider === 'webrtc' ? 'WebRTC' : 'Live Class'}
                     </span>
                   </div>
                 </div>

@@ -3,6 +3,15 @@ import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { getPublishedCourses } from '../../services/courseService';
 import { useNavigate } from 'react-router-dom';
+
+const stripHtml = (html) => {
+  if (!html) return '';
+  let text = html.replace(/<[^>]*>?/gm, ' '); // Replace tags with space so words don't merge
+  text = text.replace(/&nbsp;/g, ' '); // Replace non-breaking spaces
+  text = text.replace(/\s\s+/g, ' '); // Collapse multiple spaces
+  return text.trim();
+};
+
 export default function CoursesSection({ onViewChange }) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
@@ -32,7 +41,11 @@ export default function CoursesSection({ onViewChange }) {
   const filteredCourses = courses.filter(course =>
     course.title?.toLowerCase().includes(courseFilter.toLowerCase()) ||
     course.description?.toLowerCase().includes(courseFilter.toLowerCase())
-  );
+  ).sort((a, b) => {
+    if (a.isImportant && !b.isImportant) return -1;
+    if (!a.isImportant && b.isImportant) return 1;
+    return 0;
+  });
 
   // Manual Slider Controls
   const nextSlide = () => {
@@ -210,7 +223,7 @@ export default function CoursesSection({ onViewChange }) {
                     {course.title}
                   </h4>
                   <p className="text-blue-gray text-xs leading-relaxed font-normal line-clamp-3">
-                    {course.description}
+                    {stripHtml(course.description)}
                   </p>
                 </div>
 

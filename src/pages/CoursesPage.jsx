@@ -20,6 +20,14 @@ const getFallbackImage = (category) => {
   return 'neuro';
 };
 
+const stripHtml = (html) => {
+  if (!html) return '';
+  let text = html.replace(/<[^>]*>?/gm, ' '); // Replace tags with space so words don't merge
+  text = text.replace(/&nbsp;/g, ' '); // Replace non-breaking spaces
+  text = text.replace(/\s\s+/g, ' '); // Collapse multiple spaces
+  return text.trim();
+};
+
 const getFullUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
@@ -103,6 +111,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
       ...c,
       id: c._id,
       slug: c.slug || c._id,
+      isImportant: c.isImportant || false,
       title: c.title,
       category: c.category?.name || c.category,
       description: c.description,
@@ -139,6 +148,10 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
 
       return matchesSearch && matchesCategory && matchesDifficulty && matchesPrice;
     }).sort((a, b) => {
+      // Always put important courses at the absolute top
+      if (a.isImportant && !b.isImportant) return -1;
+      if (!a.isImportant && b.isImportant) return 1;
+
       if (sortBy === 'Latest') return b.lessons - a.lessons; // Mock latest using lesson count
       if (sortBy === 'Popular') return parseInt(b.students) - parseInt(a.students);
       if (sortBy === 'Top Rated') return b.rating - a.rating;
@@ -502,7 +515,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                         {course.title}
                       </h3>
                       <p className="text-blue-gray text-[12px] leading-relaxed font-light line-clamp-3">
-                        {course.description}
+                        {stripHtml(course.description)}
                       </p>
                     </div>
 
@@ -805,7 +818,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
               },
               {
                 q: 'How are the live board viva mock classes scheduled?',
-                a: 'Live viva-voce board preparations are held twice weekly via private, high-bandwidth Zoom webinars. Timing is staggered (Batch A & Batch B) to accommodate residents working global hospital shift schedules.'
+                a: 'Live viva-voce board preparations are held twice weekly via private, high-bandwidth Live Classes. Timing is staggered (Batch A & Batch B) to accommodate residents working global hospital shift schedules.'
               },
               {
                 q: 'Do you offer institution seats for university residency programs?',

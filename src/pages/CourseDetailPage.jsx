@@ -30,6 +30,26 @@ const getFullUrl = (url) => {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
+const FEATURE_MAP = {
+  live: { text: 'Live Classes & Vivas', icon: '📡' },
+  recorded: { text: 'Recorded HD Session archives', icon: '📹' },
+  notes: { text: 'Notes & PDFs', icon: '📄' },
+  exams: { text: 'Exam-Calibrated mock assessments', icon: '⏱️' },
+  cert: { text: 'Accredited clinical Certificate', icon: '🎓' },
+  cases: { text: 'Interactive PACS DICOM spotters', icon: '🩻' },
+  daily: { text: 'Daily Learning Access', icon: '📅' },
+  download: { text: 'Downloadable Resources', icon: '💾' }
+};
+
+const DEFAULT_FEATURES = [
+  { text: 'Weekly Live Vivas mock sessions', icon: '📡' },
+  { text: 'Recorded HD Session archives (7d replays)', icon: '📹' },
+  { text: 'Interactive PACS DICOM scan spotters', icon: '🩻' },
+  { text: 'Exam-Calibrated mock assessments & MCQs', icon: '⏱️' },
+  { text: 'Accredited clinical Certificate generated', icon: '🎓' },
+  { text: 'Optimized Mobile & Tablet access portal', icon: '📱' }
+];
+
 export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSession }) {
   // Navigation and Authentication States
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -209,6 +229,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
     }
   };
 
+  const validLearningOutcomes = course?.learningOutcomes?.filter(o => o.title?.replace(/<[^>]*>?/gm, '').trim() || o.desc?.replace(/<[^>]*>?/gm, '').trim()) || [];
+  const validModules = course?.modules?.filter(m => m.title?.replace(/<[^>]*>?/gm, '').trim()) || [];
+  const validLiveSessions = course?.liveSessions?.filter(s => s.title?.replace(/<[^>]*>?/gm, '').trim()) || [];
+  const validPacsCases = course?.pacsCases?.filter(p => p.title?.replace(/<[^>]*>?/gm, '').trim()) || [];
+  const validMockExams = course?.mockExams?.filter(m => m.title?.replace(/<[^>]*>?/gm, '').trim()) || [];
+  const validTestimonials = course?.testimonials?.filter(t => t.name?.replace(/<[^>]*>?/gm, '').trim() || t.review?.replace(/<[^>]*>?/gm, '').trim()) || [];
+  const validFaqs = course?.faqs?.filter(f => f.q?.replace(/<[^>]*>?/gm, '').trim()) || [];
+
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden relative">
       
@@ -307,14 +335,6 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                 <h1 className="text-white font-black text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-tight">
                   {course.title}
                 </h1>
-                
-                <h3 className="text-accent font-extrabold text-sm sm:text-base tracking-wide uppercase">
-                  {course.tagline}
-                </h3>
-
-                <p className="text-slate-300 text-xs sm:text-sm font-light leading-relaxed max-w-3xl">
-                  {course.description}
-                </p>
 
                 {/* Rating & stats metrics */}
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 text-xs text-slate-300 font-medium">
@@ -394,14 +414,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 4. WHAT YOU WILL LEARN SECTION */}
-            {course.learningOutcomes?.length > 0 && (
+            {validLearningOutcomes.length > 0 && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
                   What You Will Learn
                 </h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4.5">
-                  {course.learningOutcomes.map((outcome, idx) => (
+                  {validLearningOutcomes.map((outcome, idx) => (
                     <div
                       key={idx}
                       className="p-4 bg-soft-gray border border-slate-200 rounded-2xl flex items-start space-x-3.5 hover:border-accent/30 hover:bg-white transition-all duration-300 group cursor-pointer"
@@ -418,19 +438,19 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 5. COURSE CURRICULUM SECTION */}
-            {course.modules?.length > 0 && (
+            {validModules.length > 0 && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <h3 className="text-primary font-black text-xl tracking-wide uppercase">
                     Course Curriculum
                   </h3>
                   <span className="text-blue-gray text-xs font-semibold">
-                    {course.modules.length} Modules
+                    {validModules.length} Modules
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {course.modules.map((mod, idx) => (
+                  {validModules.map((mod, idx) => (
                     <div
                       key={idx}
                       className="p-4 border border-slate-200 rounded-xl bg-soft-gray/30 flex items-center space-x-3 text-sm"
@@ -455,14 +475,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 6. LIVE CLASSES & RECORDINGS SECTION */}
-            {course.liveSessions?.length > 0 && (
+            {validLiveSessions.length > 0 && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
-                  Zoom Live Classes & Recorded Replays
+                  Live Classes & Recorded Replays
                 </h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {course.liveSessions.map((session, idx) => {
+                  {validLiveSessions.map((session, idx) => {
                     const isLive = session.sessionType === 'Live';
                     return (
                       <div key={idx} className="bg-soft-gray border border-slate-200 p-5 rounded-2xl flex flex-col justify-between h-full relative overflow-hidden text-xs">
@@ -505,7 +525,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                             onClick={() => navigate('/student/login')}
                             className="w-full text-[10px] py-2.5 uppercase tracking-widest font-black"
                           >
-                            {isLive ? 'Attend via Zoom' : 'Access Recorded Replays'}
+                            {isLive ? 'Attend Live Class' : 'Access Recorded Replays'}
                           </Button>
                         </div>
                       </div>
@@ -516,14 +536,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 7. CASE-BASED LEARNING SECTION */}
-            {course.pacsCases?.length > 0 && (
+            {validPacsCases.length > 0 && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
                   Radiology PACS Case preview Spotters
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {course.pacsCases.map((item, idx) => (
+                  {validPacsCases.map((item, idx) => (
                     <div
                       key={idx}
                       className="border border-slate-200 rounded-2xl overflow-hidden bg-soft-gray hover:border-accent/40 group cursor-pointer transition-all text-xs text-left shadow-sm flex flex-col justify-between"
@@ -562,14 +582,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 8. MOCK EXAMS & ASSESSMENTS SECTION */}
-            {course.mockExams?.length > 0 && (
+            {validMockExams.length > 0 && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
                   Mock Board Exams & Assessments
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {course.mockExams.map((test, idx) => (
+                  {validMockExams.map((test, idx) => (
                     <div
                       key={idx}
                       className="p-5 border border-slate-200 rounded-2xl flex flex-col justify-between bg-soft-gray text-xs text-left shadow-sm h-full"
@@ -640,7 +660,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             </section>
 
             {/* 10. STUDENT REVIEWS & TESTIMONIALS */}
-            {course.testimonials?.length > 0 && (
+            {validTestimonials.length > 0 && (
               <section className="bg-gradient-to-r from-[#030919] to-[#0A1733] text-white p-6 sm:p-8 rounded-3xl border border-accent/20 text-left space-y-6 shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 text-8xl text-accent/5 font-serif pointer-events-none">“</div>
                 
@@ -652,7 +672,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                 </div>
 
                 <div className="space-y-6 relative z-10 text-xs">
-                  {course.testimonials.map((test, idx) => (
+                  {validTestimonials.map((test, idx) => (
                     <div key={idx} className="bg-white/5 border border-white/10 p-5 rounded-2xl">
                       <div className="flex items-center space-x-3 mb-3">
                         <span className="text-2xl bg-white/10 p-1.5 rounded-full border border-white/10 flex items-center justify-center h-10 w-10">🧑‍⚕️</span>
@@ -671,14 +691,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             )}
 
             {/* 11. FAQ SECTION */}
-            {course.faqs?.length > 0 && (
+            {validFaqs.length > 0 && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
                   Frequently Asked Questions
                 </h3>
 
                 <div className="space-y-3.5">
-                  {course.faqs.map((faq, idx) => {
+                  {validFaqs.map((faq, idx) => {
                     const isOpen = openFaq === idx;
 
                     return (
@@ -734,19 +754,19 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                 <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">This Course Includes:</div>
                 
                 <div className="space-y-2.5 font-medium text-slate-300 text-[11px]">
-                  {[
-                    { text: 'Weekly Zoom Live Vivas mock sessions', icon: '📡' },
-                    { text: 'Recorded HD Session archives (7d replays)', icon: '📹' },
-                    { text: 'Interactive PACS DICOM scan spotters', icon: '🩻' },
-                    { text: 'Exam-Calibrated mock assessments & MCQs', icon: '⏱️' },
-                    { text: 'Accredited clinical Certificate generated', icon: '🎓' },
-                    { text: 'Optimized Mobile & Tablet access portal', icon: '📱' }
-                  ].map((feat, idx) => (
+                  {((course.features && course.features.length > 0)
+                    ? course.features.map(fId => FEATURE_MAP[fId]).filter(Boolean)
+                    : []
+                  ).map((feat, idx) => (
                     <div key={idx} className="flex items-center space-x-2.5">
                       <span>{feat.icon}</span>
                       <span>{feat.text}</span>
                     </div>
                   ))}
+                  {/* DEBUG INFO TO REMOVE LATER */}
+                  <div className="text-red-500 text-xs mt-2 font-mono">
+                    DEBUG features array: {JSON.stringify(course.features)}
+                  </div>
                 </div>
               </div>
 
