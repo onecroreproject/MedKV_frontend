@@ -34,9 +34,12 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
   const [coursesList, setCoursesList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { hasPurchased } = usePurchase();
+  const { hasPurchased, refreshPurchases } = usePurchase();
 
   useEffect(() => {
+    // Always refresh enrollment status when courses page loads
+    if (refreshPurchases) refreshPurchases();
+
     if (initialCategory) {
       setSelectedCategory(initialCategory);
     }
@@ -92,6 +95,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
     return coursesList.map(c => ({
       ...c,
       id: c._id,
+      slug: c.slug || c._id,
       title: c.title,
       category: c.category?.name || c.category,
       description: c.description,
@@ -524,23 +528,32 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => {
-                            if (onNavigate) {
-                              onNavigate('course-detail', course.id);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }
+                            navigate(`/courses/${course.slug || course.id}`);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                           className="px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary border-2 border-primary rounded-xl hover:bg-primary hover:text-white transition-all cursor-pointer"
                         >
                           Details
                         </button>
-                        <Button
-                          variant={hasPurchased(course.id) ? "primary" : "secondary"}
-                          size="sm"
-                          onClick={() => handleEnrollClick(course.id)}
-                          className={`rounded-xl font-extrabold uppercase tracking-widest text-[10px] py-2 px-4.5 ${hasPurchased(course.id) ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-700' : ''}`}
-                        >
-                          {hasPurchased(course.id) ? 'Continue →' : 'Enroll'}
-                        </Button>
+                        {hasPurchased(course.id) ? (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => onNavigate('dashboard')}
+                            className="rounded-xl font-extrabold uppercase tracking-widest text-[10px] py-2 px-4.5 bg-emerald-600 border-emerald-600 hover:bg-emerald-700"
+                          >
+                            ✅ View Course
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleEnrollClick(course.id)}
+                            className="rounded-xl font-extrabold uppercase tracking-widest text-[10px] py-2 px-4.5"
+                          >
+                            Enroll
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -22,24 +22,28 @@ export const PurchaseProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Load purchased courses from the backend on mount or login
-  useEffect(() => {
-    const fetchPurchases = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const res = await getMe();
-          if (res?.data?.enrolledCourses) {
-            // Check if it's an array of objects or strings, handle both
-            const courseIds = res.data.enrolledCourses.map(c => typeof c.course === 'object' ? c.course._id : c.course);
-            setPurchasedCourses(courseIds.filter(id => id));
-          }
+  const fetchPurchases = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const res = await getMe();
+        if (res?.data?.enrolledCourses) {
+          // Normalize to strings to safely compare with any ID format
+          const courseIds = res.data.enrolledCourses.map(c => {
+            const raw = typeof c.course === 'object' ? c.course._id : c.course;
+            return raw ? raw.toString() : null;
+          }).filter(Boolean);
+          setPurchasedCourses(courseIds);
         }
-      } catch (error) {
-        console.error("Failed to load purchased courses", error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Failed to load purchased courses", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPurchases();
   }, []);
 
@@ -145,11 +149,13 @@ export const PurchaseProvider = ({ children }) => {
   };
 
   const hasPurchased = (courseId) => {
-    return purchasedCourses.includes(courseId);
+    if (!courseId) return false;
+    const idStr = courseId.toString();
+    return purchasedCourses.some(id => id.toString() === idStr);
   };
 
   return (
-    <PurchaseContext.Provider value={{ purchasedCourses, purchaseCourse, enrollFreeCourse, hasPurchased }}>
+    <PurchaseContext.Provider value={{ purchasedCourses, purchaseCourse, enrollFreeCourse, hasPurchased, refreshPurchases: fetchPurchases }}>
       {children}
     </PurchaseContext.Provider>
   );

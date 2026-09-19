@@ -303,11 +303,9 @@ export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ong
                                 key={course._id} 
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  if (onViewChange) {
-                                    hideMenuTemporarily();
-                                    onViewChange('course-detail', course._id);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }
+                                  hideMenuTemporarily();
+                                  navigate(`/courses/${course.slug || course._id}`);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }} 
                                 className="block px-3 py-2.5 rounded-lg hover:bg-[#0F224A] transition-all cursor-pointer group/course border border-transparent hover:border-accent/10"
                               >

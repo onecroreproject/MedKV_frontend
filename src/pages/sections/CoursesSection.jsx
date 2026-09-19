@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { getPublishedCourses } from '../../services/courseService';
+import { useNavigate } from 'react-router-dom';
 export default function CoursesSection({ onViewChange }) {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [courseFilter, setCourseFilter] = useState('');
@@ -202,7 +204,7 @@ export default function CoursesSection({ onViewChange }) {
                     <span className="text-primary bg-soft-gray px-2 py-0.5 rounded border border-slate-200/40">ONLINE</span>
                   </div>
                   <h4 
-                    onClick={() => onViewChange('course-detail', course._id)}
+                    onClick={() => navigate(`/courses/${course.slug || course._id}`)}
                     className="text-primary font-bold text-base leading-tight group-hover:text-accent transition-colors cursor-pointer"
                   >
                     {course.title}
@@ -224,7 +226,7 @@ export default function CoursesSection({ onViewChange }) {
                   <Button 
                     variant="primary" 
                     size="sm" 
-                    onClick={() => onViewChange('course-detail', course._id)}
+                    onClick={() => navigate(`/courses/${course.slug || course._id}`)}
                     className="rounded-md uppercase tracking-wider text-[10px] font-bold"
                   >
                     ENROLL NOW

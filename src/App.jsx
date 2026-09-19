@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Home from './pages/Home';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
@@ -18,6 +18,44 @@ import StudentResetPassword from './pages/auth/StudentResetPassword';
 import PolicyPage from './pages/PolicyPage';
 import { PlatformProvider } from './context/PlatformContext';
 import { getMe } from './services/userService';
+import { getCourseById } from './services/courseService';
+
+// Wrapper that reads the slug from URL params and renders CourseDetailPage
+function CourseDetailWrapper({ userSession, setUserSession }) {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const [courseId, setCourseId] = useState(null);
+
+  useEffect(() => {
+    if (slug) {
+      getCourseById(slug)
+        .then(res => { if (res?.data?._id) setCourseId(res.data._id); })
+        .catch(() => navigate('/', { replace: true }));
+    }
+  }, [slug, navigate]);
+
+  const handleLoginSuccess = (user) => { setUserSession(user); };
+  const handleNavigate = (view, param) => {
+    if (view === 'courses') navigate('/?view=courses');
+    else if (view === 'home') navigate('/');
+    else if (view === 'dashboard') navigate('/?view=dashboard');
+    else if (view === 'enrollment-review') navigate(`/?view=enrollment-review&courseId=${param || courseId}`);
+    else if (view === 'secure-payment') navigate(`/?view=secure-payment&courseId=${param || courseId}`);
+    else if (view === 'course-detail' && param) navigate(`/?view=course-detail&courseId=${param}`);
+    else navigate(`/?view=${view}`);
+  };
+
+  if (!courseId) return (
+    <div className="min-h-screen bg-[#030919] flex items-center justify-center">
+      <svg className="animate-spin h-10 w-10 text-[#C89B3C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+  );
+
+  return <CourseDetailPage onNavigate={handleNavigate} courseId={courseId} onLoginSuccess={handleLoginSuccess} userSession={userSession} />;
+}
 function MainApp({ userSession, setUserSession }) {
   const [initialCategory, setInitialCategory] = useState('All Categories');
   const [selectedCourseId, setSelectedCourseId] = useState(null);
@@ -52,13 +90,21 @@ function MainApp({ userSession, setUserSession }) {
     if (targetView === 'courses') {
       if (param) setInitialCategory(param);
       else setInitialCategory('All Categories');
-    } else if (targetView === 'course-detail' || targetView === 'enrollment-review' || targetView === 'secure-payment' || targetView === 'payment-processing') {
+    } else if (targetView === 'course-detail') {
+      // Navigate to slug URL if param is an _id; we need to look it up
+      // For now navigate with courseId query param — slug URL is set in course cards
+      if (param) setSelectedCourseId(param);
+      const newParams = new URLSearchParams();
+      newParams.set('view', 'course-detail');
+      newParams.set('courseId', param);
+      navigate(`?${newParams.toString()}`);
+      return;
+    } else if (targetView === 'enrollment-review' || targetView === 'secure-payment' || targetView === 'payment-processing') {
       if (param) setSelectedCourseId(param);
     } else if (targetView === 'dashboard') {
       if (param) setDashboardTab(param);
     }
     
-    // Only keep view, preserve preview if it exists
     const newParams = new URLSearchParams();
     newParams.set('view', targetView);
     if (params.has('preview')) newParams.set('preview', params.get('preview'));
@@ -204,6 +250,7 @@ function App() {
           <Route path="/webrtc/:roomId" element={<WebRTCRoom />} />
           <Route path="/studlive" element={<StudentLiveClassMock />} />
           <Route path="/policy/:type" element={<PolicyPage />} />
+          <Route path="/courses/:slug" element={<CourseDetailWrapper userSession={userSession} setUserSession={setUserSession} />} />
           <Route path="/*" element={<MainApp userSession={userSession} setUserSession={setUserSession} />} />
         </Routes>
       </Router>

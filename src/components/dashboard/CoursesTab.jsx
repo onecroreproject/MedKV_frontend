@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function CoursesTab({
   ENROLLED_COURSES,
   onNavigate,
   onEnterCourse
 }) {
+  const navigate = useNavigate();
   return (
     <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="pb-3 border-b border-slate-200">
@@ -75,14 +77,14 @@ export function CoursesTab({
                   {/* CTA Buttons */}
                   <div className="grid grid-cols-2 gap-2.5">
                     <button
-                      onClick={() => onEnterCourse ? onEnterCourse(course.id) : onNavigate('course-detail', course.id)}
+                      onClick={() => onEnterCourse ? onEnterCourse(course.id) : navigate(`/courses/${course.slug || course.id}`)}
                       className="w-full text-center py-2 text-[10px] font-black uppercase tracking-widest text-white bg-accent rounded-lg border border-transparent hover:bg-[#A8802E] active:scale-95 transition-all duration-300 transform cursor-pointer shadow-sm hover:shadow flex items-center justify-center space-x-1.5"
                     >
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                       <span>Resume</span>
                     </button>
                     <button
-                      onClick={() => onNavigate('course-detail', course.id)}
+                      onClick={() => navigate(`/courses/${course.slug || course.id}`)}
                       className="w-full text-center py-2 text-[10px] font-black uppercase tracking-widest text-accent bg-transparent rounded-lg border border-accent hover:bg-accent/10 active:scale-95 transition-all duration-300 transform cursor-pointer"
                     >
                       Details

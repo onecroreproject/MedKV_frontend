@@ -44,8 +44,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
   const [openFaq, setOpenFaq] = useState(null);
 
-  const { hasPurchased, purchaseCourse, enrollFreeCourse } = usePurchase();
-  const isPurchased = hasPurchased(courseId);
+  const { hasPurchased, purchaseCourse, enrollFreeCourse, purchasedCourses, refreshPurchases } = usePurchase();
+  // Reactive: recomputes whenever courseId OR the purchases list changes
+  const isPurchased = React.useMemo(() => hasPurchased(courseId), [courseId, purchasedCourses, hasPurchased]);
+
+  // Refresh enrollment data from server each time this page loads
+  useEffect(() => {
+    if (refreshPurchases) refreshPurchases();
+  }, [courseId]);
 
   const [course, setCourse] = useState(null);
   const [recommendedCourses, setRecommendedCourses] = useState([]);
@@ -94,6 +100,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
           const others = pubRes.data.filter(c => c._id !== courseId).slice(0, 3);
           setRecommendedCourses(others.map(c => ({
             id: c._id,
+            slug: c.slug || c._id,
             title: c.title,
             price: c.price || 0,
             originalPrice: c.originalPrice || null,
@@ -341,14 +348,25 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                     <span>Pricing: ₹{course.price}</span>
                     {course.originalPrice && <span className="text-xs text-slate-400 line-through">₹{course.originalPrice}</span>}
                   </div>
-                  <Button
-                    variant={isPurchased ? "primary" : "secondary"}
-                    size="lg"
-                    onClick={handleEnrollClick}
-                    className={`w-full uppercase tracking-widest text-xs font-black py-4 shadow-lg ${isPurchased ? 'shadow-primary/25' : 'shadow-accent/25'}`}
-                  >
-                    {isPurchased ? 'Continue Learning →' : (course.price === 0 ? 'Enroll for Free' : 'Enroll Now')}
-                  </Button>
+                  {isPurchased ? (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={() => onNavigate('dashboard')}
+                      className="w-full uppercase tracking-widest text-xs font-black py-4 bg-emerald-600 border-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+                    >
+                      ✅ View Course
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      onClick={handleEnrollClick}
+                      className="w-full uppercase tracking-widest text-xs font-black py-4 shadow-lg shadow-accent/25"
+                    >
+                      {course.price === 0 ? 'Enroll for Free' : 'Enroll Now'}
+                    </Button>
+                  )}
                 </div>
               </div>
             </section>
@@ -733,24 +751,37 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
               {/* Enrollment CTA buttons */}
               <div className="space-y-3.5 pt-3 relative z-10">
-                <Button
-                  variant={isPurchased ? "primary" : "secondary"}
-                  size="md"
-                  onClick={handleEnrollClick}
-                  className={`w-full rounded-xl uppercase tracking-widest text-xs font-black py-4 shadow-lg hover:scale-102 transition-transform duration-300 ${isPurchased ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'shadow-accent/20'}`}
-                >
-                  {isPurchased ? 'Continue Learning →' : (course.price === 0 ? 'Enroll for Free' : 'Enroll In Course')}
-                </Button>
-
-                {!isPurchased && course.previewVideoUrl && (
+                {isPurchased ? (
                   <Button
-                    variant="outline"
+                    variant="primary"
                     size="md"
-                    onClick={() => setPreviewVideo(course.previewVideoUrl)}
-                    className="w-full rounded-xl border-white text-white hover:bg-white/10 uppercase tracking-widest text-xs font-black py-3.5"
+                    onClick={() => onNavigate('dashboard')}
+                    className="w-full rounded-xl uppercase tracking-widest text-xs font-black py-4 shadow-lg bg-emerald-600 border-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20 transition-transform duration-300"
                   >
-                    Watch Course Preview
+                    ✅ View Course
                   </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      onClick={handleEnrollClick}
+                      className="w-full rounded-xl uppercase tracking-widest text-xs font-black py-4 shadow-lg shadow-accent/20 hover:scale-102 transition-transform duration-300"
+                    >
+                      {course.price === 0 ? 'Enroll for Free' : 'Enroll In Course'}
+                    </Button>
+
+                    {course.previewVideoUrl && (
+                      <Button
+                        variant="outline"
+                        size="md"
+                        onClick={() => setPreviewVideo(course.previewVideoUrl)}
+                        className="w-full rounded-xl border-white text-white hover:bg-white/10 uppercase tracking-widest text-xs font-black py-3.5"
+                      >
+                        Watch Course Preview
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -770,10 +801,8 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                   <div
                     key={rec.id}
                     onClick={() => {
-                      if (onNavigate) {
-                        onNavigate('course-detail', rec.id);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }
+                      navigate(`/courses/${rec.slug || rec.id}`);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className="p-3 bg-soft-gray border border-slate-200/80 rounded-xl flex items-center justify-between gap-3 cursor-pointer hover:border-accent/40 hover:bg-white transition-all group text-xs font-semibold"
                   >
