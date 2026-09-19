@@ -751,7 +751,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
               {/* Course Features Checklist */}
               <div className="space-y-3.5 relative z-10">
-                <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">This Course Includes:</div>
+
                 
                 <div className="space-y-2.5 font-medium text-slate-300 text-[11px]">
                   {((course.features && course.features.length > 0)
@@ -763,10 +763,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                       <span>{feat.text}</span>
                     </div>
                   ))}
-                  {/* DEBUG INFO TO REMOVE LATER */}
-                  <div className="text-red-500 text-xs mt-2 font-mono">
-                    DEBUG features array: {JSON.stringify(course.features)}
-                  </div>
+           
                 </div>
               </div>
 
