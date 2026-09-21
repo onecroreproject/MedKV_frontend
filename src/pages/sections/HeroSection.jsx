@@ -47,11 +47,11 @@ export default function HeroSection() {
   const hasBanners = banners.length > 0;
 
   return (
-    <section id="home" className="relative bg-[#030919] text-white overflow-hidden min-h-[600px] lg:min-h-[680px]">
+    <section id="home" className={`relative bg-[#030919] text-white overflow-hidden ${hasBanners ? '' : 'min-h-[600px] lg:min-h-[680px]'}`}>
 
       {hasBanners ? (
         // --- CUSTOM BANNERS CAROUSEL ---
-        <div className="absolute inset-0 w-full h-full">
+        <div className="relative w-full aspect-[16/10] md:aspect-[16/7] lg:aspect-[1920/600]">
           {banners.map((banner, index) => (
             <div 
               key={index} 
@@ -59,14 +59,12 @@ export default function HeroSection() {
             >
               {/* Background Image (Clickable if there are no buttons configured) */}
               {banner.link && !banner.buttonText && !banner.button2Text ? (
-                <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="absolute inset-0 w-full h-full z-0 cursor-pointer block bg-[#030919] flex items-center justify-center overflow-hidden">
-                  <img src={getFullUrl(banner.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 blur-2xl scale-110" />
-                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="relative z-10 w-full h-full object-contain max-w-[1920px] mx-auto" />
+                <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="absolute inset-0 w-full h-full z-0 cursor-pointer block bg-[#030919]">
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
                 </a>
               ) : (
-                <div className="absolute inset-0 w-full h-full z-0 bg-[#030919] flex items-center justify-center overflow-hidden">
-                  <img src={getFullUrl(banner.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 blur-2xl scale-110" />
-                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="relative z-10 w-full h-full object-contain max-w-[1920px] mx-auto" />
+                <div className="absolute inset-0 w-full h-full z-0 bg-[#030919]">
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
                 </div>
               )}
                 
@@ -209,7 +207,7 @@ export default function HeroSection() {
       )}
 
       {/* Highlights Strip - Kept in both modes */}
-      <div className={`bg-[#030919] ${hasBanners ? 'absolute bottom-0 w-full' : 'border-t border-[#0F224D]/50 py-8 relative'} z-20`}>
+      <div className={`bg-[#030919] ${hasBanners ? 'relative border-t border-[#0F224D]/50 py-8' : 'border-t border-[#0F224D]/50 py-8 relative'} z-20`}>
         {hasBanners && <div className="absolute inset-0 bg-[#030919]/60 backdrop-blur-md border-t border-[#0F224D]/50 z-0"></div>}
         <div className={`max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10 ${hasBanners ? 'py-6' : ''}`}>
           <div className="flex space-x-3.5 items-center">
