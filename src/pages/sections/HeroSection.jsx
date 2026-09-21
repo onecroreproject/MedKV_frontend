@@ -158,10 +158,6 @@ export default function HeroSection() {
               </div>
             </>
           )}
-
-          {/* Fades to blend into the dark theme */}
-          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#030919] to-transparent pointer-events-none z-10" />
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#030919] to-transparent pointer-events-none z-10" />
         </div>
       ) : (
         // --- DEFAULT HERO (If no banners configured) ---
