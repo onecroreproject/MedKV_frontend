@@ -158,9 +158,9 @@ export default function CoursesSection({ onViewChange }) {
             <Card key={course._id} variant="default" className="border-slate-200 hover:border-accent/40 group relative flex flex-col justify-between bg-white shadow-sm hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-300">
               
               {/* Visual Thumbnail */}
-              <div className="h-48 overflow-hidden relative border-b border-slate-200 bg-soft-gray">
+              <div className="w-full aspect-video overflow-hidden relative border-b border-slate-200 bg-white">
                 {course.thumbnail && course.thumbnail !== 'no-photo.jpg' && (
-                  <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-cover z-20 group-hover:scale-105 transition-transform duration-500" />
+                  <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-contain z-20 group-hover:scale-105 transition-transform duration-500" />
                 )}
                 {/* Decorative High-End Vector Gradients & Graphics */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-soft-gray via-primary/5 to-accent/5 z-0" />

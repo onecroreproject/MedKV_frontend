@@ -434,9 +434,9 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                   className="bg-white rounded-3xl border border-slate-200/85 overflow-hidden flex flex-col h-full shadow-md hover:-translate-y-2 hover:shadow-[0_15px_35px_-5px_rgba(11,31,77,0.12)] hover:border-accent/35 transition-all duration-300 group"
                 >
                   {/* Thumbnail Banner with Discount/Status Overlay */}
-                  <div className="h-52 bg-gradient-to-br from-[#0B1F4D] to-[#0A1733] relative p-5 flex flex-col justify-between overflow-hidden">
+                  <div className="w-full aspect-video bg-gradient-to-br from-[#0B1F4D] to-[#0A1733] relative p-5 flex flex-col justify-between overflow-hidden bg-white">
                     {course.thumbnail && course.thumbnail !== 'no-photo.jpg' && (
-                       <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
+                       <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-contain opacity-60 group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
                     )}
                     {/* Visual abstract clinical wave */}
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,155,60,0.1)_0%,transparent_70%)] pointer-events-none" />
