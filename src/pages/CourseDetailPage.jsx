@@ -297,22 +297,9 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             <div className="lg:col-span-8 space-y-10">
               
               {/* 2. COURSE HERO SECTION */}
-              <div className="space-y-8">
-                {/* Image Banner */}
-                {((course.banner && course.banner !== 'no-photo.jpg') || (course.thumbnail && course.thumbnail !== 'no-photo.jpg')) && (
-                  <div className="w-full aspect-video rounded-3xl overflow-hidden border border-slate-200 shadow-sm bg-white relative">
-                    <img 
-                      src={getFullUrl((course.banner && course.banner !== 'no-photo.jpg') ? course.banner : course.thumbnail)} 
-                      alt={course.title} 
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  </div>
-                )}
-
-                {/* Course Details Text Box */}
-                <section 
-                  className="bg-gradient-to-br from-[#030919] to-[#0A1733] text-white p-6 sm:p-10 rounded-3xl border border-accent/20 relative overflow-hidden shadow-xl text-left"
-                >
+              <section 
+                className="bg-gradient-to-br from-[#030919] to-[#0A1733] text-white p-6 sm:p-10 rounded-3xl border border-accent/20 relative overflow-hidden shadow-xl text-left"
+              >
                   {/* Radial glow details */}
                   <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
                 
@@ -407,9 +394,8 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                 </div>
               </div>
             </section>
-          </div>
 
-          {/* 3. COURSE OVERVIEW SECTION */}
+            {/* 3. COURSE OVERVIEW SECTION */}
             {course.description && (
               <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-4 shadow-sm">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
