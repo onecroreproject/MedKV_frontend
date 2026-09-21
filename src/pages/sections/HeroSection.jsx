@@ -59,12 +59,14 @@ export default function HeroSection() {
             >
               {/* Background Image (Clickable if there are no buttons configured) */}
               {banner.link && !banner.buttonText && !banner.button2Text ? (
-                <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="absolute inset-0 w-full h-full z-0 cursor-pointer block">
-                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
+                <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="absolute inset-0 w-full h-full z-0 cursor-pointer block bg-[#030919] flex items-center justify-center overflow-hidden">
+                  <img src={getFullUrl(banner.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 blur-2xl scale-110" />
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="relative z-10 w-full h-full object-contain max-w-[1920px] mx-auto" />
                 </a>
               ) : (
-                <div className="absolute inset-0 w-full h-full z-0">
-                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
+                <div className="absolute inset-0 w-full h-full z-0 bg-[#030919] flex items-center justify-center overflow-hidden">
+                  <img src={getFullUrl(banner.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 blur-2xl scale-110" />
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="relative z-10 w-full h-full object-contain max-w-[1920px] mx-auto" />
                 </div>
               )}
                 
