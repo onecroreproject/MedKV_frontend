@@ -47,7 +47,7 @@ export default function HeroSection() {
   const hasBanners = banners.length > 0;
 
   return (
-    <section id="home" className={`relative bg-[#030919] text-white overflow-hidden ${hasBanners ? '' : 'min-h-[600px] lg:min-h-[680px]'}`}>
+    <section id="home" className={`relative bg-[#030919] text-white overflow-hidden ${hasBanners ? 'pt-[80px] lg:pt-[100px]' : 'min-h-[600px] lg:min-h-[680px]'}`}>
 
       {hasBanners ? (
         // --- CUSTOM BANNERS CAROUSEL ---
