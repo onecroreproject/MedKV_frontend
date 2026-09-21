@@ -160,7 +160,7 @@ export default function CoursesSection({ onViewChange }) {
               {/* Visual Thumbnail */}
               <div className="w-full aspect-video overflow-hidden relative border-b border-slate-200 bg-white">
                 {course.thumbnail && course.thumbnail !== 'no-photo.jpg' && (
-                  <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-contain z-20 group-hover:scale-105 transition-transform duration-500" />
+                  <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-cover z-20 group-hover:scale-105 transition-transform duration-500" />
                 )}
                 {/* Decorative High-End Vector Gradients & Graphics */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-soft-gray via-primary/5 to-accent/5 z-0" />
