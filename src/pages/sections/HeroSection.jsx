@@ -4,6 +4,15 @@ import bannerImg from '../../assets/banner.png';
 import { getSettings } from '../../services/settingsService';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+const getFullUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+    : 'http://localhost:5000';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function HeroSection() {
   const [banners, setBanners] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -51,11 +60,11 @@ export default function HeroSection() {
               {/* Background Image (Clickable if there are no buttons configured) */}
               {banner.link && !banner.buttonText && !banner.button2Text ? (
                 <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="absolute inset-0 w-full h-full z-0 cursor-pointer block">
-                  <img src={banner.imageUrl} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
                 </a>
               ) : (
                 <div className="absolute inset-0 w-full h-full z-0">
-                  <img src={banner.imageUrl} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
                 </div>
               )}
                 
