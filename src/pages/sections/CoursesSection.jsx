@@ -12,6 +12,15 @@ const stripHtml = (html) => {
   return text.trim();
 };
 
+const getFullUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+    : 'http://localhost:5000';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function CoursesSection({ onViewChange }) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
@@ -150,6 +159,9 @@ export default function CoursesSection({ onViewChange }) {
               
               {/* Visual Thumbnail */}
               <div className="h-48 overflow-hidden relative border-b border-slate-200 bg-soft-gray">
+                {course.thumbnail && course.thumbnail !== 'no-photo.jpg' && (
+                  <img src={getFullUrl(course.thumbnail)} alt={course.title} className="absolute inset-0 w-full h-full object-cover z-20 group-hover:scale-105 transition-transform duration-500" />
+                )}
                 {/* Decorative High-End Vector Gradients & Graphics */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-soft-gray via-primary/5 to-accent/5 z-0" />
                 

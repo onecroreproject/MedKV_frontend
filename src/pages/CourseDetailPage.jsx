@@ -300,7 +300,11 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
               <section 
                 className="bg-gradient-to-br from-[#030919] to-[#0A1733] text-white p-6 sm:p-10 rounded-3xl border border-accent/20 relative overflow-hidden shadow-xl text-left"
                 style={{
-                  backgroundImage: course.banner && course.banner !== 'no-photo.jpg' ? `linear-gradient(to bottom right, rgba(3, 9, 25, 0.9), rgba(10, 23, 51, 0.85)), url(${getFullUrl(course.banner)})` : 'none',
+                  backgroundImage: (course.banner && course.banner !== 'no-photo.jpg') 
+                    ? `linear-gradient(to bottom right, rgba(3, 9, 25, 0.9), rgba(10, 23, 51, 0.85)), url(${getFullUrl(course.banner)})` 
+                    : (course.thumbnail && course.thumbnail !== 'no-photo.jpg') 
+                      ? `linear-gradient(to bottom right, rgba(3, 9, 25, 0.9), rgba(10, 23, 51, 0.85)), url(${getFullUrl(course.thumbnail)})` 
+                      : 'none',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
