@@ -51,20 +51,20 @@ export default function HeroSection() {
 
       {hasBanners ? (
         // --- CUSTOM BANNERS CAROUSEL ---
-        <div className="relative w-full aspect-[16/10] md:aspect-[16/7] lg:aspect-[1920/750]">
+        <div className="relative w-full">
           {banners.map((banner, index) => (
             <div 
               key={index} 
-              className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}
+              className={`w-full transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100 relative z-10 pointer-events-auto' : 'opacity-0 absolute inset-0 z-0 pointer-events-none'}`}
             >
-              {/* Background Image (Clickable if there are no buttons configured) */}
+              {/* Image (Clickable if there are no buttons configured) */}
               {banner.link && !banner.buttonText && !banner.button2Text ? (
-                <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="absolute inset-0 w-full h-full z-0 cursor-pointer block bg-[#030919]">
-                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
+                <a href={banner.link} target={banner.link?.startsWith('http') ? "_blank" : "_self"} rel="noreferrer" className="w-full block bg-[#030919]">
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-auto block" />
                 </a>
               ) : (
-                <div className="absolute inset-0 w-full h-full z-0 bg-[#030919]">
-                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-full object-cover object-center" />
+                <div className="w-full bg-[#030919]">
+                  <img src={getFullUrl(banner.imageUrl)} alt={banner.title || `Banner ${index + 1}`} className="w-full h-auto block" />
                 </div>
               )}
                 
