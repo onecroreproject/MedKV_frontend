@@ -51,7 +51,7 @@ export default function HeroSection() {
 
       {hasBanners ? (
         // --- CUSTOM BANNERS CAROUSEL ---
-        <div className="relative w-full aspect-[16/10] md:aspect-[16/7] lg:aspect-[1920/600]">
+        <div className="relative w-full aspect-[16/10] md:aspect-[16/7] lg:aspect-[1920/750]">
           {banners.map((banner, index) => (
             <div 
               key={index} 
