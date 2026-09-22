@@ -118,7 +118,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
       faculty: c.instructor?.name || 'Unknown Faculty',
       duration: 'Self-Paced',
       lessons: c.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0,
-      students: '0+',
+      students: `${c.registrationCount || 0}+`,
       rating: 5.0,
       price: c.price || 0,
       originalPrice: c.originalPrice || null,

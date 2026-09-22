@@ -16,6 +16,7 @@ const getFullUrl = (url) => {
 export default function HeroSection() {
   const [banners, setBanners] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -32,14 +33,14 @@ export default function HeroSection() {
     fetchBanners();
   }, []);
 
-  // Auto-slide every 5 seconds
+  // Auto-slide every 4 seconds
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1 || isPaused) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(interval);
-  }, [banners.length]);
+  }, [banners.length, isPaused]);
 
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % banners.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
@@ -51,7 +52,11 @@ export default function HeroSection() {
 
       {hasBanners ? (
         // --- CUSTOM BANNERS CAROUSEL ---
-        <div className="relative w-full">
+        <div 
+          className="relative w-full"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           {banners.map((banner, index) => (
             <div 
               key={index} 

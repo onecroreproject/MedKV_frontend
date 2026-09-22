@@ -96,7 +96,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             description: data.description,
             faculty: data.instructor?.name || 'Unknown Faculty',
             rating: 5.0,
-            students: '100+',
+            students: `${data.registrationCount || 0}+`,
             duration: 'Self-Paced',
             lessons: data.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0,
             difficulty: data.level || '',
@@ -113,7 +113,9 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             mockExams: data.mockExams || [],
             testimonials: data.testimonials || [],
             faqs: data.faqs || [],
-            languages: data.languages || []
+            languages: data.languages || [],
+            earlyBird: data.earlyBird || null,
+            registrationCount: data.registrationCount || 0
           });
         }
 
@@ -236,6 +238,11 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
   const validMockExams = course?.mockExams?.filter(m => m.title?.replace(/<[^>]*>?/gm, '').trim()) || [];
   const validTestimonials = course?.testimonials?.filter(t => t.name?.replace(/<[^>]*>?/gm, '').trim() || t.review?.replace(/<[^>]*>?/gm, '').trim()) || [];
   const validFaqs = course?.faqs?.filter(f => f.q?.replace(/<[^>]*>?/gm, '').trim()) || [];
+
+  const isEarlyBirdActive = course?.earlyBird?.enabled && (course.earlyBird.limit - (course.registrationCount || 0)) > 0;
+  const earlyBirdSpots = isEarlyBirdActive ? course.earlyBird.limit - (course.registrationCount || 0) : 0;
+  const displayPrice = isEarlyBirdActive && course.earlyBird.price > 0 ? course.earlyBird.price : (course?.price || 0);
+  const displayOriginalPrice = isEarlyBirdActive ? (course?.price || null) : (course?.originalPrice || null);
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-charcoal flex flex-col font-sans selection:bg-accent selection:text-white overflow-x-hidden relative">
@@ -369,8 +376,13 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                 {/* Mobile specific buy button (Hidden on Desktop) */}
                 <div className="lg:hidden pt-4 flex flex-col gap-3">
                   <div className="text-2xl font-black text-white flex items-center justify-between">
-                    <span>Pricing: ₹{course.price}</span>
-                    {course.originalPrice && <span className="text-xs text-slate-400 line-through">₹{course.originalPrice}</span>}
+                    <div className="flex flex-col">
+                      <span>Pricing: ₹{displayPrice}</span>
+                      {isEarlyBirdActive && (
+                        <span className="text-[10px] text-red-400 animate-pulse mt-1 uppercase tracking-widest font-black">🔥 Only for Early Birds: {earlyBirdSpots} Spots Left!</span>
+                      )}
+                    </div>
+                    {displayOriginalPrice && <span className="text-xs text-slate-400 line-through">₹{displayOriginalPrice}</span>}
                   </div>
                   {isPurchased ? (
                     <Button
@@ -736,11 +748,16 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
               <div className="space-y-1 text-center relative z-10 pb-4.5 border-b border-white/10">
                 <span className="text-[10px] text-accent font-extrabold uppercase tracking-[0.25em]">Clinical Enrollment Key</span>
                 <div className="flex items-end justify-center space-x-2 pt-1.5">
-                  <span className="text-white font-black text-3xl leading-none">₹{course.price}</span>
-                  {course.originalPrice && (
-                    <span className="text-slate-400 line-through text-xs leading-none pb-0.5">₹{course.originalPrice}</span>
+                  <span className="text-white font-black text-3xl leading-none">₹{displayPrice}</span>
+                  {displayOriginalPrice && (
+                    <span className="text-slate-400 line-through text-xs leading-none pb-0.5">₹{displayOriginalPrice}</span>
                   )}
                 </div>
+                {isEarlyBirdActive && (
+                  <div className="mt-3 text-center bg-red-600/20 border border-red-500/50 rounded-lg py-1.5">
+                    <span className="text-[10px] text-red-400 font-black uppercase tracking-widest animate-pulse">🔥 Only for Early Birds - First {earlyBirdSpots} Members!</span>
+                  </div>
+                )}
                 <div className="text-[9px] text-[#A8802E] font-black uppercase tracking-wider mt-1">Live + Recorded Replay Access</div>
               </div>
 

@@ -18,12 +18,19 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
       try {
         const res = await getCourseById(courseId);
         if (res?.data) {
+          let calculatedDiscount = 0;
+          if (res.data.earlyBird?.enabled && (res.data.earlyBird.limit - (res.data.registrationCount || 0)) > 0) {
+            if (res.data.earlyBird.price > 0) {
+              calculatedDiscount = Math.max(0, (res.data.price || 0) - res.data.earlyBird.price);
+            }
+          }
+            
           setCourse({
             title: res.data.title,
             faculty: res.data.instructor?.name || 'Dr. Sam Reefath',
             duration: 'Self-Paced',
             price: res.data.price || 0,
-            discount: res.data.discount || 0,
+            discount: calculatedDiscount,
           });
         }
       } catch (err) {
@@ -35,12 +42,24 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
     if (courseId) fetchCourse();
   }, [courseId]);
 
-  const finalAmount = course ? course.price - course.discount : 0;
+  const basePrice = course ? course.price - course.discount : 0;
+  
+  let totalPayable = basePrice;
+  let paymentProcessingFee = 0;
+  let gstOnProcessingFee = 0;
+  let totalProcessingFee = 0;
+
+  if (basePrice > 0) {
+    totalPayable = Math.round((basePrice / 0.9764) * 100) / 100;
+    totalProcessingFee = totalPayable - basePrice;
+    paymentProcessingFee = Math.round((totalPayable * 0.02) * 100) / 100;
+    gstOnProcessingFee = totalProcessingFee - paymentProcessingFee;
+  }
 
   const handleProceed = async () => {
     if (acceptedTerms) {
       setIsProcessing(true);
-      const success = finalAmount === 0 
+      const success = totalPayable === 0 
         ? await enrollFreeCourse(courseId)
         : await purchaseCourse(courseId);
       setIsProcessing(false);
@@ -130,15 +149,33 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
             <div className="space-y-3 text-sm font-medium text-blue-gray">
               <div className="flex justify-between">
                 <span>Course Price</span>
-                <span>${course.price.toFixed(2)}</span>
+                <span>₹{course.price.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-emerald-600">
-                <span>Early Bird Discount</span>
-                <span>-${course.discount.toFixed(2)}</span>
-              </div>
+              {course.discount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Early Bird Discount</span>
+                  <span>-₹{course.discount.toFixed(2)}</span>
+                </div>
+              )}
+              {basePrice > 0 && (
+                <>
+                  <div className="flex justify-between pt-2 border-t border-slate-50">
+                    <span>Course Fee (After Discount)</span>
+                    <span>₹{basePrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>Payment Processing Fee (2%)</span>
+                    <span>₹{paymentProcessingFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>GST on Processing Fee (18%)</span>
+                    <span>₹{gstOnProcessingFee.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between text-lg font-black text-primary pt-3 border-t border-slate-100">
                 <span>Final Amount Payable</span>
-                <span>${finalAmount.toFixed(2)}</span>
+                <span>₹{totalPayable.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -177,7 +214,7 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                 disabled={!acceptedTerms || isProcessing}
                 onClick={handleProceed}
               >
-                {isProcessing ? (finalAmount === 0 ? 'PROCESSING ENROLLMENT...' : 'INITIALIZING RAZORPAY...') : (finalAmount === 0 ? 'ENROLL FOR FREE' : `PAY $${finalAmount.toFixed(2)} SECURELY`)}
+                {isProcessing ? (totalPayable === 0 ? 'PROCESSING ENROLLMENT...' : 'INITIALIZING RAZORPAY...') : (totalPayable === 0 ? 'ENROLL FOR FREE' : `PAY ₹${totalPayable.toFixed(2)} SECURELY`)}
               </Button>
             </div>
           </div>

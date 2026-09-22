@@ -154,9 +154,13 @@ export default function CoursesSection({ onViewChange }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {visibleCourses.map((course) => (
+          {visibleCourses.map((course) => {
+            const isEarlyBirdActive = course.earlyBird?.enabled && (course.earlyBird.limit - (course.registrationCount || 0)) > 0;
+            const spotsLeft = isEarlyBirdActive ? course.earlyBird.limit - (course.registrationCount || 0) : 0;
+            const displayPrice = isEarlyBirdActive && course.earlyBird.price > 0 ? course.earlyBird.price : course.price;
+
+            return (
             <Card key={course._id} variant="default" className="border-slate-200 hover:border-accent/40 group relative flex flex-col justify-between bg-white shadow-sm hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-300">
-              
               {/* Visual Thumbnail */}
               <div className="w-full aspect-[4/3] overflow-hidden relative border-b border-slate-200 bg-white">
                 {course.thumbnail && course.thumbnail !== 'no-photo.jpg' && (
@@ -216,9 +220,15 @@ export default function CoursesSection({ onViewChange }) {
                 )}
 
                 {/* Rating Tag */}
-                <div className="absolute bottom-3 right-3 bg-white/95 text-accent text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 shadow-sm tracking-wider">
+                <div className="absolute bottom-3 right-3 bg-white/95 text-accent text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 shadow-sm tracking-wider flex items-center gap-1">
                   ★ {course.rating ? course.rating.toFixed(1) : '4.9'}
                 </div>
+                
+                {isEarlyBirdActive && (
+                  <div className="absolute top-3 left-3 bg-red-600/90 backdrop-blur-sm text-white text-[9.5px] font-black px-2.5 py-1 rounded shadow-md tracking-wider uppercase border border-red-500/50 flex items-center gap-1 animate-pulse">
+                    <span className="text-[12px]">🔥</span> Early Bird: Only {spotsLeft} Spots Left!
+                  </div>
+                )}
               </div>
 
               {/* Body Content */}
@@ -241,12 +251,14 @@ export default function CoursesSection({ onViewChange }) {
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <div className="flex flex-col">
-                    {course.originalPrice && (
+                    {(course.originalPrice || isEarlyBirdActive) && (
                       <span className="text-[10px] text-blue-gray line-through leading-none mb-0.5">
-                        ₹{course.originalPrice}
+                        ₹{isEarlyBirdActive ? course.price : course.originalPrice}
                       </span>
                     )}
-                    <span className="text-primary font-bold text-lg leading-none">₹{course.price}</span>
+                    <span className="text-primary font-bold text-lg leading-none">
+                      ₹{displayPrice}
+                    </span>
                   </div>
                   <Button 
                     variant="primary" 
@@ -259,7 +271,8 @@ export default function CoursesSection({ onViewChange }) {
                 </div>
               </CardBody>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 

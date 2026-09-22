@@ -66,6 +66,7 @@ function MainApp({ userSession, setUserSession }) {
 
   const searchParams = new URLSearchParams(location.search);
   const view = searchParams.get('view') || 'home';
+  const activeCourseId = selectedCourseId || searchParams.get('courseId');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -147,7 +148,7 @@ function MainApp({ userSession, setUserSession }) {
       {view === 'course-detail' && (
         <CourseDetailPage
           onNavigate={handleNavigate}
-          courseId={selectedCourseId}
+          courseId={activeCourseId}
           onLoginSuccess={handleLoginSuccess}
           userSession={userSession}
         />
@@ -163,14 +164,14 @@ function MainApp({ userSession, setUserSession }) {
       {view === 'enrollment-review' && (
         <EnrollmentReview
           userSession={userSession}
-          courseId={selectedCourseId}
+          courseId={activeCourseId}
           onNavigate={handleNavigate}
         />
       )}
       {view === 'secure-payment' && (
         <SecurePayment
           userSession={userSession}
-          courseId={selectedCourseId}
+          courseId={activeCourseId}
           onNavigate={handleNavigate}
         />
       )}
@@ -183,7 +184,7 @@ function MainApp({ userSession, setUserSession }) {
         <PaymentResult
           userSession={userSession}
           status="success"
-          courseId={selectedCourseId}
+          courseId={activeCourseId}
           onNavigate={handleNavigate}
         />
       )}
@@ -191,7 +192,7 @@ function MainApp({ userSession, setUserSession }) {
         <PaymentResult
           userSession={userSession}
           status="failed"
-          courseId={selectedCourseId}
+          courseId={activeCourseId}
           onNavigate={handleNavigate}
         />
       )}

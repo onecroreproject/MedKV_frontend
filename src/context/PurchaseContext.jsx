@@ -30,6 +30,7 @@ export const PurchaseProvider = ({ children }) => {
         if (res?.data?.enrolledCourses) {
           // Normalize to strings to safely compare with any ID format
           const courseIds = res.data.enrolledCourses.map(c => {
+            if (!c || !c.course) return null;
             const raw = typeof c.course === 'object' ? c.course._id : c.course;
             return raw ? raw.toString() : null;
           }).filter(Boolean);
