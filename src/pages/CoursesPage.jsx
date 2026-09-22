@@ -123,6 +123,8 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
       price: c.price || 0,
       originalPrice: c.originalPrice || null,
       difficulty: c.level || '',
+      earlyBird: c.earlyBird,
+      registrationCount: c.registrationCount || 0,
       imageType: getFallbackImage(c.category?.name || c.category)
     })).filter((course) => {
       // Search Match
@@ -428,7 +430,12 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {filteredCourses.map((course) => (
+              {filteredCourses.map((course) => {
+                const isEarlyBirdActive = course.earlyBird?.enabled && (course.earlyBird.limit - (course.registrationCount || 0)) > 0;
+                const spotsLeft = isEarlyBirdActive ? course.earlyBird.limit - (course.registrationCount || 0) : 0;
+                const displayPrice = isEarlyBirdActive && course.earlyBird.price > 0 ? course.earlyBird.price : course.price;
+                
+                return (
                 <div
                   key={course.id}
                   className="bg-white rounded-3xl border border-slate-200/85 overflow-hidden flex flex-col h-full shadow-md hover:-translate-y-2 hover:shadow-[0_15px_35px_-5px_rgba(11,31,77,0.12)] hover:border-accent/35 transition-all duration-300 group"
@@ -442,14 +449,22 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,155,60,0.1)_0%,transparent_70%)] pointer-events-none" />
 
                     {/* Interactive overlay items */}
-                    <div className="flex items-center justify-between relative z-10">
-                      <span className="bg-[#050E24] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/10 uppercase tracking-widest">
-                        {course.category}
-                      </span>
-                      {course.discountBadge && (
-                        <span className="bg-accent text-[#050E24] text-[10px] font-black px-3.5 py-1.5 rounded-lg shadow-md uppercase tracking-wider">
-                          {course.discountBadge}
+                    <div className="flex flex-col gap-2 relative z-10 w-full">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="bg-[#050E24] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/10 uppercase tracking-widest">
+                          {course.category}
                         </span>
+                        {course.discountBadge && (
+                          <span className="bg-accent text-[#050E24] text-[10px] font-black px-3.5 py-1.5 rounded-lg shadow-md uppercase tracking-wider">
+                            {course.discountBadge}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {isEarlyBirdActive && (
+                        <div className="self-start bg-red-600/90 backdrop-blur-sm text-white text-[9.5px] font-black px-2.5 py-1 rounded shadow-md tracking-wider uppercase border border-red-500/50 flex items-center gap-1 animate-pulse">
+                          <span className="text-[12px]">🔥</span> Early Bird: Only {spotsLeft} Spots Left!
+                        </div>
                       )}
                     </div>
 
@@ -538,13 +553,13 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                     {/* Price and CTAs */}
                     <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
                       <div className="flex flex-col">
-                        {course.originalPrice && (
+                        {(course.originalPrice || isEarlyBirdActive) && (
                           <span className="text-[10px] text-blue-gray line-through leading-none mb-0.5">
-                            ₹{course.originalPrice}
+                            ₹{isEarlyBirdActive ? course.price : course.originalPrice}
                           </span>
                         )}
                         <span className="text-primary font-black text-xl leading-none">
-                          ₹{course.price}
+                          ₹{displayPrice}
                         </span>
                       </div>
 
@@ -582,7 +597,8 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                   </div>
 
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
 
