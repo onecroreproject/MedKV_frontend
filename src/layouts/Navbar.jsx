@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NAVIGATION_LINKS } from '../config/constants';
 import Button from '../components/ui/Button';
 import dark_logo from "../assets/dark_logo_transparent.png";
@@ -90,6 +91,7 @@ const INITIAL_SUB_MENUS = {
 
 export function Navbar({ userSession, onLoginClick, onViewChange, hasTopBar, ongoingLiveClass }) {
   const { platformSettings } = usePlatform();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSubMenuOpen, setMobileSubMenuOpen] = useState(null); // Tracks active mobile dropdown label
