@@ -552,17 +552,17 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
 
 
 
-  const toggleMute = useCallback(() => {
-    localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled);
-  }, [localParticipant]);
+  const toggleMute = useCallback(async () => {
+    await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+  }, [localParticipant, isMicrophoneEnabled]);
 
-  const toggleVideo = useCallback(() => {
-    localParticipant.setCameraEnabled(!localParticipant.isCameraEnabled);
-  }, [localParticipant]);
+  const toggleVideo = useCallback(async () => {
+    await localParticipant.setCameraEnabled(!isCameraEnabled);
+  }, [localParticipant, isCameraEnabled]);
 
   const toggleScreenShare = useCallback(async () => {
-    localParticipant.setScreenShareEnabled(!localParticipant.isScreenShareEnabled);
-  }, [localParticipant]);
+    await localParticipant.setScreenShareEnabled(!isScreenShareEnabled);
+  }, [localParticipant, isScreenShareEnabled]);
 
   const toggleRecording = useCallback(async () => {
     if (!isRecording) {
