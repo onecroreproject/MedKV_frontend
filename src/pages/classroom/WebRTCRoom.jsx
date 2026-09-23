@@ -396,7 +396,19 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const navigate = useNavigate();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
   const participants = useParticipants();
-  const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: false });
+  // Find the teacher participant
+  const teacherParticipant = participants.find(p => {
+    try {
+      const meta = JSON.parse(p.metadata || '{}');
+      return meta.isTeacher === true;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const allTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: false });
+  // Students should ONLY see the teacher in the main grid, not other students
+  const tracks = allTracks.filter(t => t.participant.identity === teacherParticipant?.identity);
 
   const [isTabFocused, setIsTabFocused] = useState(true);
 
@@ -656,9 +668,20 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
 
           {/* Google Meet Style Grid Layout */}
           <div className="flex-1 rounded-xl overflow-hidden relative border border-slate-800 bg-black">
-            <GridLayout tracks={tracks} style={{ height: '100%', width: '100%' }}>
-              <ParticipantTile />
-            </GridLayout>
+            {tracks.length > 0 ? (
+              <GridLayout tracks={tracks} style={{ height: '100%', width: '100%' }}>
+                <ParticipantTile />
+              </GridLayout>
+            ) : teacherParticipant ? (
+              <div className="w-full h-full">
+                <ParticipantTile participant={teacherParticipant} style={{ height: '100%', width: '100%' }} />
+              </div>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-4">
+                <div className="w-20 h-20 bg-slate-800 rounded-full animate-pulse"></div>
+                <p className="font-medium animate-pulse">Waiting for Teacher to join...</p>
+              </div>
+            )}
           </div>
         </div>
 
