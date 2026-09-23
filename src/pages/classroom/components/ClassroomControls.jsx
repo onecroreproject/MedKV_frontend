@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, Video, VideoOff, MonitorUp, Square, Circle, Hand, PhoneOff, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, MonitorUp, Square, Circle, Hand, PhoneOff, MessageSquare, Minimize, Maximize } from 'lucide-react';
 
 const ClassroomControls = React.memo(({ 
   isTeacher, 
@@ -15,8 +15,8 @@ const ClassroomControls = React.memo(({
   onToggleRecording, 
   onRaiseHand, 
   onLeaveRoom, 
-  onToggleChat,
-  unreadChatCount
+  onToggleFullscreen,
+  isFullscreen
 }) => {
   return (
     <footer className="pt-3 pb-10 md:py-0 h-auto md:h-20 bg-slate-900 border-t border-slate-800 flex items-center justify-between px-2 md:px-8 z-20 shrink-0">
@@ -63,13 +63,8 @@ const ClassroomControls = React.memo(({
 
       {/* Right Controls */}
       <div className="flex justify-end gap-3 sm:w-1/4">
-        <button onClick={onToggleChat} className={`relative p-2.5 md:p-3.5 rounded-xl transition-all border ${chatOpen ? 'bg-accent/10 text-accent border-accent/20' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border-slate-700'}`} title="Toggle Chat">
-          <MessageSquare size={20} />
-          {unreadChatCount > 0 && !chatOpen && (
-             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full animate-bounce shadow-lg">
-                {unreadChatCount}
-             </span>
-          )}
+        <button onClick={onToggleFullscreen} className={`relative p-2.5 md:p-3.5 rounded-xl transition-all border ${isFullscreen ? 'bg-primary text-white border-primary' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border-slate-700'}`} title={isFullscreen ? 'Minimize' : 'Maximize'}>
+          {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
         </button>
       </div>
     </footer>

@@ -18,6 +18,7 @@ import {
   RoomAudioRenderer,
   useLocalParticipant,
   useParticipants,
+  useParticipant,
   useChat,
   GridLayout,
   ParticipantTile
@@ -392,6 +393,31 @@ export default function WebRTCRoom() {
   );
 }
 
+const VoiceIndicator = ({ participant }) => {
+  if (!participant) return null;
+  const { isSpeaking } = useParticipant(participant);
+  if (!isSpeaking) return null;
+  return (
+    <>
+      <style>{`
+        @keyframes danceBar {
+          0% { transform: scaleY(0.3); opacity: 0.8; }
+          100% { transform: scaleY(1.2); opacity: 1; }
+        }
+        .dancing-bar {
+          animation: danceBar 0.4s ease-in-out infinite alternate;
+          transform-origin: bottom;
+        }
+      `}</style>
+      <div className="absolute top-2 right-2 flex gap-1 items-end bg-black/60 px-2 py-1.5 rounded-md z-20 shadow border border-white/10 h-8">
+        <div className="w-1.5 h-3.5 bg-green-400 rounded-full dancing-bar" style={{ animationDelay: '0ms' }} />
+        <div className="w-1.5 h-5 bg-green-400 rounded-full dancing-bar" style={{ animationDelay: '150ms' }} />
+        <div className="w-1.5 h-4 bg-green-400 rounded-full dancing-bar" style={{ animationDelay: '300ms' }} />
+      </div>
+    </>
+  );
+};
+
 function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const navigate = useNavigate();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
@@ -407,8 +433,9 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   });
 
   const allTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: false });
-  // Students should ONLY see the teacher in the main grid, not other students
-  const tracks = allTracks.filter(t => t.participant.identity === teacherParticipant?.identity);
+  const teacherTracks = allTracks.filter(t => t.participant.identity === teacherParticipant?.identity);
+  
+  const studentParticipants = participants.filter(p => p.identity !== teacherParticipant?.identity);
 
   const [isTabFocused, setIsTabFocused] = useState(true);
 
@@ -444,6 +471,27 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const [messages, setMessages] = useState([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const mainVideoWrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (mainVideoWrapperRef.current?.requestFullscreen) {
+        mainVideoWrapperRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  };
+
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordingSessionIdRef = useRef(null);
@@ -478,26 +526,25 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
 
     webrtcService.onForceMute = () => {
        localParticipant.setMicrophoneEnabled(false);
-       alert("The Host has muted your microphone.");
+       setMessages(prev => [...prev, { senderId: 'system', name: 'System', role: 'system', message: 'The Host has muted your microphone.', timestamp: new Date() }]);
     };
 
     webrtcService.onForceUnmute = () => {
        localParticipant.setMicrophoneEnabled(true);
-       alert("The Host has unmuted your microphone.");
+       setMessages(prev => [...prev, { senderId: 'system', name: 'System', role: 'system', message: 'The Host has unmuted your microphone.', timestamp: new Date() }]);
     };
 
     webrtcService.onForceCameraOff = () => {
        localParticipant.setCameraEnabled(false);
-       alert("The Host has turned off your camera.");
+       setMessages(prev => [...prev, { senderId: 'system', name: 'System', role: 'system', message: 'The Host has turned off your camera.', timestamp: new Date() }]);
     };
 
     webrtcService.onForceCameraOn = () => {
        localParticipant.setCameraEnabled(true);
-       alert("The Host has requested to turn on your camera.");
+       setMessages(prev => [...prev, { senderId: 'system', name: 'System', role: 'system', message: 'The Host has requested to turn on your camera.', timestamp: new Date() }]);
     };
 
     webrtcService.onForceKick = () => {
-       alert("You have been removed from the class by the host.");
        navigate('/courses');
     };
 
@@ -666,22 +713,64 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
         {/* Video Area */}
         <div className={`flex flex-col p-2 md:p-4 relative bg-[#01040A] transition-all duration-300 ${chatOpen && !isTeacher ? 'h-[35%] md:h-auto md:flex-1' : 'flex-1'}`}>
 
-          {/* Google Meet Style Grid Layout */}
-          <div className="flex-1 rounded-xl overflow-hidden relative border border-slate-800 bg-black">
-            {tracks.length > 0 ? (
-              <GridLayout tracks={tracks} style={{ height: '100%', width: '100%' }}>
-                <ParticipantTile />
-              </GridLayout>
-            ) : teacherParticipant ? (
-              <div className="w-full h-full">
-                <ParticipantTile participant={teacherParticipant} style={{ height: '100%', width: '100%' }} />
-              </div>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-4">
-                <div className="w-20 h-20 bg-slate-800 rounded-full animate-pulse"></div>
-                <p className="font-medium animate-pulse">Waiting for Teacher to join...</p>
+          {/* Main Video Wrapper */}
+          <div ref={mainVideoWrapperRef} className="flex-1 flex flex-col gap-2 rounded-xl overflow-hidden relative border border-slate-700 bg-black p-1">
+            
+            {/* Main Screen: Admin (Host) ALWAYS */}
+            <div className="flex-1 w-full relative rounded-lg overflow-hidden border border-slate-800 group">
+              {teacherParticipant && <VoiceIndicator participant={teacherParticipant} />}
+              {teacherTracks.length > 0 ? (
+                <GridLayout tracks={teacherTracks} style={{ height: '100%', width: '100%' }}>
+                  <ParticipantTile />
+                </GridLayout>
+              ) : teacherParticipant ? (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 gap-4 relative">
+                  <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center text-4xl font-bold text-slate-300 shadow-xl border-4 border-slate-800">
+                    {teacherParticipant.name ? teacherParticipant.name.charAt(0).toUpperCase() : 'T'}
+                  </div>
+                  <div className="absolute bottom-4 left-4 bg-black/60 px-3 py-1 rounded text-white text-sm flex items-center gap-2">
+                    <MicOff size={14} className="text-red-400" />
+                    {teacherParticipant.name || 'Teacher'}
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-4">
+                  <div className="w-20 h-20 bg-slate-800 rounded-full animate-pulse"></div>
+                  <p className="font-medium animate-pulse">Waiting for Teacher to join...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Horizontal Scroll Row for Students */}
+            {studentParticipants.length > 0 && (
+              <div className="h-28 md:h-36 w-full shrink-0 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden pb-2 scroll-smooth scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 px-1">
+                {studentParticipants.map(p => (
+                  <div key={p.identity} className="h-full aspect-video min-w-[160px] md:min-w-[200px] shrink-0 rounded-lg overflow-hidden border border-slate-700 relative bg-slate-900 flex flex-col items-center justify-center group">
+                    <VoiceIndicator participant={p} />
+                    {p.isCameraEnabled ? (
+                      <ParticipantTile participant={p} style={{ height: '100%', width: '100%' }} />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full w-full bg-slate-800">
+                        <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-slate-300 shadow-md border-2 border-slate-700">
+                          {p.name ? p.name.substring(0, 2).toUpperCase() : 'ST'}
+                        </div>
+                      </div>
+                    )}
+                    {/* Persistent Label when Camera is Off, or Overlay when Camera is On */}
+                    {!p.isCameraEnabled && (
+                      <div className="absolute bottom-2 left-2 right-2 bg-black/70 px-2 py-1 rounded text-white text-[10px] sm:text-xs flex items-center justify-between z-10">
+                        <span className="truncate flex-1 mr-1 font-medium">{p.name || p.identity}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {p.isMicrophoneEnabled ? <Mic size={12} className="text-green-400" /> : <MicOff size={12} className="text-red-400" />}
+                          <VideoOff size={12} className="text-red-400" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
+            
           </div>
         </div>
 
@@ -710,8 +799,8 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
         onToggleRecording={toggleRecording}
         onRaiseHand={raiseHand}
         onLeaveRoom={leaveRoom}
-        onToggleChat={toggleChat}
-        unreadChatCount={unreadChatCount}
+        onToggleFullscreen={toggleFullscreen}
+        isFullscreen={isFullscreen}
       />
     </div>
   );
