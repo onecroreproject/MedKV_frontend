@@ -466,6 +466,12 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
 
     webrtcService.onForceMute = () => {
        localParticipant.setMicrophoneEnabled(false);
+       alert("The Host has muted your microphone.");
+    };
+
+    webrtcService.onForceCameraOff = () => {
+       localParticipant.setCameraEnabled(false);
+       alert("The Host has turned off your camera.");
     };
 
     webrtcService.onForceKick = () => {
