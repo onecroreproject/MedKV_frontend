@@ -379,6 +379,7 @@ export default function WebRTCRoom() {
       connect={true}
       options={LOW_LATENCY_OPTIONS}
       className="flex flex-col h-screen bg-slate-900 text-white relative"
+      data-lk-theme="default"
     >
       <ActiveStudentClassroom 
          user={user} 
@@ -467,7 +468,12 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
        localParticipant.setMicrophoneEnabled(false);
     };
 
-  }, [user._id, localParticipant]);
+    webrtcService.onForceKick = () => {
+       alert("You have been removed from the class by the host.");
+       navigate('/courses');
+    };
+
+  }, [user._id, localParticipant, navigate]);
 
 
 
