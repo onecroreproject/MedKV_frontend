@@ -466,8 +466,8 @@ const DraggableLocalVideo = ({ participant, allTracks }) => {
     <div 
       className="fixed z-50 rounded-lg overflow-hidden border-2 border-slate-600 shadow-2xl bg-black cursor-move group"
       style={{ 
-        width: 200, 
-        height: 112, 
+        width: 160, 
+        height: 120, 
         left: pos.x, 
         top: pos.y,
         touchAction: 'none'
@@ -487,6 +487,11 @@ const DraggableLocalVideo = ({ participant, allTracks }) => {
            </div>
         </div>
       )}
+      
+      {/* Label for Local Video */}
+      <div className="absolute bottom-1 left-1 bg-black/60 px-2 py-0.5 rounded text-white text-[10px] font-medium z-10 pointer-events-none">
+        You
+      </div>
     </div>
   );
 };
@@ -793,8 +798,10 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
             {/* Main Screen: Admin (Host) ALWAYS */}
             <div className="flex-1 w-full relative rounded-lg overflow-hidden border border-slate-800 group teacher-video-wrapper">
               <style>{`
-                .teacher-video-wrapper video {
-                  transform: scaleX(1) !important;
+                .teacher-video-wrapper video, .teacher-video-wrapper .lk-video-mirrored {
+                  transform: rotateY(0deg) !important;
+                  -webkit-transform: rotateY(0deg) !important;
+                  scale: 1 !important;
                 }
               `}</style>
               {teacherParticipant && <VoiceIndicator participant={teacherParticipant} />}
