@@ -18,7 +18,7 @@ import {
   RoomAudioRenderer,
   useLocalParticipant,
   useParticipants,
-  useParticipant,
+  useIsSpeaking,
   useChat,
   GridLayout,
   ParticipantTile
@@ -395,7 +395,7 @@ export default function WebRTCRoom() {
 
 const VoiceIndicator = ({ participant }) => {
   if (!participant) return null;
-  const { isSpeaking } = useParticipant(participant);
+  const isSpeaking = useIsSpeaking(participant);
   if (!isSpeaking) return null;
   return (
     <>
