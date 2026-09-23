@@ -578,6 +578,20 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const chatOpenRef = useRef(chatOpen);
   useEffect(() => { chatOpenRef.current = chatOpen; }, [chatOpen]);
 
+  // Prevent accidental refresh or closing of the tab
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      let message = "Are you sure you want to leave the class?";
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        message = "WARNING: You are currently recording! If you refresh or leave now, your recording WILL BE LOST completely. Please cancel and stop the recording first to save it.";
+      }
+      e.returnValue = message;
+      return message;
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
   const { send: sendChatMessage, chatMessages } = useChat();
 
   useEffect(() => {
