@@ -418,6 +418,79 @@ const VoiceIndicator = ({ participant }) => {
   );
 };
 
+const DraggableLocalVideo = ({ participant, allTracks }) => {
+  const [pos, setPos] = useState({ x: window.innerWidth - 220, y: window.innerHeight - 150 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    // Keep it within bounds on resize
+    const handleResize = () => {
+      setPos(prev => ({
+        x: Math.min(prev.x, window.innerWidth - 220),
+        y: Math.min(prev.y, window.innerHeight - 150)
+      }));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const cameraTrack = allTracks?.find(t => t.participant.identity === participant?.identity && t.source === Track.Source.Camera);
+
+  if (!participant?.isCameraEnabled && !cameraTrack) return null;
+
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    setOffset({
+      x: e.clientX - pos.x,
+      y: e.clientY - pos.y
+    });
+    e.target.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e) => {
+    if (isDragging) {
+      setPos({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y
+      });
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    setIsDragging(false);
+    e.target.releasePointerCapture(e.pointerId);
+  };
+
+  return (
+    <div 
+      className="fixed z-50 rounded-lg overflow-hidden border-2 border-slate-600 shadow-2xl bg-black cursor-move group"
+      style={{ 
+        width: 200, 
+        height: 112, 
+        left: pos.x, 
+        top: pos.y,
+        touchAction: 'none'
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      <VoiceIndicator participant={participant} />
+      {cameraTrack ? (
+        <ParticipantTile trackRef={cameraTrack} style={{ height: '100%', width: '100%', pointerEvents: 'none' }} />
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full w-full bg-slate-800">
+           <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center text-lg font-bold text-slate-300">
+              {participant?.name ? participant.name.substring(0, 2).toUpperCase() : 'ME'}
+           </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const navigate = useNavigate();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
@@ -701,8 +774,9 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-md border border-slate-700 flex items-center gap-2 font-semibold">
-            <Users size={14} className="text-accent" /> {participants.length} Participants
+          <span className="bg-red-950/40 text-red-500 text-[11px] sm:text-xs px-3 py-1.5 rounded-full border border-red-500/30 flex items-center gap-2 font-bold tracking-wider shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.8)]"></span>
+            LIVE {participants.length}
           </span>
         </div>
       </header>
@@ -717,7 +791,12 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
           <div ref={mainVideoWrapperRef} className="flex-1 flex flex-col gap-2 rounded-xl overflow-hidden relative border border-slate-700 bg-black p-1">
             
             {/* Main Screen: Admin (Host) ALWAYS */}
-            <div className="flex-1 w-full relative rounded-lg overflow-hidden border border-slate-800 group">
+            <div className="flex-1 w-full relative rounded-lg overflow-hidden border border-slate-800 group teacher-video-wrapper">
+              <style>{`
+                .teacher-video-wrapper video {
+                  transform: scaleX(1) !important;
+                }
+              `}</style>
               {teacherParticipant && <VoiceIndicator participant={teacherParticipant} />}
               {teacherTracks.length > 0 ? (
                 <GridLayout tracks={teacherTracks} style={{ height: '100%', width: '100%' }}>
@@ -741,36 +820,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
               )}
             </div>
 
-            {/* Horizontal Scroll Row for Students */}
-            {studentParticipants.length > 0 && (
-              <div className="h-28 md:h-36 w-full shrink-0 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden pb-2 scroll-smooth scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 px-1">
-                {studentParticipants.map(p => (
-                  <div key={p.identity} className="h-full aspect-video min-w-[160px] md:min-w-[200px] shrink-0 rounded-lg overflow-hidden border border-slate-700 relative bg-slate-900 flex flex-col items-center justify-center group">
-                    <VoiceIndicator participant={p} />
-                    {p.isCameraEnabled ? (
-                      <ParticipantTile trackRef={{ participant: p, source: Track.Source.Camera }} style={{ height: '100%', width: '100%' }} />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full w-full bg-slate-800">
-                        <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-slate-300 shadow-md border-2 border-slate-700">
-                          {p.name ? p.name.substring(0, 2).toUpperCase() : 'ST'}
-                        </div>
-                      </div>
-                    )}
-                    {/* Persistent Label when Camera is Off, or Overlay when Camera is On */}
-                    {!p.isCameraEnabled && (
-                      <div className="absolute bottom-2 left-2 right-2 bg-black/70 px-2 py-1 rounded text-white text-[10px] sm:text-xs flex items-center justify-between z-10">
-                        <span className="truncate flex-1 mr-1 font-medium">{p.name || p.identity}</span>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {p.isMicrophoneEnabled ? <Mic size={12} className="text-green-400" /> : <MicOff size={12} className="text-red-400" />}
-                          <VideoOff size={12} className="text-red-400" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            
+            {/* No Horizontal Scroll Row for Students - Replaced by Draggable Local Video */}
           </div>
         </div>
 
@@ -783,6 +833,9 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
           />
         )}
       </div>
+
+      {/* Floating Local Draggable Video */}
+      <DraggableLocalVideo participant={localParticipant} allTracks={allTracks} />
 
       {/* Control Bar */}
       <ClassroomControls 
