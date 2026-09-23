@@ -805,10 +805,10 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
                 }
               `}</style>
               {teacherParticipant && <VoiceIndicator participant={teacherParticipant} />}
-              {teacherParticipant?.isCameraEnabled || teacherParticipant?.isScreenShareEnabled ? (
-                <div className="w-full h-full">
-                  <ParticipantTile participant={teacherParticipant} style={{ height: '100%', width: '100%' }} />
-                </div>
+              {teacherTracks.length > 0 ? (
+                <GridLayout tracks={teacherTracks} style={{ height: '100%', width: '100%' }}>
+                  <ParticipantTile />
+                </GridLayout>
               ) : teacherParticipant ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 gap-4 relative">
                   <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center text-4xl font-bold text-slate-300 shadow-xl border-4 border-slate-800">
