@@ -748,7 +748,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
                   <div key={p.identity} className="h-full aspect-video min-w-[160px] md:min-w-[200px] shrink-0 rounded-lg overflow-hidden border border-slate-700 relative bg-slate-900 flex flex-col items-center justify-center group">
                     <VoiceIndicator participant={p} />
                     {p.isCameraEnabled ? (
-                      <ParticipantTile participant={p} style={{ height: '100%', width: '100%' }} />
+                      <ParticipantTile trackRef={{ participant: p, source: Track.Source.Camera }} style={{ height: '100%', width: '100%' }} />
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full w-full bg-slate-800">
                         <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-slate-300 shadow-md border-2 border-slate-700">
