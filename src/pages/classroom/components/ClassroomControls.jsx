@@ -19,7 +19,7 @@ const ClassroomControls = React.memo(({
   unreadChatCount
 }) => {
   return (
-    <footer className="h-16 md:h-20 bg-slate-900 border-t border-slate-800 flex items-center justify-between px-2 md:px-8 z-20 shrink-0">
+    <footer className="py-2 pb-6 md:py-0 h-auto md:h-20 bg-slate-900 border-t border-slate-800 flex items-center justify-between px-2 md:px-8 z-20 shrink-0">
       
       {/* Left Side Info */}
       <div className="hidden sm:flex items-center gap-3 w-1/4"></div>

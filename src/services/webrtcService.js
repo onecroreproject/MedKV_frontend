@@ -13,7 +13,9 @@ class WebRTCService {
     this.onClassEnded = null;
     this.onForceKick = null;
     this.onForceMute = null;
+    this.onForceUnmute = null;
     this.onForceCameraOff = null;
+    this.onForceCameraOn = null;
     this.onParticipantMediaState = null;
     this.onJoinedWaitingRoom = null;
     this.onAdmitted = null;
@@ -40,8 +42,16 @@ class WebRTCService {
       if (this.onForceMute) this.onForceMute();
     });
 
+    this.socket.on('force-unmute', () => {
+      if (this.onForceUnmute) this.onForceUnmute();
+    });
+
     this.socket.on('force-camera-off', () => {
       if (this.onForceCameraOff) this.onForceCameraOff();
+    });
+
+    this.socket.on('force-camera-on', () => {
+      if (this.onForceCameraOn) this.onForceCameraOn();
     });
 
     this.socket.on('participant-media-state', (data) => {

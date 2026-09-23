@@ -469,9 +469,19 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
        alert("The Host has muted your microphone.");
     };
 
+    webrtcService.onForceUnmute = () => {
+       localParticipant.setMicrophoneEnabled(true);
+       alert("The Host has unmuted your microphone.");
+    };
+
     webrtcService.onForceCameraOff = () => {
        localParticipant.setCameraEnabled(false);
        alert("The Host has turned off your camera.");
+    };
+
+    webrtcService.onForceCameraOn = () => {
+       localParticipant.setCameraEnabled(true);
+       alert("The Host has requested to turn on your camera.");
     };
 
     webrtcService.onForceKick = () => {
@@ -590,7 +600,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   // Using GridLayout instead of mainTrack
 
   return (
-    <div className="h-screen w-full bg-[#030919] text-white flex flex-col font-sans overflow-hidden relative">
+    <div className="h-[100dvh] w-full bg-[#030919] text-white flex flex-col font-sans overflow-hidden relative">
       
       {/* Anti-Recording Blackout Overlay */}
       {!isTeacher && !isTabFocused && (
