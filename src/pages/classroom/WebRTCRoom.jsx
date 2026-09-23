@@ -10,8 +10,6 @@ import company_name from '../../assets/company_name_transparent.png';
 // Components
 import ChatPanel from './components/ChatPanel';
 import ClassroomControls from './components/ClassroomControls';
-import MainVideo from './components/MainVideo';
-import ParticipantGrid from './components/ParticipantGrid';
 
 import {
   LiveKitRoom,
@@ -20,7 +18,9 @@ import {
   RoomAudioRenderer,
   useLocalParticipant,
   useParticipants,
-  useChat
+  useChat,
+  GridLayout,
+  ParticipantTile
 } from '@livekit/components-react';
 import {
   Track,
@@ -469,12 +469,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
 
   }, [user._id, localParticipant]);
 
-  // Ensure mic and camera are disabled immediately on room join
-  useEffect(() => {
-    if (!localParticipant) return;
-    localParticipant.setMicrophoneEnabled(false);
-    localParticipant.setCameraEnabled(false);
-  }, [localParticipant?.sid]); // runs once when localParticipant first connects
+
 
   const toggleMute = useCallback(() => {
     localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled);
@@ -580,10 +575,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
     setChatOpen(prev => !prev);
   }, []);
 
-  // Main track is teacher's screen share OR teacher's camera
-  const teacherScreen = tracks.find(t => !t.participant.isLocal && t.source === Track.Source.ScreenShare);
-  const teacherCam = tracks.find(t => !t.participant.isLocal && t.source === Track.Source.Camera);
-  const mainTrack = teacherScreen || teacherCam;
+  // Using GridLayout instead of mainTrack
 
   return (
     <div className="h-screen w-full bg-[#030919] text-white flex flex-col font-sans overflow-hidden relative">
@@ -640,20 +632,12 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
         {/* Video Area */}
         <div className={`flex flex-col p-2 md:p-4 relative bg-[#01040A] transition-all duration-300 ${chatOpen && !isTeacher ? 'h-[35%] md:h-auto md:flex-1' : 'flex-1'}`}>
 
-          {/* Main Video View */}
-          <MainVideo 
-            screenTrack={teacherScreen} 
-            cameraTrack={teacherCam} 
-            isTeacher={isTeacher} 
-            user={user} 
-          />
-
-          {/* Picture in Picture / Grid of other students */}
-          <ParticipantGrid 
-            isTeacher={isTeacher} 
-            tracks={tracks}
-            localParticipant={localParticipant}
-          />
+          {/* Google Meet Style Grid Layout */}
+          <div className="flex-1 rounded-xl overflow-hidden relative border border-slate-800 bg-black">
+            <GridLayout tracks={tracks} style={{ height: '100%', width: '100%' }}>
+              <ParticipantTile />
+            </GridLayout>
+          </div>
         </div>
 
         {/* Sidebar (Chat / Participants) */}

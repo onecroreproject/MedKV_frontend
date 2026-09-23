@@ -30,7 +30,7 @@ const ChatPanel = React.memo(({ messages, user, onSendChat }) => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((m, i) => {
           const isSystem = m.senderId === 'system' || !m.from;
-          const isMe = m.from?.identity === user?.name || m.senderId === user?._id || m.senderId === webrtcService.socket?.id;
+          const isMe = m.from?.identity === user?._id?.toString() || m.senderId === user?._id || m.senderId === webrtcService.socket?.id;
           const senderName = m.from?.name || m.from?.identity || m.name;
           return (
           <div key={m.id || i} className={`flex flex-col ${isSystem ? 'items-center' : isMe ? 'items-end' : 'items-start'}`}>
