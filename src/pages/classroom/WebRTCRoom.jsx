@@ -806,8 +806,11 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
               `}</style>
               {teacherParticipant && <VoiceIndicator participant={teacherParticipant} />}
               {(() => {
-                const screenShareTrack = teacherTracks.find(t => t.source === Track.Source.ScreenShare);
-                const cameraTrack = teacherTracks.find(t => t.source === Track.Source.Camera);
+                const isScreenShareOn = teacherParticipant?.isScreenShareEnabled;
+                const isCameraOn = teacherParticipant?.isCameraEnabled;
+
+                const screenShareTrack = isScreenShareOn ? teacherTracks.find(t => t.source === Track.Source.ScreenShare) : null;
+                const cameraTrack = isCameraOn ? teacherTracks.find(t => t.source === Track.Source.Camera) : null;
                 const activeTrack = screenShareTrack || cameraTrack;
 
                 if (activeTrack) {
@@ -817,25 +820,28 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
                     </div>
                   );
                 }
-                return null;
+                
+                if (teacherParticipant) {
+                  return (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 gap-4 relative">
+                      <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center text-4xl font-bold text-slate-300 shadow-xl border-4 border-slate-800">
+                        {teacherParticipant.name ? teacherParticipant.name.charAt(0).toUpperCase() : 'T'}
+                      </div>
+                      <div className="absolute bottom-4 left-4 bg-black/60 px-3 py-1 rounded text-white text-sm flex items-center gap-2">
+                        {teacherParticipant.isMicrophoneEnabled ? <Mic size={14} className="text-green-400" /> : <MicOff size={14} className="text-red-400" />}
+                        {teacherParticipant.name || 'Teacher'}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-4">
+                    <div className="w-20 h-20 bg-slate-800 rounded-full animate-pulse"></div>
+                    <p className="font-medium animate-pulse">Waiting for Teacher to join...</p>
+                  </div>
+                );
               })()}
-              
-              {!teacherTracks.length && teacherParticipant ? (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 gap-4 relative">
-                  <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center text-4xl font-bold text-slate-300 shadow-xl border-4 border-slate-800">
-                    {teacherParticipant.name ? teacherParticipant.name.charAt(0).toUpperCase() : 'T'}
-                  </div>
-                  <div className="absolute bottom-4 left-4 bg-black/60 px-3 py-1 rounded text-white text-sm flex items-center gap-2">
-                    {teacherParticipant.isMicrophoneEnabled ? <Mic size={14} className="text-green-400" /> : <MicOff size={14} className="text-red-400" />}
-                    {teacherParticipant.name || 'Teacher'}
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-4">
-                  <div className="w-20 h-20 bg-slate-800 rounded-full animate-pulse"></div>
-                  <p className="font-medium animate-pulse">Waiting for Teacher to join...</p>
-                </div>
-              )}
             </div>
 
             {/* No Horizontal Scroll Row for Students - Replaced by Draggable Local Video */}
