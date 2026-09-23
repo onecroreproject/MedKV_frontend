@@ -28,20 +28,24 @@ const ChatPanel = React.memo(({ messages, user, onSendChat }) => {
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex flex-col ${m.senderId === 'system' ? 'items-center' : (m.senderId === user?._id || m.senderId === webrtcService.socket?.id) ? 'items-end' : 'items-start'}`}>
-            {m.senderId === 'system' ? (
+        {messages.map((m, i) => {
+          const isSystem = m.senderId === 'system' || !m.from;
+          const isMe = m.from?.identity === user?.name || m.senderId === user?._id || m.senderId === webrtcService.socket?.id;
+          const senderName = m.from?.name || m.from?.identity || m.name;
+          return (
+          <div key={m.id || i} className={`flex flex-col ${isSystem ? 'items-center' : isMe ? 'items-end' : 'items-start'}`}>
+            {isSystem ? (
               <span className="bg-accent/10 text-accent border border-accent/20 text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-wider my-2">
                 {m.message || m.text}
               </span>
             ) : (
-              <div className={`max-w-[85%] ${(m.senderId === user?._id || m.senderId === webrtcService.socket?.id) ? 'items-end' : 'items-start'}`}>
+              <div className={`max-w-[85%] ${isMe ? 'items-end' : 'items-start'}`}>
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-[10px] font-bold text-slate-300">{m.name}</span>
+                  <span className="text-[10px] font-bold text-slate-300">{senderName}</span>
                   <span className="text-[9px] text-slate-500">{new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
                 <div className={`p-2.5 rounded-2xl text-xs leading-relaxed ${
-                  (m.senderId === user?._id || m.senderId === webrtcService.socket?.id)
+                  isMe
                     ? 'bg-accent text-[#030919] rounded-tr-sm font-medium' 
                     : m.role === 'teacher'
                       ? 'bg-blue-600/20 border border-blue-500/30 text-blue-100 rounded-tl-sm'
@@ -52,7 +56,7 @@ const ChatPanel = React.memo(({ messages, user, onSendChat }) => {
               </div>
             )}
           </div>
-        ))}
+        )})}
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 border-t border-slate-800 bg-slate-900 flex gap-2">

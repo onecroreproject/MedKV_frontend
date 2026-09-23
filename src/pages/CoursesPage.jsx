@@ -37,6 +37,15 @@ const getFullUrl = (url) => {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
+const formatTime12Hour = (time) => {
+  if (!time) return '';
+  const [h, m] = time.split(':');
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${m} ${ampm}`;
+};
+
 export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userSession }) {
   // Navigation and Authentication States
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -501,10 +510,21 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                       </div>
                     </div>
 
-                    <div className="relative z-10 flex items-center justify-between text-slate-300 text-[10px] tracking-wider uppercase font-bold">
+                    <div className="relative z-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-300 text-[10px] tracking-wider uppercase font-bold">
                       <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : course.duration}</span>
                       <span>•</span>
                       <span>{course.lessons} Lectures</span>
+                      {course.startDate && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 text-accent whitespace-nowrap">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 

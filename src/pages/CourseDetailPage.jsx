@@ -30,6 +30,15 @@ const getFullUrl = (url) => {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
+const formatTime12Hour = (time) => {
+  if (!time) return '';
+  const [h, m] = time.split(':');
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${m} ${ampm}`;
+};
+
 const FEATURE_MAP = {
   live: { text: 'Live Classes & Vivas', icon: '📡' },
   recorded: { text: 'Recorded HD Session archives', icon: '📹' },
@@ -115,7 +124,10 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             faqs: data.faqs || [],
             languages: data.languages || [],
             earlyBird: data.earlyBird || null,
-            registrationCount: data.registrationCount || 0
+            registrationCount: data.registrationCount || 0,
+            startDate: data.startDate || null,
+            startTime: data.startTime || null,
+            endTime: data.endTime || null
           });
         }
 
@@ -361,6 +373,17 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-slate-400 text-[10.5px] uppercase tracking-wider font-semibold">
                   <span>Duration: {course.duration}</span>
+                  {course.startDate && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1.5 text-accent">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Batch Starts: {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                      </span>
+                    </>
+                  )}
                   {course.lessons > 0 && (
                     <>
                       <span>•</span>
@@ -763,7 +786,16 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
               {/* Course Features Checklist */}
               <div className="space-y-3.5 relative z-10">
-
+                {course.startDate && (
+                  <div className="flex items-center justify-center space-x-2 bg-accent/10 border border-accent/20 rounded-lg py-2 px-3 text-accent mb-2">
+                     <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-bold text-[11px] uppercase tracking-wider">
+                        Starts: {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `| ${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)}` : course.startTime ? `| ${formatTime12Hour(course.startTime)}` : ''}
+                      </span>
+                  </div>
+                )}
                 
                 <div className="space-y-2.5 font-medium text-slate-300 text-[11px]">
                   {((course.features && course.features.length > 0)

@@ -21,6 +21,15 @@ const getFullUrl = (url) => {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
+const formatTime12Hour = (time) => {
+  if (!time) return '';
+  const [h, m] = time.split(':');
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${m} ${ampm}`;
+};
+
 export default function CoursesSection({ onViewChange }) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
@@ -234,8 +243,18 @@ export default function CoursesSection({ onViewChange }) {
               {/* Body Content */}
               <CardBody className="p-6 space-y-4 flex-grow flex flex-col justify-between bg-white text-left">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center text-[10px] text-accent font-bold uppercase tracking-wider">
-                    <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : (course.duration || 'Flexible Timeline')}</span>
+                  <div className="flex justify-between items-center text-[10px] text-accent font-bold uppercase tracking-wider flex-wrap gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : (course.duration || 'Flexible Timeline')}</span>
+                      {course.startDate && (
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/10 rounded text-accent whitespace-nowrap">
+                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-primary bg-soft-gray px-2 py-0.5 rounded border border-slate-200/40">ONLINE</span>
                   </div>
                   <h4 

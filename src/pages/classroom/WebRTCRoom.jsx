@@ -19,7 +19,8 @@ import {
   useTracks,
   RoomAudioRenderer,
   useLocalParticipant,
-  useParticipants
+  useParticipants,
+  useChat
 } from '@livekit/components-react';
 import {
   Track,
@@ -56,8 +57,8 @@ const LOW_LATENCY_OPTIONS = {
   publishDefaults: {
     // Use Opus for audio — lowest latency codec
     audioPreset: AudioPresets.music,
-    // Prefer VP8 (widely supported) with simulcast for adaptive quality
-    videoCodec: 'vp8',
+    // Prefer AV1 for high-fidelity imaging (PACS) with simulcast for adaptive quality
+    videoCodec: 'av1',
     simulcast: true,
     // Host broadcasts at up to 720p; participants at 360p
     videoEncoding: {
@@ -438,21 +439,25 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   const chatOpenRef = useRef(chatOpen);
   useEffect(() => { chatOpenRef.current = chatOpen; }, [chatOpen]);
 
+  const { send: sendChatMessage, chatMessages } = useChat();
+
   useEffect(() => {
     if (chatOpen) setUnreadChatCount(0);
   }, [chatOpen]);
 
   useEffect(() => {
-    webrtcService.onChat = (data) => {
-      setMessages(prev => [...prev, data]);
-      if (data.senderId !== user._id) {
+    if (chatMessages.length > 0) {
+      const lastMsg = chatMessages[chatMessages.length - 1];
+      if (lastMsg.from?.identity !== user.name) {
         playSound('message');
         if (!chatOpenRef.current) {
           setUnreadChatCount(prev => prev + 1);
         }
       }
-    };
+    }
+  }, [chatMessages.length, user.name]);
 
+  useEffect(() => {
     webrtcService.onHandRaise = (data) => {
       console.log('Hand raised by', data.name);
       setMessages(prev => [...prev, { senderId: 'system', name: 'System', role: 'system', message: `${data.name} raised hand!`, timestamp: new Date() }]);
@@ -557,8 +562,8 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
   }, [navigate]);
 
   const sendChat = useCallback((text) => {
-    webrtcService.sendChat(text);
-  }, []);
+    sendChatMessage(text);
+  }, [sendChatMessage]);
 
   const [isHandRaised, setIsHandRaised] = useState(false);
 
@@ -654,7 +659,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
         {/* Sidebar (Chat / Participants) */}
         {chatOpen && (
           <ChatPanel 
-            messages={messages} 
+            messages={chatMessages} 
             user={user} 
             onSendChat={sendChat} 
           />
