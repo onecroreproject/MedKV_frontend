@@ -66,8 +66,41 @@ function MainApp({ userSession, setUserSession }) {
   const navigate = useNavigate();
 
   const searchParams = new URLSearchParams(location.search);
-  const view = searchParams.get('view') || 'home';
-  const activeCourseId = selectedCourseId || searchParams.get('courseId');
+  
+  // 1. Deep Link Path Parsing
+  let defaultView = 'home';
+  let defaultCourseId = null;
+  let parsedTab = null;
+
+  if (location.pathname.startsWith('/student/dashboard')) {
+    defaultView = 'dashboard';
+    parsedTab = searchParams.get('tab');
+  } else if (location.pathname.startsWith('/student/courses/')) {
+    defaultView = 'course-detail';
+    defaultCourseId = location.pathname.split('/').pop();
+    parsedTab = searchParams.get('tab');
+  }
+
+  const view = searchParams.get('view') || defaultView;
+  const activeCourseId = selectedCourseId || searchParams.get('courseId') || defaultCourseId;
+
+  // Sync tab from deep link to state
+  useEffect(() => {
+    if (parsedTab && view === 'dashboard') {
+      setDashboardTab(parsedTab);
+    }
+  }, [parsedTab, view]);
+
+  // 2. Protected Routes Verification
+  useEffect(() => {
+    const protectedViews = ['dashboard', 'enrollment-review', 'secure-payment', 'payment-processing', 'payment-success', 'payment-failed'];
+    
+    // If accessing a protected route without a user session, force redirect to login
+    if (protectedViews.includes(view) && !userSession) {
+      const currentUrl = location.pathname + location.search;
+      navigate(`/student/login?redirect=${encodeURIComponent(currentUrl)}`, { replace: true });
+    }
+  }, [view, userSession, navigate, location.pathname, location.search]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
