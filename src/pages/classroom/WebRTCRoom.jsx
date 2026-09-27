@@ -4,6 +4,7 @@ import { webrtcService } from '../../services/webrtcService';
 import { VideoOff, Users, Mic, MicOff, Video } from 'lucide-react';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
+import { logLiveClassEvent } from '../../services/liveClassService';
 import dark_logo from '../../assets/dark_logo_transparent.png';
 import company_name from '../../assets/company_name_transparent.png';
 
@@ -511,6 +512,22 @@ function ActiveStudentClassroom({ user, roomId, isTeacher, isFocused }) {
   const navigate = useNavigate();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
   const participants = useParticipants();
+  
+  const logEvent = useCallback((action, details = {}) => {
+    logLiveClassEvent(roomId, {
+      action,
+      details,
+      userId: user._id || user.id,
+      userName: user.name,
+      role: isTeacher ? 'teacher' : 'student'
+    });
+  }, [roomId, user, isTeacher]);
+
+  useEffect(() => {
+    logEvent('JOINED_CLASSROOM', { timestamp: new Date().toISOString() });
+    return () => logEvent('LEFT_CLASSROOM');
+  }, [logEvent]);
+
   // Find the teacher participant
   const teacherParticipant = participants.find(p => {
     try {
@@ -656,16 +673,34 @@ function ActiveStudentClassroom({ user, roomId, isTeacher, isFocused }) {
 
 
   const toggleMute = useCallback(async () => {
-    await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
-  }, [localParticipant, isMicrophoneEnabled]);
+    try {
+      await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+      logEvent('TOGGLE_MIC', { enabled: !isMicrophoneEnabled });
+    } catch (err) {
+      logEvent('ERROR_MIC', { error: err.message });
+      alert("Failed to access microphone.");
+    }
+  }, [localParticipant, isMicrophoneEnabled, logEvent]);
 
   const toggleVideo = useCallback(async () => {
-    await localParticipant.setCameraEnabled(!isCameraEnabled);
-  }, [localParticipant, isCameraEnabled]);
+    try {
+      await localParticipant.setCameraEnabled(!isCameraEnabled);
+      logEvent('TOGGLE_CAMERA', { enabled: !isCameraEnabled });
+    } catch (err) {
+      logEvent('ERROR_CAMERA', { error: err.message });
+      alert("Failed to access camera.");
+    }
+  }, [localParticipant, isCameraEnabled, logEvent]);
 
   const toggleScreenShare = useCallback(async () => {
-    await localParticipant.setScreenShareEnabled(!isScreenShareEnabled);
-  }, [localParticipant, isScreenShareEnabled]);
+    try {
+      await localParticipant.setScreenShareEnabled(!isScreenShareEnabled);
+      logEvent('TOGGLE_SCREENSHARE', { enabled: !isScreenShareEnabled });
+    } catch (err) {
+      console.warn("Screen share was canceled or failed:", err);
+      logEvent('ERROR_SCREENSHARE', { error: err.message });
+    }
+  }, [localParticipant, isScreenShareEnabled, logEvent]);
 
   const toggleRecording = useCallback(async () => {
     if (!isRecording) {
