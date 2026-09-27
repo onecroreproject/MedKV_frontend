@@ -34,7 +34,7 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
     windowPrint.document.write(`
       <html>
         <head>
-          <title>Invoice - ${invoiceData.invoiceId}</title>
+          <title>${invoiceData.studentName} - Invoice - ${invoiceData.invoiceId}</title>
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             @media print {
@@ -94,15 +94,9 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
               
               {/* Top Banner Row */}
               <div className="flex justify-between border-b border-gray-300">
-                <div className="w-1/3 p-4 flex items-center justify-center border-r border-gray-300">
-                   <img src={dark_logo} alt="Dr. Sam Reefath Radiology Academy" className="h-16 object-contain" />
-                </div>
-                <div className="w-1/3 p-4 border-r border-gray-300">
-                   <h1 className="font-bold text-base mb-1">Dr. Sam Reefath Radiology Academy</h1>
-                   <p>Academic Head Office</p>
-                   <p>12, Academy Street, Adyar</p>
-                   <p>Chennai - 600020, Tamil Nadu</p>
-                   <p>India</p>
+                <div className="w-2/3 p-6 flex items-center border-r border-gray-300 bg-[#0B1F4D]">
+                   <img src={dark_logo} alt="Dr. Sam Reefath Radiology Academy" className="h-24 object-contain mr-6" />
+                   <h1 className="font-bold text-2xl text-white tracking-wide">Dr. Sam Reefath Radiology Academy</h1>
                 </div>
                 <div className="w-1/3 p-4 flex items-end justify-end">
                    <h2 className="text-3xl font-light text-gray-500 tracking-wide">TAX INVOICE</h2>
@@ -170,14 +164,14 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
                 </div>
                 
                 <div className="flex border-b border-gray-300 min-h-[80px]">
-                  <div className="w-[5%] p-2 border-r border-gray-300 text-center">1</div>
-                  <div className="w-[55%] p-2 border-r border-gray-300">
-                    <p className="font-bold">{invoiceData.courseName}</p>
-                    <p className="text-gray-500 mt-1">Full Curriculum Access + Live Webinars ({itemSuffix})</p>
+                  <div className="w-[5%] p-2 border-r border-gray-300 text-center shrink-0">1</div>
+                  <div className="w-[55%] p-2 border-r border-gray-300 min-w-0 break-words pr-4">
+                    <p className="font-bold leading-snug">{invoiceData.courseName}</p>
+                    <p className="text-gray-500 mt-1 leading-snug">Full Curriculum Access + Live Webinars ({itemSuffix})</p>
                   </div>
-                  <div className="w-[10%] p-2 border-r border-gray-300 text-center">1.00</div>
-                  <div className="w-[15%] p-2 border-r border-gray-300 text-right">{invoiceData.amount}</div>
-                  <div className="w-[15%] p-2 text-right">{invoiceData.amount}</div>
+                  <div className="w-[10%] p-2 border-r border-gray-300 text-center shrink-0">1.00</div>
+                  <div className="w-[15%] p-2 border-r border-gray-300 text-right shrink-0">{invoiceData.amount}</div>
+                  <div className="w-[15%] p-2 text-right shrink-0">{invoiceData.amount}</div>
                 </div>
               </div>
 
@@ -208,10 +202,6 @@ export default function InvoiceModal({ isOpen, onClose, invoiceData }) {
                    
                    <div className="p-4 flex flex-col items-center justify-center flex-1">
                      <p className="font-bold mb-4 text-center">Dr. Sam Reefath Academy</p>
-                     <div className="w-32 h-16 border-2 border-blue-200/50 rounded-full flex items-center justify-center bg-blue-50/30 rotate-[-5deg]">
-                       <span className="text-blue-700/60 font-bold tracking-widest text-[10px]">PAID SECURELY</span>
-                     </div>
-                     <p className="mt-4 border-t border-gray-400 pt-1 w-full text-center text-gray-500 text-[10px]">Authorized Signature</p>
                    </div>
                 </div>
               </div>

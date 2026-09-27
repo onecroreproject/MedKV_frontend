@@ -13,6 +13,7 @@ import company_name from '../../assets/company_name_transparent.png';
 const getRegisterSchema = (authSettings) => yup.object().shape({
   fullName: yup.string().required('Full name is required'),
   email: yup.string().email('Invalid email format').required('Email is required'),
+  phoneNumber: yup.string().required('Mobile number is required').matches(/^[0-9]+$/, "Must be only digits").min(10, 'Must be at least 10 digits'),
   password: buildPasswordSchema(authSettings),
   confirmPassword: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match').required('Confirm Password is required'),
 });
@@ -44,6 +45,7 @@ export default function StudentRegister() {
       const userData = {
         name: data.fullName,
         email: data.email,
+        phoneNumber: data.phoneNumber,
         password: data.password
       };
       
@@ -129,6 +131,17 @@ export default function StudentRegister() {
               placeholder="student@example.com"
             />
             {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+            <input
+              type="tel"
+              {...register('phoneNumber')}
+              className={`w-full px-4 py-3 rounded-lg border ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-[#0B1F4D] focus:border-transparent outline-none transition-colors`}
+              placeholder="9876543210"
+            />
+            {errors.phoneNumber && <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>}
           </div>
 
           <div>

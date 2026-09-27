@@ -816,6 +816,9 @@ function ActiveStudentClassroom({ user, roomId, isTeacher }) {
                   transform: rotateY(0deg) !important;
                   -webkit-transform: rotateY(0deg) !important;
                   scale: 1 !important;
+                  object-fit: cover !important;
+                  width: 100% !important;
+                  height: 100% !important;
                 }
               `}</style>
               {teacherParticipant && <VoiceIndicator participant={teacherParticipant} />}

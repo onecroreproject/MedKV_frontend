@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card, { CardBody } from '../../components/ui/Card';
 import { FACULTY_MEMBERS } from '../../config/constants';
 
 export default function FacultySection() {
   const leftCardsRef = useRef([]);
   const rightCardsRef = useRef([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const observerOptions = {
@@ -109,6 +111,14 @@ export default function FacultySection() {
                             "{fac.bio}"
                           </p>
                         </div>
+                        {fac.detailedBio && (
+                          <button 
+                            onClick={() => navigate('/faculty/' + fac.slug)}
+                            className="mt-2 text-xs font-bold text-accent hover:text-primary transition-colors flex items-center gap-1"
+                          >
+                            Read Full Profile &rarr;
+                          </button>
+                        )}
                       </div>
                     </div>
                   </CardBody>
@@ -156,6 +166,14 @@ export default function FacultySection() {
                             "{fac.bio}"
                           </p>
                         </div>
+                        {fac.detailedBio && (
+                          <button 
+                            onClick={() => navigate('/faculty/' + fac.slug)}
+                            className="mt-2 text-xs font-bold text-accent hover:text-primary transition-colors flex items-center gap-1"
+                          >
+                            Read Full Profile &rarr;
+                          </button>
+                        )}
                       </div>
                     </div>
                   </CardBody>
@@ -165,6 +183,7 @@ export default function FacultySection() {
           </div>
         </div>
       </div>
+
 
       {/* Add these styles to your global CSS or CSS module */}
       <style>{`

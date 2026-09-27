@@ -16,6 +16,7 @@ import StudentRegister from './pages/auth/StudentRegister';
 import StudentForgotPassword from './pages/auth/StudentForgotPassword';
 import StudentResetPassword from './pages/auth/StudentResetPassword';
 import PolicyPage from './pages/PolicyPage';
+import FacultyProfilePage from './pages/FacultyProfilePage';
 import { PlatformProvider } from './context/PlatformContext';
 import { getMe } from './services/userService';
 import { getCourseById } from './services/courseService';
@@ -251,6 +252,7 @@ function App() {
           <Route path="/webrtc/:roomId" element={<WebRTCRoom />} />
           <Route path="/studlive" element={<StudentLiveClassMock />} />
           <Route path="/policy/:type" element={<PolicyPage />} />
+          <Route path="/faculty/:slug" element={<FacultyProfilePage />} />
           <Route path="/courses/:slug" element={<CourseDetailWrapper userSession={userSession} setUserSession={setUserSession} />} />
           <Route path="/*" element={<MainApp userSession={userSession} setUserSession={setUserSession} />} />
         </Routes>

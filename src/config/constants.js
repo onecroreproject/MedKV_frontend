@@ -182,20 +182,61 @@ export const CASE_STUDIES = [
 export const FACULTY_MEMBERS = [
   {
     name: 'Dr. V Krishnaveni',
+    slug: 'dr-v-krishnaveni',
     role: 'Founder & Chief Executive Officer (CEO)',
     specialization: 'Fetal, Breast, Women’s & MSK Imaging',
     experience: 'Consultant Radiologist',
     bio: 'Consultant Radiologist at MGM Malar Hospital, Chennai. Specializes in Fetal, Breast, Women’s, and Musculoskeletal Radiology with advanced fellowship training. Dedicated to building a high-quality academic platform focused on structured, clinically relevant, and exam-oriented radiology education for postgraduate students.'
   },
   {
-    name: 'Dr. Sam Reefath Jabaraj',
+    name: 'Dr. Samuel Reefath J.',
+    slug: 'dr-samuel-reefath-j',
     role: 'Co-Founder & Academic Director',
-    specialization: 'Concept-oriented Radiology Teaching',
-    experience: 'Dedicated Educator & Mentor',
-    bio: 'A dedicated radiology educator with a strong passion for academic teaching, case-based learning, and exam-oriented radiology training for MDRD, DNB, DMRD & FRCR aspirants. Mentoring postgraduate aspirants and simplifying complex radiological concepts.'
+    specialization: 'Onco-Radiology, Advanced Imaging, AI & Data Science',
+    experience: 'Senior Consultant & Lead Radiologist',
+    bio: 'Senior Consultant & Lead Radiologist at MGM Healthcare, Chennai. Founder of Dr. Sam Reefath Radiology Academy. Specializes in advanced diagnostic imaging, oncologic imaging, emergency radiology, cardiovascular imaging and image-guided interventions.',
+    detailedBio: [
+      {
+        title: "Professional Profile",
+        content: "Dr. Samuel Reefath J. is a Senior Consultant & Lead Radiologist at MGM Healthcare, Malar–Adyar, Chennai, with extensive clinical experience in advanced diagnostic imaging, oncologic imaging, emergency radiology, cardiovascular imaging and image-guided interventions.\n\nHe has received foundational and advanced training at prestigious national referral institutions including Christian Medical College, Ludhiana, and Tata Memorial Hospital, Mumbai. His practice has been shaped by exposure to complex oncologic imaging, multidisciplinary clinical decision-making and high-volume tertiary/quaternary care.\n\nAlongside clinical radiology, he has a strong academic interest in advanced CT and MRI, artificial intelligence and machine learning in medical imaging, data science, research and postgraduate radiology education."
+      },
+      {
+        title: "Clinical & Academic Areas of Expertise",
+        content: "• Neuroimaging: Acute stroke imaging, Perfusion-based evaluation, Advanced neuroimaging, Functional MRI, Diffusion Tensor Imaging\n• Cardiovascular Imaging: Coronary CT angiography, Low-dose coronary CT, Ultra-low-contrast coronary imaging, TAVI planning and assessment\n• Advanced CT: Ultra-low-dose CT, Dose-optimized protocols, Advanced reconstruction, Deep-learning-enabled imaging, Quantitative radiology\n• Advanced MRI: Whole-body diffusion imaging, Myeloma imaging, ZTE MRI, Cartilage mapping, Advanced functional MRI\n• Ultrasound & Interventions: Contrast-enhanced ultrasound, Advanced abdominal imaging, Peripheral vascular imaging, Musculoskeletal imaging, Image-guided interventions"
+      },
+      {
+        title: "Radiology + Artificial Intelligence",
+        content: "A distinctive component of Dr. Reefath’s academic profile is his interest in the intersection of Radiology, Artificial Intelligence, Machine Learning and Data Science. His scholarly interests include AI-assisted medical imaging and quantitative approaches, with active research engagement and collaboration involving IIT Madras.\n\nHis clinical and academic work explores how advanced reconstruction, deep learning and quantitative imaging can support more efficient, information-rich and clinically meaningful imaging."
+      },
+      {
+        title: "Research & Innovation",
+        content: "At MGM Healthcare, Malar–Adyar, Dr. Reefath has been involved in advanced CT research and clinical initiatives exploring low-dose, low-contrast and AI-assisted imaging.\n\n• 260 patients reported in an ultra-low-dose CT screening programme\n• 54 cancers identified before symptoms in the reported screening cohort\n• 133 coronary CT examinations reported using approximately 15–20 mL iodinated contrast\n\nThese initiatives have explored the combination of low-dose imaging, reduced contrast exposure, deep-learning reconstruction and quantitative radiology, with an emphasis on clinically useful information and patient-centred imaging."
+      },
+      {
+        title: "Academic & Teaching Profile",
+        content: "Dr. Reefath is actively involved in postgraduate radiology teaching, examination-oriented education, FRCR-focused learning and academic mentorship. His teaching philosophy is structured around:\nCONCEPT → PATTERN → REASONING → DIAGNOSIS → CLINICAL APPLICATION\n\n• Case-based learning and image interpretation\n• High-yield conceptual teaching\n• Pattern recognition and differential diagnosis\n• Clinical correlation and reporting approach\n• Systematic examination and spotter strategy\n• Integration of emerging imaging technology and AI\n• Academic mentorship and structured learning"
+      },
+      {
+        title: "The Dr. Sam Reefath Teaching Approach",
+        content: "01 SEE: Recognise the dominant imaging finding.\n02 ANALYSE: Break the case down into meaningful imaging features.\n03 CORRELATE: Connect imaging with clinical information.\n04 REASON: Build and narrow the differential diagnosis.\n05 DIAGNOSE: Reach the most appropriate conclusion.\n06 COMMUNICATE: Translate interpretation into clear clinical reporting."
+      },
+      {
+        title: "Healthcare Leadership",
+        content: "Proprietor — Radiance Scans & Labs, Chennai\nAlongside his clinical and academic responsibilities, Dr. Samuel Reefath is the Proprietor of Radiance Scans & Labs, Chennai. His involvement in developing a diagnostic imaging centre brings an additional perspective spanning clinical radiology, advanced imaging technology, healthcare delivery, multidisciplinary operations and innovation."
+      },
+      {
+        title: "Why Dr. Sam Reefath Radiology Academy?",
+        content: "• Clinical Experience: Learn from a radiologist actively involved in tertiary-care clinical practice.\n• Case-Based Learning: Understand imaging through real clinical problems rather than isolated facts.\n• Concept-Driven Teaching: Build a foundation that helps you approach unfamiliar cases.\n• Exam-Oriented Training: Develop a systematic method for postgraduate and FRCR-style learning.\n• Modern Radiology: Explore advanced CT, MRI, AI, deep learning and quantitative imaging.\n• Clinical Reasoning: Learn to connect imaging findings with the clinical question."
+      },
+      {
+        title: "Vision for the Academy",
+        content: "Dr. Sam Reefath Radiology Academy aims to create a structured learning environment where postgraduate radiology students move from memorising to understanding, from seeing images to interpreting them, and from knowing diagnoses to developing a systematic radiological thought process.\n\n\"Don’t just learn what an image looks like. Learn why it looks that way.\"\n\nDR. SAM REEFATH RADIOLOGY ACADEMY\nLearn the Concepts • Decode the Images • Build the Reasoning • Think Like a Radiologist"
+      }
+    ]
   },
   {
     name: 'Dr. Sanjay P Yadav',
+    slug: 'dr-sanjay-p-yadav',
     role: 'Director – Partnerships & Growth',
     specialization: 'Strategic Growth & Collaborations',
     experience: 'Leadership & Development',
