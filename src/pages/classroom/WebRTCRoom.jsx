@@ -396,6 +396,7 @@ export default function WebRTCRoom() {
          user={user} 
          roomId={roomId} 
          isTeacher={isTeacher} 
+         isFocused={isFocused}
       />
       {/* RoomAudioRenderer: renders all remote audio tracks with zero-delay */}
       <RoomAudioRenderer volume={1.0} />
@@ -506,7 +507,7 @@ const DraggableLocalVideo = ({ participant, allTracks }) => {
   );
 };
 
-function ActiveStudentClassroom({ user, roomId, isTeacher }) {
+function ActiveStudentClassroom({ user, roomId, isTeacher, isFocused }) {
   const navigate = useNavigate();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
   const participants = useParticipants();

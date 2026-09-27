@@ -289,9 +289,10 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
           setSessions(mapped);
         }
         
+        let publishedRecordings = [];
         if (recRes.success) {
           // Filter out drafts, only show published recordings to students
-          const published = recRes.data.filter(r => {
+          publishedRecordings = recRes.data.filter(r => {
              if (r.isPublished === false) return false;
              // Is lesson free?
              if (r.lesson && r.lesson.isFreePreview) return true;
@@ -301,7 +302,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
              // Default false
              return false;
           });
-          setRecordings(published);
+          setRecordings(publishedRecordings);
         }
 
         // Generating Dynamic Alerts
@@ -346,7 +347,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
         }
 
         if (recRes.success) {
-          published.forEach(r => {
+          publishedRecordings.forEach(r => {
             if (r.createdAt) {
               const recDate = new Date(r.createdAt);
               const diffDays = Math.floor((now - recDate) / (1000 * 60 * 60 * 24));
