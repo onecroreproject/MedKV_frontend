@@ -57,7 +57,7 @@ const LOW_LATENCY_OPTIONS = {
   },
   publishDefaults: {
     // Use Opus for audio — lowest latency codec
-    audioPreset: AudioPresets.music,
+    audioPreset: AudioPresets.speech,
     // Prefer AV1 for high-fidelity imaging (PACS) with simulcast for adaptive quality
     videoCodec: 'av1',
     simulcast: true,
@@ -71,8 +71,8 @@ const LOW_LATENCY_OPTIONS = {
       maxBitrate: 3_000_000,
       maxFramerate: 30,
     },
-    dtx: true,   // Discontinuous Transmission — saves bandwidth during silence
-    red: true,   // Redundant audio packets — recovers from packet loss
+    dtx: false,  // Discontinuous Transmission disabled to prevent wake-up delays
+    red: false,  // Redundant audio disabled to prevent bandwidth congestion
   },
 };
 
