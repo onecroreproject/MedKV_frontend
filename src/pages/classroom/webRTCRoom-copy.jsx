@@ -33,13 +33,20 @@ import {
 // ─── Low-latency LiveKit room options ────────────────────────────────────────
 // These are shared between host and participant instances.
 const LOW_LATENCY_OPTIONS = {
-  // Enable adaptive bitrate to prevent frame pausing/freezing on hide
-  adaptiveStream: true,
+  // Disable adaptive bitrate to prevent frame pausing/freezing on hide
+  adaptiveStream: false,
   // Dynacast: only encode/send layers that subscribers actually need
   dynacast: true,
   // Stop local tracks when unpublished so the OS releases camera/mic immediately
   stopLocalTrackOnUnpublish: true,
-
+  // Reconnect quickly without full renegotiation
+  reconnectPolicy: {
+    nextRetryDelayInMs: (context) => {
+      if (context.retryCount === 0) return 300;
+      if (context.retryCount < 4)  return 1000 * context.retryCount;
+      return null; // give up after 4 retries
+    },
+  },
   // Audio publish defaults: Opus with all processing enabled for lowest latency
   audioCaptureDefaults: {
     echoCancellation: true,
@@ -52,8 +59,8 @@ const LOW_LATENCY_OPTIONS = {
   publishDefaults: {
     // Use Opus for audio — lowest latency codec
     audioPreset: AudioPresets.speech,
-    // Prefer vp8 for hardware compatibility
-    videoCodec: 'vp8',
+    // Prefer AV1 for high-fidelity imaging (PACS) with simulcast for adaptive quality
+    videoCodec: 'av1',
     simulcast: true,
     // Host broadcasts at up to 720p; participants at 360p
     videoEncoding: {
@@ -62,8 +69,8 @@ const LOW_LATENCY_OPTIONS = {
     },
     // Screen share: high quality, no simulcast needed
     screenShareEncoding: {
-      maxBitrate: 2500000,
-      maxFramerate: 15,
+      maxBitrate: 3_000_000,
+      maxFramerate: 30,
     },
     dtx: false,  // Discontinuous Transmission disabled to prevent wake-up delays
     red: false,  // Redundant audio disabled to prevent bandwidth congestion
