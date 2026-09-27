@@ -29,13 +29,30 @@ function DifficultyBadge({ level }) {
 }
 
 // ─── VIDEO PLAYER ─────────────────────────────────────────────────────────────
-function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted }) {
+function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted, user }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState('1x');
   const [volume, setVolume] = useState(80);
   const [showControls, setShowControls] = useState(true);
   const [marked, setMarked] = useState(isCompleted || false);
+  
+  const [isFocused, setIsFocused] = useState(true);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      setIsFocused(false);
+      if (playing) setPlaying(false); // Automatically pause video when focus is lost
+    };
+    const handleFocus = () => setIsFocused(true);
+    
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [playing]);
 
   useEffect(() => {
     setMarked(isCompleted || false);
@@ -175,6 +192,48 @@ function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted }) {
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => playing && setShowControls(false)}
       >
+        {/* "Recording Not Allowed" Badge */}
+        <div className="absolute top-4 right-4 z-[60] bg-red-950/80 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-2 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+          <span className="text-[9px] sm:text-[10px] font-black text-red-200 tracking-widest uppercase">Recording Prohibited</span>
+        </div>
+
+        {/* Bouncing Anti-Piracy Watermark overlay */}
+        <div className="absolute inset-0 pointer-events-none z-[50] overflow-hidden select-none">
+          <style>{`
+            @keyframes floatAroundPlayer {
+              0% { transform: translate(0, 0) rotate(-15deg); }
+              25% { transform: translate(30vw, 20vh) rotate(-15deg); }
+              50% { transform: translate(10vw, 40vh) rotate(-15deg); }
+              75% { transform: translate(50vw, 10vh) rotate(-15deg); }
+              100% { transform: translate(0, 0) rotate(-15deg); }
+            }
+            .floating-watermark-player {
+              position: absolute;
+              top: 10%;
+              left: 10%;
+              animation: floatAroundPlayer 35s linear infinite;
+            }
+          `}</style>
+          <div className="floating-watermark-player text-xs sm:text-sm font-black text-white/10 whitespace-nowrap tracking-widest drop-shadow-md bg-black/5 px-4 py-2 rounded-xl backdrop-blur-[1px]">
+            {user?.name} • {user?.phone || user?.phoneNumber || user?.email || 'Student'}
+          </div>
+        </div>
+        
+        {/* Focus Loss Overlay */}
+        {!isFocused && (
+          <div className="absolute inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center text-center p-8 transition-all duration-300">
+            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-10 h-10 text-red-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 uppercase tracking-tight">Playback Paused</h2>
+            <p className="text-red-400 font-bold mb-4 uppercase tracking-widest text-sm">Window Focus Lost</p>
+            <p className="text-slate-400 text-sm max-w-md leading-relaxed border border-slate-800 bg-slate-900/50 p-4 rounded-xl">
+              For security and anti-piracy compliance, video playback is paused while this window is not actively in focus. Click anywhere on this screen to resume.
+            </p>
+          </div>
+        )}
+
         {videoSrc ? (
           <video 
             ref={videoRef}
@@ -561,6 +620,7 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
               onAddNotes={() => setLearningTab('notes')} 
               isExpired={isExpired}
               isCompleted={localProfile?.completedLessons?.includes(activeLesson?._id || activeLesson?.id)}
+              user={localProfile || STUDENT_PROFILE}
             />
           </div>
 
