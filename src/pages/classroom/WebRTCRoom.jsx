@@ -124,7 +124,7 @@ export default function WebRTCRoom() {
   const location = useLocation();
 
   const [user, setUser] = useState(location.state?.user || null);
-  const [isTeacher, setIsTeacher] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(null);
   const [loadingUser, setLoadingUser] = useState(!location.state?.user);
 
   useEffect(() => {
@@ -145,6 +145,7 @@ export default function WebRTCRoom() {
   }, [user]);
 
   const [lobbyStream, setLobbyStream] = useState(null);
+  const lobbyStreamRef = useRef(null);
   const [isMuted, setIsMuted] = useState(true);     // mic OFF by default
   const [isVideoOff, setIsVideoOff] = useState(true); // camera OFF by default
   const [mediaError, setMediaError] = useState('');
@@ -194,12 +195,30 @@ export default function WebRTCRoom() {
   }, [isTeacher]);
 
   useEffect(() => {
+    if (loadingUser || isTeacher === null || hasJoined) {
+      return;
+    }
+  
+    if (lobbyStreamRef.current || mediaError) {
+      return;
+    }
+  
+    let cancelled = false;
+  
     const initMedia = async () => {
       try {
-        const videoConstraints = isTeacher 
-          ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
-          : { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24 } };
-
+        const videoConstraints = isTeacher
+          ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              frameRate: { ideal: 30 },
+            }
+          : {
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              frameRate: { ideal: 24 },
+            };
+  
         const userStream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraints,
           audio: {
@@ -208,24 +227,49 @@ export default function WebRTCRoom() {
             autoGainControl: true,
             sampleRate: 48000,
             channelCount: 1,
-          }
+          },
         });
-
+  
+        // Component was unmounted while getUserMedia was resolving
+        if (cancelled) {
+          userStream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+  
+        lobbyStreamRef.current = userStream;
         setLobbyStream(userStream);
       } catch (err) {
-        console.error("Failed to get local media", err);
-        setMediaError(`Media error: ${err.message || err.name}`);
+        if (!cancelled) {
+          console.error("Failed to get local media", err);
+          setMediaError(`Media error: ${err.message || err.name}`);
+        }
       }
     };
-
-    if (isTeacher !== undefined && !lobbyStream && !mediaError && !hasJoined) {
-      initMedia();
-    }
-
+  
+    initMedia();
+  
     return () => {
-      webrtcService.disconnect();
+      cancelled = true;
     };
-  }, [roomId, isTeacher]);
+  }, [loadingUser, isTeacher, hasJoined, mediaError]);
+
+  useEffect(() => {
+    return () => {
+      const stream = lobbyStreamRef.current;
+  
+      if (stream) {
+        stream.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (err) {
+            console.warn("Failed to stop lobby media track:", err);
+          }
+        });
+  
+        lobbyStreamRef.current = null;
+      }
+    };
+  }, []);
 
   const toggleLobbyMute = () => {
     if (lobbyStream) {
@@ -285,8 +329,23 @@ export default function WebRTCRoom() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         
-        // Stop lobby AFTER token is ready so LiveKit picks up immediately
-        if (lobbyStream) lobbyStream.getTracks().forEach(t => t.stop());
+        // Stop lobby AFTER token is ready
+        if (lobbyStreamRef.current) {
+          lobbyStreamRef.current.getTracks().forEach((track) => {
+            try {
+              track.stop();
+            } catch (err) {
+              console.warn("Failed to stop lobby track:", err);
+            }
+          });
+        
+          lobbyStreamRef.current = null;
+          setLobbyStream(null);
+        }
+        
+        // Give the browser a short moment to release the camera
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        
         setToken(response.data.token);
       } catch (err) {
         console.error("Failed to fetch LiveKit token", err);
