@@ -510,7 +510,6 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                       </div>
                     </div>
 
-                    </div>
                   </div>
 
                   {/* Course Details Block */}
