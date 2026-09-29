@@ -1066,9 +1066,10 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
                 {selectedClass.notes && (
                   <div>
                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Agenda & Notes</h4>
-                    <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 leading-relaxed">
-                      {selectedClass.notes}
-                    </p>
+                    <div 
+                      className="text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 leading-relaxed quill-content"
+                      dangerouslySetInnerHTML={{ __html: selectedClass.notes }}
+                    />
                   </div>
                 )}
               </div>

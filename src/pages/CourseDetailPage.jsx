@@ -210,7 +210,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
       if (profileCompletion < 100) {
         setShowIncompleteProfileModal(true);
       } else {
-        if (course?.price === 0) {
+        if (!course?.price || course?.price === 0 || course?.price === '0') {
           const success = await enrollFreeCourse(course?.id || courseId);
           if (success) {
             onNavigate('dashboard');
@@ -771,7 +771,9 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
               <div className="space-y-1 text-center relative z-10 pb-4.5 border-b border-white/10">
                 <span className="text-[10px] text-accent font-extrabold uppercase tracking-[0.25em]">Clinical Enrollment Key</span>
                 <div className="flex items-end justify-center space-x-2 pt-1.5">
-                  <span className="text-white font-black text-3xl leading-none">₹{displayPrice}</span>
+                  <span className="text-white font-black text-3xl leading-none">
+                    {!displayPrice || displayPrice === 0 || displayPrice === '0' ? 'FREE' : `₹${displayPrice}`}
+                  </span>
                   {displayOriginalPrice && (
                     <span className="text-slate-400 line-through text-xs leading-none pb-0.5">₹{displayOriginalPrice}</span>
                   )}
@@ -830,7 +832,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                       onClick={handleEnrollClick}
                       className="w-full rounded-xl uppercase tracking-widest text-xs font-black py-4 shadow-lg shadow-accent/20 hover:scale-102 transition-transform duration-300"
                     >
-                      {course.price === 0 ? 'Enroll for Free' : 'Enroll In Course'}
+                      {!course?.price || course?.price === 0 || course?.price === '0' ? 'Enroll for Free' : 'Enroll In Course'}
                     </Button>
 
                     {course.previewVideoUrl && (
