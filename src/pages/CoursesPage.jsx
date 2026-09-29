@@ -548,6 +548,7 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                           <span className="text-charcoal font-black text-xs">{course.rating.toFixed(1)}</span>
                         </div>
                       </div>
+                      </div>
 
                       <h3 className="text-primary font-black text-lg leading-snug group-hover:text-accent transition-colors">
                         {course.title}
