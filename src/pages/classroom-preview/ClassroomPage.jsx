@@ -310,10 +310,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       )}
 
       <div className="flex-1 flex overflow-hidden relative">
-        <StageManager 
-          isHandRaised={isHandRaised} 
+        <StageManager
           raisedHands={raisedHands}
-          recentReactions={recentReactions}
           mutedParticipants={mutedParticipants}
           cameraDisabledParticipants={cameraDisabledParticipants}
         />
@@ -426,48 +424,46 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ isHandRaised, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {} }) {
-  const participants = useParticipants();
-  const [pinnedParticipantId, setPinnedParticipantId] = useState(null);
-  
-  // Find screen share track
+function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {} }) {
+  const [pinnedIdentity, setPinnedIdentity] = useState(null);
+
+  // Get all camera tracks (includes local + remote) — these are proper TrackReferences
+  const cameraTrackRefs = useTracks(
+    [Track.Source.Camera],
+    { onlySubscribed: false }
+  );
+
+  // Get screen share tracks
   const screenShareTracks = useTracks([Track.Source.ScreenShare]);
   const isScreenSharing = screenShareTracks.length > 0;
-  
-  // Separate teacher and students
-  const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher'));
-  const students = participants.filter(p => p.identity !== teacher?.identity);
 
-  // Normalize participants — hand state driven by authoritative raisedHands array
-  const normalize = (p) => {
-    if (!p) return null;
-    return {
-      id: p.identity,
-      name: p.name || p.identity,
-      isMuted: !p.isMicrophoneEnabled,
-      isSpeaking: p.isSpeaking,
-      participantIdentity: p.identity,
-      lkParticipant: p, 
-      isHandRaised: raisedHands.includes(p.identity),
-      isModerationMuted: !!mutedParticipants[p.identity],
-      isModerationCameraDisabled: !!cameraDisabledParticipants[p.identity]
-    };
-  };
-
-  const normalizedTeacher = normalize(teacher);
-  const normalizedStudents = students.map(normalize);
+  // Determine teacher identity from participant metadata
+  const participants = useParticipants();
+  const teacher = participants.find(p => {
+    try {
+      const meta = p.metadata ? JSON.parse(p.metadata) : {};
+      return meta.role === 'teacher' || meta.isTeacher;
+    } catch {
+      return false;
+    }
+  });
+  const teacherIdentity = teacher?.identity;
 
   return (
-    <VideoStage 
-      isScreenSharing={isScreenSharing} 
+    <VideoStage
+      isScreenSharing={isScreenSharing}
       screenShareTrack={screenShareTracks[0]}
-      participants={normalizedStudents} 
-      teacher={normalizedTeacher} 
-      pinnedParticipantId={pinnedParticipantId}
-      setPinnedParticipantId={setPinnedParticipantId}
+      cameraTrackRefs={cameraTrackRefs}
+      teacherIdentity={teacherIdentity}
+      pinnedIdentity={pinnedIdentity}
+      setPinnedIdentity={setPinnedIdentity}
+      raisedHands={raisedHands}
+      mutedParticipants={mutedParticipants}
+      cameraDisabledParticipants={cameraDisabledParticipants}
     />
   );
 }
+
 
 function PeoplePanelManager({ 
   onClose, userRole, admissionService, roomId, user, 
