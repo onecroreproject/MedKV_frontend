@@ -485,7 +485,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
     }
 
     if (cls.meetingProvider === 'webrtc') {
-      navigate(`/webrtc/${cls.id || cls.roomId}`);
+      navigate(`/classroom/${cls.id || cls.roomId}`);
       return;
     }
 

@@ -192,6 +192,10 @@ export function useClassroomRealtime(roomId, user) {
       console.warn('[Moderation] error:', code);
     });
 
+    newSocket.on('class-ended', () => {
+      setSocketAuthError('Class has ended.');
+    });
+
     return () => {
       newSocket.disconnect();
     };

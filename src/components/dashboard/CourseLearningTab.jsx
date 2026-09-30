@@ -843,7 +843,7 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
                           <button 
                             onClick={() => {
                               if (sess.meetingProvider === 'webrtc') {
-                                navigate(`/webrtc/${sess._id || sess.roomId}`);
+                                navigate(`/classroom/${sess._id || sess.roomId}`);
                               } else {
                                 window.open(sess.zoomLink, '_blank');
                               }
