@@ -2,7 +2,7 @@ import React from 'react';
 import ParticipantGrid from './ParticipantGrid';
 import ParticipantTile from './ParticipantTile';
 import { MonitorUp } from 'lucide-react';
-import { VideoTrack } from '@livekit/components-react';
+import { VideoTrack, TrackRefContext } from '@livekit/components-react';
 
 /**
  * VideoStage
@@ -61,10 +61,11 @@ export default function VideoStage({
     mainStageNode = (
       <div className="absolute inset-0 bg-black flex items-center justify-center transition-all duration-300 ease-in-out">
         {screenShareTrack ? (
-          <VideoTrack
-            trackRef={screenShareTrack}
-            className="w-full h-full object-contain"
-          />
+          <TrackRefContext.Provider value={screenShareTrack}>
+            <VideoTrack
+              className="w-full h-full object-contain"
+            />
+          </TrackRefContext.Provider>
         ) : (
           <div className="flex flex-col items-center justify-center">
             <MonitorUp size={64} className="text-slate-500 mb-4 opacity-50 animate-pulse" />

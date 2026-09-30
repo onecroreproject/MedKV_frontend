@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mic, MicOff, Pin, PinOff, Hand, CameraOff } from 'lucide-react';
-import { VideoTrack } from '@livekit/components-react';
+import { VideoTrack, TrackRefContext } from '@livekit/components-react';
 
 /**
  * ParticipantTile — renders a single participant's video tile.
@@ -49,10 +49,11 @@ export default function ParticipantTile({
     >
       {/* Video or Placeholder */}
       {cameraEnabled && trackRef ? (
-        <VideoTrack
-          trackRef={trackRef}
-          className={`w-full h-full ${isPiP ? 'object-contain' : 'object-cover'} transition-transform duration-300 ${!isPiP && isHovered ? 'scale-105' : ''} ${participant.isLocal ? '-scale-x-100' : ''}`}
-        />
+        <TrackRefContext.Provider value={trackRef}>
+          <VideoTrack
+            className={`w-full h-full ${isPiP ? 'object-contain' : 'object-cover'} transition-transform duration-300 ${!isPiP && isHovered ? 'scale-105' : ''} ${participant.isLocal ? '-scale-x-100' : ''}`}
+          />
+        </TrackRefContext.Provider>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col items-center justify-center">
           <div className="w-20 h-20 rounded-full bg-slate-600 flex items-center justify-center text-3xl font-bold text-slate-300 shadow-inner">

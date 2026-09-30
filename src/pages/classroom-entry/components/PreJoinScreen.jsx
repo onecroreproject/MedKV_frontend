@@ -22,6 +22,7 @@ export default function PreJoinScreen({ user, roomTitle, onJoin, onCancel }) {
   }, [cleanupMedia]);
 
   const handleJoin = () => {
+    cleanupMedia();
     onJoin();
   };
 

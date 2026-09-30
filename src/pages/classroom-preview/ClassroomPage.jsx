@@ -476,6 +476,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         recordingState={recordingState}
         waitingStudentsCount={waitingStudents.length}
         raisedHandsCount={raisedHands.length}
+        setToastMessage={setToastMessage}
       />
       <RoomAudioRenderer />
     </>
@@ -592,21 +593,10 @@ function ControlsManager({
   userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, 
   isHandRaised, setIsHandRaised, onLeave, onEndClass, onReaction, unreadCount = 0,
   isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState,
-  waitingStudentsCount, raisedHandsCount
+  waitingStudentsCount, raisedHandsCount, setToastMessage
 }) {
   const { localParticipant } = useLocalParticipant();
-  const [hasInitCamera, setHasInitCamera] = useState(false);
 
-  useEffect(() => {
-    if (userRole === 'teacher' && localParticipant && !hasInitCamera) {
-      // Force camera off for Host by default on join
-      if (localParticipant.isCameraEnabled) {
-        localParticipant.setCameraEnabled(false);
-      }
-      setHasInitCamera(true);
-    }
-  }, [userRole, localParticipant, hasInitCamera]);
-  
   const isMuted = !localParticipant?.isMicrophoneEnabled;
   const isVideoOff = !localParticipant?.isCameraEnabled;
   const isScreenSharing = localParticipant?.isScreenShareEnabled;
@@ -621,7 +611,16 @@ function ControlsManager({
   const toggleCamera = async () => {
     if (localParticipant) {
       if (isCameraDisabledByFaculty && !localParticipant.isCameraEnabled) return; // Prevent turning on
-      await localParticipant.setCameraEnabled(!localParticipant.isCameraEnabled);
+      const next = !localParticipant.isCameraEnabled;
+      try {
+        await localParticipant.setCameraEnabled(next);
+      } catch (error) {
+        console.error('[Camera] setCameraEnabled failed', error);
+        if (setToastMessage) {
+          setToastMessage('Camera access was blocked. Please allow camera permission in your browser.');
+          setTimeout(() => setToastMessage(null), 5000);
+        }
+      }
     }
   };
 
