@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import PreJoinScreen from './components/PreJoinScreen';
 import WaitingRoom from './components/WaitingRoom';
 import ClassroomPage from '../classroom-preview/ClassroomPage';
@@ -9,6 +9,7 @@ import { admissionService } from '../../services/admissionService';
 export default function ClassroomEntryPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [entryState, setEntryState] = useState('PRE_JOIN'); 
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,6 +18,16 @@ export default function ClassroomEntryPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // Hydrate token from URL param (_t) when coming from Admin Panel cross-origin redirect
+        const params = new URLSearchParams(location.search);
+        const urlToken = params.get('_t');
+        if (urlToken) {
+          localStorage.setItem('token', urlToken);
+          // Clean up token from URL to avoid sharing/bookmarking issues
+          const cleanUrl = `${window.location.pathname}`;
+          window.history.replaceState({}, '', cleanUrl);
+        }
+
         const token = localStorage.getItem('token');
         if (!token) {
           navigate('/student/login');
@@ -35,7 +46,7 @@ export default function ClassroomEntryPage() {
       }
     };
     fetchUser();
-  }, [navigate]);
+  }, [navigate, location.search]);
 
   useEffect(() => {
     if (user) {
