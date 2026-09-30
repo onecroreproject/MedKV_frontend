@@ -25,6 +25,12 @@ export default function ClassroomControls({
   raisedHandsCount = 0
 }) {
   
+  console.log('[Recording][UI] Record button rendered', {
+    disabled: recordingState === 'stopping',
+    userRole,
+    recordingState
+  });
+
   const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled, pulse }) => (
     <button
       onClick={onClick}
