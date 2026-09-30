@@ -25,11 +25,11 @@ export default function WatermarkOverlay({ userSession }) {
     <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden select-none">
       <div className="absolute inset-0 flex flex-col justify-between py-12">
         {rows.map((_, rowIndex) => (
-          <div key={`row-${rowIndex}`} className="flex justify-between px-12 w-[150%] -ml-[25%] opacity-[0.03]">
+          <div key={`row-${rowIndex}`} className="flex justify-between px-12 w-[150%] -ml-[25%] opacity-10 mix-blend-difference">
             {cols.map((_, colIndex) => (
               <div 
                 key={`col-${rowIndex}-${colIndex}`} 
-                className="transform -rotate-45 whitespace-nowrap text-slate-900 font-bold text-sm tracking-widest"
+                className="transform -rotate-45 whitespace-nowrap text-white font-bold text-sm tracking-widest"
               >
                 <div>{userSession.name}</div>
                 <div>{userSession.email}</div>

@@ -33,12 +33,17 @@ import {
 // ─── Low-latency LiveKit room options ────────────────────────────────────────
 // These are shared between host and participant instances.
 const LOW_LATENCY_OPTIONS = {
-  // Disable adaptive bitrate to prevent frame pausing/freezing on hide
-  adaptiveStream: false,
+  // Enable adaptive bitrate to prevent frame pausing/freezing on hide
+  adaptiveStream: true,
   // Dynacast: only encode/send layers that subscribers actually need
   dynacast: true,
   // Stop local tracks when unpublished so the OS releases camera/mic immediately
   stopLocalTrackOnUnpublish: true,
+
+  videoCaptureDefaults: {
+    resolution: VideoPresets.h720.resolution,
+  },
+
   // Reconnect quickly without full renegotiation
   reconnectPolicy: {
     nextRetryDelayInMs: (context) => {

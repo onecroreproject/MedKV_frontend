@@ -40,6 +40,10 @@ const LOW_LATENCY_OPTIONS = {
   // Stop local tracks when unpublished so the OS releases camera/mic immediately
   stopLocalTrackOnUnpublish: true,
 
+  videoCaptureDefaults: {
+    resolution: VideoPresets.h720.resolution,
+  },
+
   // Audio publish defaults: Opus with all processing enabled for lowest latency
   audioCaptureDefaults: {
     echoCancellation: true,
