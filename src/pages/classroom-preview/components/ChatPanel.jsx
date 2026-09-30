@@ -3,7 +3,7 @@ import { X, Send } from 'lucide-react';
 
 export default function ChatPanel({ onClose }) {
   return (
-    <div className="w-full md:w-80 lg:w-96 h-full bg-slate-900 border-l border-slate-800 flex flex-col z-20">
+    <div className="w-full md:w-80 lg:w-96 h-full bg-slate-900 border-l border-slate-800 flex flex-col z-20 transition-all duration-300 animate-in slide-in-from-right-8 fade-in">
       <div className="flex items-center justify-between px-4 py-4 border-b border-slate-800">
         <h2 className="text-lg font-semibold text-slate-100">In-call messages</h2>
         <button 

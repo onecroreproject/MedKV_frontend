@@ -5,7 +5,7 @@ export default function PeoplePanel({ onClose, participants, teacher, userRole }
   const allParticipants = [teacher, ...participants];
 
   return (
-    <div className="w-full md:w-80 lg:w-96 h-full bg-slate-900 border-l border-slate-800 flex flex-col z-20">
+    <div className="w-full md:w-80 lg:w-96 h-full bg-slate-900 border-l border-slate-800 flex flex-col z-20 transition-all duration-300 animate-in slide-in-from-right-8 fade-in">
       <div className="flex items-center justify-between px-4 py-4 border-b border-slate-800">
         <h2 className="text-lg font-semibold text-slate-100">People ({allParticipants.length})</h2>
         <button 
@@ -65,7 +65,7 @@ function ParticipantListItem({ participant, isHost, userRole }) {
           <Mic size={16} className={participant.isSpeaking ? "text-blue-400" : "text-slate-400"} />
         )}
         
-        {userRole === 'teacher' && (
+        {userRole === 'teacher' && !isHost && (
           <button className="p-1 hover:bg-slate-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
             <MoreVertical size={16} />
           </button>

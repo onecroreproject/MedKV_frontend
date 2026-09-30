@@ -11,7 +11,9 @@ export default function ClassroomControls({
   isScreenSharing, setIsScreenSharing,
   isChatOpen, setIsChatOpen,
   isPeopleOpen, setIsPeopleOpen,
-  userRole
+  isHandRaised, setIsHandRaised,
+  userRole,
+  onLeave
 }) {
   
   const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled }) => (
@@ -67,10 +69,10 @@ export default function ClassroomControls({
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
         
         <IconButton 
-          active={false} 
+          active={isHandRaised} 
           icon={Hand} 
-          label="Raise hand" 
-          onClick={() => {}} 
+          label={isHandRaised ? "Lower hand" : "Raise hand"} 
+          onClick={() => setIsHandRaised(!isHandRaised)} 
         />
         
         <IconButton 
@@ -104,7 +106,7 @@ export default function ClassroomControls({
         
         <button
           className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-medium flex items-center space-x-2 transition-colors shadow-lg shadow-red-500/20"
-          onClick={() => alert('Leave class action')}
+          onClick={onLeave}
         >
           <PhoneOff size={20} />
           <span className="hidden sm:inline">Leave</span>

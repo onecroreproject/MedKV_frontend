@@ -1,17 +1,19 @@
 import React from 'react';
 import { MoreVertical } from 'lucide-react';
+import darkLogo from '../../../assets/dark_logo_transparent.png';
 
 export default function ClassroomHeader({ title, duration }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 text-white shadow-sm z-10">
-      <div className="flex items-center space-x-4">
-        <div className="font-bold text-lg tracking-wide text-blue-400">
+    <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 text-white shadow-sm z-10 shrink-0 h-16">
+      <div className="flex items-center space-x-3 max-w-xs md:max-w-md w-1/3">
+        <img src={darkLogo} alt="Academy Logo" className="h-8 object-contain" />
+        <div className="font-semibold text-base tracking-wide text-blue-400 hidden sm:block truncate">
           Dr. Sam Reefath Radiology Academy
         </div>
       </div>
       
-      <div className="flex-1 flex justify-center">
-        <span className="font-medium text-slate-200 text-lg">{title}</span>
+      <div className="flex-1 flex justify-center w-1/3 truncate px-4">
+        <span className="font-medium text-slate-200 text-base md:text-lg truncate">{title}</span>
       </div>
 
       <div className="flex items-center space-x-6">

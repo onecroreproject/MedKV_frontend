@@ -144,6 +144,7 @@ function ClassroomInner({ userRole, roomId }) {
   
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isPeopleOpen, setIsPeopleOpen] = useState(false);
+  const [isHandRaised, setIsHandRaised] = useState(false);
   const [duration, setDuration] = useState('00:00:00');
 
   // Simple duration timer
@@ -180,7 +181,7 @@ function ClassroomInner({ userRole, roomId }) {
       />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <StageManager />
+        <StageManager isHandRaised={isHandRaised} />
         
         {isChatOpen && (
           <ChatPanel onClose={() => setIsChatOpen(false)} />
@@ -200,6 +201,8 @@ function ClassroomInner({ userRole, roomId }) {
         setIsChatOpen={setIsChatOpen}
         isPeopleOpen={isPeopleOpen}
         setIsPeopleOpen={setIsPeopleOpen}
+        isHandRaised={isHandRaised}
+        setIsHandRaised={setIsHandRaised}
         onLeave={handleLeave}
       />
       <RoomAudioRenderer />
@@ -207,15 +210,16 @@ function ClassroomInner({ userRole, roomId }) {
   );
 }
 
-function StageManager() {
+function StageManager({ isHandRaised }) {
   const participants = useParticipants();
+  const [pinnedParticipantId, setPinnedParticipantId] = useState(null);
   
   // Find screen share track
   const screenShareTracks = useTracks([Track.Source.ScreenShare]);
   const isScreenSharing = screenShareTracks.length > 0;
   
   // Separate teacher and students
-  const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher')) || participants[0];
+  const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher'));
   const students = participants.filter(p => p.identity !== teacher?.identity);
 
   // Normalize participants to our UI mock format if they don't exactly match
@@ -227,7 +231,8 @@ function StageManager() {
       isMuted: !p.isMicrophoneEnabled,
       isSpeaking: p.isSpeaking,
       participantIdentity: p.identity,
-      lkParticipant: p, // pass actual participant for use in tiles
+      lkParticipant: p, 
+      isHandRaised: p.isLocal && isHandRaised // simplified local state mock for now
     };
   };
 
@@ -240,6 +245,8 @@ function StageManager() {
       screenShareTrack={screenShareTracks[0]}
       participants={normalizedStudents} 
       teacher={normalizedTeacher} 
+      pinnedParticipantId={pinnedParticipantId}
+      setPinnedParticipantId={setPinnedParticipantId}
     />
   );
 }
@@ -266,7 +273,7 @@ function PeoplePanelManager({ onClose, userRole }) {
   );
 }
 
-function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, onLeave }) {
+function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, isHandRaised, setIsHandRaised, onLeave }) {
   const { localParticipant } = useLocalParticipant();
   
   const isMuted = !localParticipant?.isMicrophoneEnabled;
@@ -309,6 +316,8 @@ function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, se
       setIsChatOpen={setIsChatOpen}
       isPeopleOpen={isPeopleOpen}
       setIsPeopleOpen={setIsPeopleOpen}
+      isHandRaised={isHandRaised}
+      setIsHandRaised={setIsHandRaised}
       userRole={userRole}
       onLeave={onLeave}
     />
