@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
-import { LiveKitRoom, RoomAudioRenderer, useRoomContext, useLocalParticipant, useTracks, useParticipants } from '@livekit/components-react';
-import { Track, VideoPresets, AudioPresets } from 'livekit-client';
+import { LiveKitRoom, RoomAudioRenderer, useRoomContext, useLocalParticipant, useTracks, useParticipants, useConnectionState } from '@livekit/components-react';
+import { Track, VideoPresets, AudioPresets, ConnectionState } from 'livekit-client';
 
 import ClassroomHeader from './components/ClassroomHeader';
 import VideoStage from './components/VideoStage';
@@ -173,7 +173,14 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     disableCamera,
     removeParticipant,
     clearParticipantHand,
+    recordingState,
+    recordingStartedAt,
+    recordingAccumulatedDuration,
+    isSocketConnected,
+    socketAuthError,
   } = useClassroomRealtime(roomId, user);
+
+  const lkConnectionState = useConnectionState();
 
   // Sync chat panel open state with the realtime hook (for unread counter)
   const handleSetChatOpen = (open) => {
@@ -216,6 +223,22 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     navigate(-1);
   };
 
+  const handleEndClass = async () => {
+    if (window.confirm("End this class?")) {
+      try {
+        await axios.put(`${import.meta.env.VITE_API_URL}/live-classes/${roomId}`, { status: 'Completed' }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        room?.disconnect();
+        webrtcService.disconnect();
+        navigate(-1);
+      } catch (err) {
+        console.error('Failed to end class:', err);
+        alert('Failed to end class');
+      }
+    }
+  };
+
   // If removed from class by faculty
   if (removedFromClass) {
     room?.disconnect();
@@ -224,6 +247,22 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-red-400">
         <h2 className="text-xl font-semibold mb-2">Removed</h2>
         <p>{removedReason}</p>
+        <button onClick={() => navigate(-1)} className="mt-6 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  // If socket auth error (e.g. JWT expired, LiveClass ended, etc)
+  if (socketAuthError) {
+    room?.disconnect();
+    webrtcService.disconnect();
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-red-400 p-4 text-center">
+        <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+        <p>Your access to this class is no longer available.</p>
+        {/* <p className="text-sm opacity-60 mt-2">{socketAuthError}</p> */}
         <button onClick={() => navigate(-1)} className="mt-6 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
           Return to Dashboard
         </button>
@@ -243,7 +282,32 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
 
   return (
     <>
-      <HeaderManager duration={duration} />
+      <HeaderManager 
+        duration={duration} 
+        recordingState={recordingState}
+        recordingStartedAt={recordingStartedAt}
+        recordingAccumulatedDuration={recordingAccumulatedDuration}
+      />
+
+      {/* Connection State Overlay */}
+      {(!isSocketConnected || lkConnectionState !== ConnectionState.Connected) && !removedFromClass && (
+        <div className="absolute top-16 left-0 right-0 z-[100] flex justify-center mt-2 pointer-events-none">
+          <div className={`px-4 py-2 rounded-full shadow-lg text-sm font-semibold flex items-center space-x-2 animate-in slide-in-from-top-4 fade-in ${
+            (lkConnectionState === ConnectionState.Reconnecting || !isSocketConnected) ? 'bg-amber-500 text-amber-950' :
+            (lkConnectionState === ConnectionState.Disconnected) ? 'bg-red-500 text-white' : 'bg-slate-800 text-white'
+          }`}>
+            {(lkConnectionState === ConnectionState.Reconnecting || (!isSocketConnected && lkConnectionState === ConnectionState.Connected)) && (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <span>Reconnecting...</span>
+              </>
+            )}
+            {(lkConnectionState === ConnectionState.Disconnected && isSocketConnected) && (
+              <span>Connection lost</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 flex overflow-hidden relative">
         <StageManager 
@@ -334,10 +398,13 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         isHandRaised={isHandRaised}
         setIsHandRaised={handleToggleHand}
         onLeave={handleLeave}
+        onEndClass={handleEndClass}
         onReaction={sendReaction}
         unreadCount={unreadCount}
         isMutedByFaculty={isMutedByFaculty}
         isCameraDisabledByFaculty={isCameraDisabledByFaculty}
+        roomId={roomId}
+        recordingState={recordingState}
       />
       <RoomAudioRenderer />
     </>
@@ -345,13 +412,16 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
 }
 
 
-function HeaderManager({ duration }) {
+function HeaderManager({ duration, recordingState, recordingStartedAt, recordingAccumulatedDuration }) {
   const participants = useParticipants();
   return (
     <ClassroomHeader 
       title="Dr. Sam Reefath Radiology Class" 
       duration={duration} 
       participantCount={participants.length}
+      recordingState={recordingState}
+      recordingStartedAt={recordingStartedAt}
+      recordingAccumulatedDuration={recordingAccumulatedDuration}
     />
   );
 }
@@ -474,7 +544,7 @@ function PeoplePanelManager({
 function ControlsManager({ 
   userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, 
   isHandRaised, setIsHandRaised, onLeave, onReaction, unreadCount = 0,
-  isMutedByFaculty, isCameraDisabledByFaculty
+  isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState
 }) {
   const { localParticipant } = useLocalParticipant();
   
@@ -506,6 +576,38 @@ function ControlsManager({
     }
   };
 
+  const handleToggleRecording = async () => {
+    if (userRole !== 'teacher' && userRole !== 'admin' && userRole !== 'Faculty') return;
+    
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    
+    try {
+      if (recordingState === 'recording' || recordingState === 'paused') {
+        // Stop recording
+        await fetch(`${apiUrl}/class-recordings/stop`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ roomName: roomId })
+        });
+      } else if (recordingState === 'idle' || recordingState === 'completed' || recordingState === 'failed') {
+        // Start recording
+        await fetch(`${apiUrl}/class-recordings/start`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ roomName: roomId })
+        });
+      }
+    } catch (err) {
+      console.error('Error toggling recording', err);
+    }
+  };
+
   return (
     <ClassroomControls 
       isMuted={isMuted}
@@ -524,6 +626,8 @@ function ControlsManager({
       onLeave={onLeave}
       onReaction={onReaction}
       unreadCount={unreadCount}
+      recordingState={recordingState}
+      onToggleRecording={handleToggleRecording}
     />
   );
 }

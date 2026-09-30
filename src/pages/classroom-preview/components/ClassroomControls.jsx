@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, 
   MonitorUp, Hand, MessageSquare, 
-  Users, MoreVertical, PhoneOff, Smile 
+  Users, MoreVertical, PhoneOff, Smile, Play, Square, Pause, Loader2
 } from 'lucide-react';
 
 const ALLOWED_REACTIONS = ['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
@@ -17,7 +17,10 @@ export default function ClassroomControls({
   userRole,
   onLeave,
   onReaction,
-  unreadCount = 0
+  unreadCount = 0,
+  recordingState,
+  onToggleRecording,
+  onEndClass
 }) {
   
   const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled, pulse }) => (
@@ -70,6 +73,31 @@ export default function ClassroomControls({
           onClick={() => setIsScreenSharing(!isScreenSharing)} 
           disabled={userRole !== 'teacher'} 
         />
+
+        {userRole === 'teacher' && (
+          <>
+            <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
+            <IconButton 
+              active={recordingState === 'recording'} 
+              danger={recordingState === 'recording' || recordingState === 'paused' || recordingState === 'stopping'}
+              icon={
+                recordingState === 'stopping' ? Loader2 :
+                recordingState === 'recording' ? Square : 
+                recordingState === 'paused' ? Play :
+                Play
+              } 
+              label={
+                recordingState === 'stopping' ? "Stopping recording..." :
+                recordingState === 'recording' ? "Stop recording" : 
+                recordingState === 'paused' ? "Resume recording" :
+                "Start recording"
+              } 
+              onClick={onToggleRecording}
+              disabled={recordingState === 'stopping'}
+              pulse={recordingState === 'stopping'}
+            />
+          </>
+        )}
         
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
         
@@ -139,13 +167,23 @@ export default function ClassroomControls({
         
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
         
-        <button
-          className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-medium flex items-center space-x-2 transition-colors shadow-lg shadow-red-500/20"
-          onClick={onLeave}
-        >
-          <PhoneOff size={20} />
-          <span className="hidden sm:inline">Leave</span>
-        </button>
+        {userRole === 'teacher' ? (
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-medium flex items-center space-x-2 transition-colors shadow-lg shadow-red-500/20"
+            onClick={onEndClass}
+          >
+            <PhoneOff size={20} />
+            <span className="hidden sm:inline">End Class</span>
+          </button>
+        ) : (
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-medium flex items-center space-x-2 transition-colors shadow-lg shadow-red-500/20"
+            onClick={onLeave}
+          >
+            <PhoneOff size={20} />
+            <span className="hidden sm:inline">Leave</span>
+          </button>
+        )}
 
       </div>
     </div>

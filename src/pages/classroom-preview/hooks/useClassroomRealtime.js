@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL 
-  ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+const SOCKET_URL = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace('/api/v1', '')
   : 'http://localhost:5000';
 
 export function useClassroomRealtime(roomId, user) {
@@ -11,6 +11,15 @@ export function useClassroomRealtime(roomId, user) {
   const [recentReactions, setRecentReactions] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // ── Connection state ───────────────────────────────────────────────────────
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [socketAuthError, setSocketAuthError] = useState(null);
+
+  // ── Recording state ────────────────────────────────────────────────────────
+  const [recordingState, setRecordingState] = useState('idle');
+  const [recordingStartedAt, setRecordingStartedAt] = useState(null);
+  const [recordingAccumulatedDuration, setRecordingAccumulatedDuration] = useState(0);
 
   // ── Moderation state ────────────────────────────────────────────────────────
   // { userId: true } — tracks who is faculty-muted / camera-disabled / removed
@@ -38,12 +47,58 @@ export function useClassroomRealtime(roomId, user) {
     });
     setSocket(newSocket);
 
+    // Fetch recording state
+    const fetchRecordingState = async () => {
+      try {
+        const res = await fetch(`${SOCKET_URL}/api/v1/class-recordings/status/${roomId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setRecordingState(data.data.recordingState || 'idle');
+          if (data.data.startedAt) setRecordingStartedAt(data.data.startedAt);
+          if (data.data.accumulatedDuration) setRecordingAccumulatedDuration(data.data.accumulatedDuration);
+        }
+      } catch (err) {
+        console.error('Failed to fetch recording state', err);
+      }
+    };
+
     newSocket.on('connect', () => {
+      setIsSocketConnected(true);
+      setSocketAuthError(null);
       newSocket.emit('class:room-join', { roomId });
+      fetchRecordingState();
+    });
+
+    newSocket.on('disconnect', () => {
+      setIsSocketConnected(false);
     });
 
     newSocket.on('connect_error', (err) => {
       console.warn('[ClassroomRealtime] socket auth error:', err.message);
+      setIsSocketConnected(false);
+      setSocketAuthError(err.message);
+    });
+
+    // ── Recording Events ──────────────────────────────────────────────────────
+    newSocket.on('class:recording-started', (payload) => {
+      setRecordingState(payload.status || 'recording');
+      setRecordingStartedAt(payload.startedAt || new Date());
+    });
+
+    newSocket.on('class:recording-stopping', (payload) => {
+      setRecordingState('stopping');
+    });
+
+    newSocket.on('class:recording-completed', (payload) => {
+      setRecordingState('completed');
+    });
+
+    newSocket.on('class:recording-failed', (payload) => {
+      setRecordingState('failed');
     });
 
     // ── Raise Hand ───────────────────────────────────────────────────────────
@@ -233,5 +288,12 @@ export function useClassroomRealtime(roomId, user) {
     removeParticipant,
     clearParticipantHand,
     dismissUnmuteRequest,
+    // Recording
+    recordingState,
+    recordingStartedAt,
+    recordingAccumulatedDuration,
+    // Connection
+    isSocketConnected,
+    socketAuthError,
   };
 }
