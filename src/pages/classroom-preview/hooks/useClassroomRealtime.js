@@ -33,6 +33,9 @@ export function useClassroomRealtime(roomId, user) {
   // Unmute requests received by faculty
   const [unmuteRequests, setUnmuteRequests] = useState([]);
 
+  // ── Waiting Room state ──────────────────────────────────────────────────────
+  const [waitingStudents, setWaitingStudents] = useState([]);
+
   const isChatOpenRef = useRef(false);
   const currentUserId = user?._id || user?.id;
 
@@ -69,8 +72,15 @@ export function useClassroomRealtime(roomId, user) {
     newSocket.on('connect', () => {
       setIsSocketConnected(true);
       setSocketAuthError(null);
+      console.log(`[Realtime] socket connected`);
       newSocket.emit('class:room-join', { roomId });
+      console.log(`[Realtime] joined classroom room ${roomId}`);
       fetchRecordingState();
+      
+      // Fetch waiting students for faculty
+      if (user && (user.role === 'teacher' || user.role === 'Faculty' || user.role === 'admin')) {
+        newSocket.emit('class:get-waiting-students', { roomId });
+      }
     });
 
     newSocket.on('disconnect', () => {
@@ -192,6 +202,23 @@ export function useClassroomRealtime(roomId, user) {
       console.warn('[Moderation] error:', code);
     });
 
+    // ── Admission / Waiting Room ─────────────────────────────────────────────
+    newSocket.on('class:waiting-student', (student) => {
+      console.log(`[Realtime] waiting-student received`);
+      setWaitingStudents(prev => {
+        if (prev.find(s => s.userId === student.userId)) return prev;
+        return [...prev, student];
+      });
+    });
+
+    newSocket.on('class:waiting-students-list', (studentsList) => {
+      setWaitingStudents(studentsList);
+    });
+
+    newSocket.on('class:student-left-waiting', (data) => {
+      setWaitingStudents(prev => prev.filter(s => s.userId !== data.userId));
+    });
+
     newSocket.on('class-ended', () => {
       setSocketAuthError('Class has ended.');
     });
@@ -265,6 +292,16 @@ export function useClassroomRealtime(roomId, user) {
     socket.emit('class:clear-participant-hand', { roomId, targetUserId });
   }, [socket, roomId]);
 
+  const admitStudent = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:admit-student', { roomId, targetUserId });
+  }, [socket, roomId]);
+
+  const rejectStudent = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:reject-student', { roomId, targetUserId });
+  }, [socket, roomId]);
+
   return {
     // Existing
     raisedHands,
@@ -292,6 +329,10 @@ export function useClassroomRealtime(roomId, user) {
     removeParticipant,
     clearParticipantHand,
     dismissUnmuteRequest,
+    // Admission / Waiting Room
+    waitingStudents,
+    admitStudent,
+    rejectStudent,
     // Recording
     recordingState,
     recordingStartedAt,

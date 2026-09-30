@@ -173,6 +173,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     disableCamera,
     removeParticipant,
     clearParticipantHand,
+    waitingStudents,
+    admitStudent,
+    rejectStudent,
     recordingState,
     recordingStartedAt,
     recordingAccumulatedDuration,
@@ -329,7 +332,6 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           <PeoplePanelManager 
             onClose={() => handleSetPeopleOpen(false)} 
             userRole={userRole}
-            admissionService={admissionService}
             roomId={roomId}
             user={user}
             raisedHands={raisedHands}
@@ -341,6 +343,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
             onRemoveParticipant={removeParticipant}
             unmuteRequests={unmuteRequests}
             onAllowUnmute={allowUnmute}
+            waitingStudents={waitingStudents}
+            onAdmitStudent={admitStudent}
+            onRejectStudent={rejectStudent}
           />
         )}
 
@@ -466,46 +471,23 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
 
 
 function PeoplePanelManager({ 
-  onClose, userRole, admissionService, roomId, user, 
+  onClose, userRole, roomId, user, 
   raisedHands = [], onClearHand,
   mutedParticipants, cameraDisabledParticipants,
   onMuteParticipant, onDisableCamera, onRemoveParticipant,
-  unmuteRequests, onAllowUnmute
+  unmuteRequests, onAllowUnmute,
+  waitingStudents = [], onAdmitStudent, onRejectStudent
 }) {
   const participants = useParticipants();
   const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher')) || participants[0];
   const students = participants.filter(p => p.identity !== teacher?.identity);
-  
-  const [waitingStudents, setWaitingStudents] = useState([]);
-
-  useEffect(() => {
-    if (userRole === 'teacher' && admissionService) {
-      admissionService.onWaitingStudent = (student) => {
-        setWaitingStudents(prev => {
-          if (prev.find(s => s.userId === student.userId)) return prev;
-          return [...prev, student];
-        });
-      };
-      
-      admissionService.onWaitingStudentsList = (studentsList) => {
-        setWaitingStudents(studentsList);
-      };
-      
-      admissionService.onStudentLeftWaiting = (data) => {
-        setWaitingStudents(prev => prev.filter(s => s.userId !== data.userId));
-      };
-
-      // Fetch initial list
-      admissionService.getWaitingStudents(roomId);
-    }
-  }, [userRole, admissionService, roomId, user]);
 
   const handleAdmit = (targetUserId) => {
-    admissionService.admitStudent(roomId, targetUserId);
+    onAdmitStudent(targetUserId);
   };
   
   const handleReject = (targetUserId) => {
-    admissionService.rejectStudent(roomId, targetUserId);
+    onRejectStudent(targetUserId);
   };
 
   const normalize = (p) => ({
