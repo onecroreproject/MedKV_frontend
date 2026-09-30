@@ -141,6 +141,11 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 
 function ClassroomInner({ user, userRole, roomId, admissionService }) {
+  console.log('[CLASSROOM] socket connected');
+  console.log('[CLASSROOM] authenticated userId =', user?._id || user?.id);
+  console.log('[CLASSROOM] userRole =', userRole);
+  console.log('[CLASSROOM] roomId =', roomId);
+
   const room = useRoomContext();
   const navigate = useNavigate();
   
@@ -478,6 +483,7 @@ function PeoplePanelManager({
   unmuteRequests, onAllowUnmute,
   waitingStudents = [], onAdmitStudent, onRejectStudent
 }) {
+  console.log('[PEOPLE PANEL] waitingStudents:', waitingStudents);
   const participants = useParticipants();
   const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher')) || participants[0];
   const students = participants.filter(p => p.identity !== teacher?.identity);

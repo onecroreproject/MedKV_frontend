@@ -73,12 +73,14 @@ export function useClassroomRealtime(roomId, user) {
       setIsSocketConnected(true);
       setSocketAuthError(null);
       console.log(`[Realtime] socket connected`);
+      console.log(`[CLASSROOM] emitting class:room-join roomId = ${roomId}`);
       newSocket.emit('class:room-join', { roomId });
       console.log(`[Realtime] joined classroom room ${roomId}`);
       fetchRecordingState();
       
       // Fetch waiting students for faculty
-      if (user && (user.role === 'teacher' || user.role === 'Faculty' || user.role === 'admin')) {
+      const uRole = user?.role?.toLowerCase();
+      if (user && (uRole === 'teacher' || uRole === 'faculty' || uRole === 'admin')) {
         newSocket.emit('class:get-waiting-students', { roomId });
       }
     });
@@ -204,7 +206,7 @@ export function useClassroomRealtime(roomId, user) {
 
     // ── Admission / Waiting Room ─────────────────────────────────────────────
     newSocket.on('class:waiting-student', (student) => {
-      console.log(`[Realtime] waiting-student received`);
+      console.log(`[REALTIME] class:waiting-student RECEIVED`, student);
       setWaitingStudents(prev => {
         if (prev.find(s => s.userId === student.userId)) return prev;
         return [...prev, student];
@@ -212,10 +214,12 @@ export function useClassroomRealtime(roomId, user) {
     });
 
     newSocket.on('class:waiting-students-list', (studentsList) => {
+      console.log(`[REALTIME] waiting-students-list RECEIVED`, studentsList);
       setWaitingStudents(studentsList);
     });
 
     newSocket.on('class:student-left-waiting', (data) => {
+      console.log(`[REALTIME] student-left-waiting RECEIVED`, data);
       setWaitingStudents(prev => prev.filter(s => s.userId !== data.userId));
     });
 
@@ -227,6 +231,10 @@ export function useClassroomRealtime(roomId, user) {
       newSocket.disconnect();
     };
   }, [roomId, user]);
+
+  useEffect(() => {
+    console.log('[REALTIME] waitingStudents changed', waitingStudents);
+  }, [waitingStudents]);
 
   // Called by ClassroomPage when chat panel opens/closes
   const setChatPanelOpen = useCallback((open) => {
