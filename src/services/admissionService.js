@@ -17,7 +17,11 @@ class AdmissionService {
 
   connect() {
     if (!this.socket) {
-      this.socket = io(SOCKET_URL, { transports: ['websocket'] });
+      const token = localStorage.getItem('token');
+      this.socket = io(SOCKET_URL, { 
+        transports: ['websocket'],
+        auth: { token }       // JWT verified server-side by io.use()
+      });
       
       this.socket.on('class:admitted', () => {
         if (this.onAdmitted) this.onAdmitted();
@@ -42,6 +46,10 @@ class AdmissionService {
       this.socket.on('class:student-left-waiting', (data) => {
         if (this.onStudentLeftWaiting) this.onStudentLeftWaiting(data);
       });
+
+      this.socket.on('connect_error', (err) => {
+        console.warn('[AdmissionService] socket auth error:', err.message);
+      });
     }
   }
 
@@ -52,27 +60,31 @@ class AdmissionService {
     }
   }
 
-  requestJoin(roomId, userId, userRole, name) {
+  // roomId only — backend resolves identity from JWT
+  requestJoin(roomId) {
     if (this.socket) {
-      this.socket.emit('class:join-request', { roomId, userId, userRole, name });
+      this.socket.emit('class:join-request', { roomId });
     }
   }
 
-  getWaitingStudents(roomId, userId, userRole) {
+  // roomId only
+  getWaitingStudents(roomId) {
     if (this.socket) {
-      this.socket.emit('class:get-waiting-students', { roomId, userId, userRole });
+      this.socket.emit('class:get-waiting-students', { roomId });
     }
   }
 
-  admitStudent(roomId, facultyId, userRole, targetUserId) {
+  // Faculty admits a student — only targetUserId as data
+  admitStudent(roomId, targetUserId) {
     if (this.socket) {
-      this.socket.emit('class:admit-student', { roomId, facultyId, userRole, targetUserId });
+      this.socket.emit('class:admit-student', { roomId, targetUserId });
     }
   }
 
-  rejectStudent(roomId, facultyId, userRole, targetUserId) {
+  // Faculty rejects a student
+  rejectStudent(roomId, targetUserId) {
     if (this.socket) {
-      this.socket.emit('class:reject-student', { roomId, facultyId, userRole, targetUserId });
+      this.socket.emit('class:reject-student', { roomId, targetUserId });
     }
   }
 }

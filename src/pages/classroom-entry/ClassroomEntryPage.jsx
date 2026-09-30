@@ -79,7 +79,7 @@ export default function ClassroomEntryPage() {
 
   const handleJoinPreJoin = () => {
     setErrorMsg(null);
-    admissionService.requestJoin(roomId, user._id || user.id, user.role, user.name);
+    admissionService.requestJoin(roomId);
   };
 
   const handleCancel = () => {

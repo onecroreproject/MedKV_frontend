@@ -22,12 +22,15 @@ class WebRTCService {
     this.userName = '';
   }
 
-  connect(roomId, userId, userRole, name) {
-    this.userName = name;
-    this.socket = io(SOCKET_URL, { transports: ['websocket'] });
+  connect(roomId) {
+    const token = localStorage.getItem('token');
+    this.socket = io(SOCKET_URL, { 
+      transports: ['websocket'],
+      auth: { token }   // JWT verified server-side by io.use()
+    });
     
     this.socket.on('connect', () => {
-      this.socket.emit('join-room', { roomId, userId, userRole, name });
+      this.socket.emit('join-room', { roomId }); // identity derived from JWT server-side
     });
 
     this.socket.on('class-ended', () => {

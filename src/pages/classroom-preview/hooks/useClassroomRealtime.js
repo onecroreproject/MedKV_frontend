@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL 
@@ -7,25 +7,34 @@ const SOCKET_URL = import.meta.env.VITE_API_URL
 
 export function useClassroomRealtime(roomId, user) {
   const [socket, setSocket] = useState(null);
-  const [raisedHands, setRaisedHands] = useState([]); // Array of userIds
-  const [recentReactions, setRecentReactions] = useState([]); // Array of { id, reaction, name, timestamp }
+  const [raisedHands, setRaisedHands] = useState([]);
+  const [recentReactions, setRecentReactions] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Use ref so callbacks always see latest value without re-creating listeners
+  const isChatOpenRef = useRef(false);
 
   useEffect(() => {
     if (!roomId || !user) return;
 
-    // We reuse the same socket endpoint/namespace, but connect here for classroom events
-    // (Note: Socket.IO clients automatically multiplex multiple logical connections if URLs match)
-    const newSocket = io(SOCKET_URL, { transports: ['websocket'] });
+    const token = localStorage.getItem('token');
+
+    const newSocket = io(SOCKET_URL, { 
+      transports: ['websocket'],
+      auth: { token }
+    });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      // We don't need a separate "join-room" event because validateAndExecute in backend
-      // checks DB, but wait! The backend needs to know which socket is in which room for `io.to(roomId)`.
-      // Actually, wait, does `classroomHandler.js` have a `join-room`? No, it relies on the socket being joined!
-      // Let's emit a join event to ensure this socket is in the roomId!
-      newSocket.emit('class:room-join', { roomId, userId: user._id || user.id, userRole: user.role });
+      newSocket.emit('class:room-join', { roomId });
     });
 
+    newSocket.on('connect_error', (err) => {
+      console.warn('[ClassroomRealtime] socket auth error:', err.message);
+    });
+
+    // ── Raise Hand ─────────────────────────────────────────────────────────
     newSocket.on('class:hand-updated', ({ userId, action }) => {
       setRaisedHands(prev => {
         if (action === 'raised') {
@@ -41,19 +50,30 @@ export function useClassroomRealtime(roomId, user) {
       setRaisedHands(hands);
     });
 
+    // ── Reactions ───────────────────────────────────────────────────────────
     newSocket.on('class:reaction', (payload) => {
-      // payload: { userId, name, reaction, timestamp }
       const newReaction = {
         ...payload,
         id: `${payload.userId}-${payload.timestamp}-${Math.random()}`
       };
-      
       setRecentReactions(prev => [...prev, newReaction]);
-      
-      // Auto-remove after 3 seconds
       setTimeout(() => {
         setRecentReactions(prev => prev.filter(r => r.id !== newReaction.id));
       }, 3000);
+    });
+
+    // ── Chat ────────────────────────────────────────────────────────────────
+    newSocket.on('class:chat-message', (msg) => {
+      setChatMessages(prev => [...prev, msg]);
+      // Only increment unread when panel is closed
+      if (!isChatOpenRef.current) {
+        setUnreadCount(prev => prev + 1);
+      }
+    });
+
+    newSocket.on('class:chat-error', ({ code }) => {
+      console.warn('[Chat] error:', code);
+      // Expose via a toast if needed — for now just log
     });
 
     return () => {
@@ -61,27 +81,43 @@ export function useClassroomRealtime(roomId, user) {
     };
   }, [roomId, user]);
 
+  // Called by ClassroomPage when chat panel opens/closes
+  const setChatPanelOpen = useCallback((open) => {
+    isChatOpenRef.current = open;
+    if (open) setUnreadCount(0);
+  }, []);
+
+  // ── Actions ─────────────────────────────────────────────────────────────
   const toggleHand = useCallback((isRaised) => {
-    if (!socket || !user) return;
-    const eventName = isRaised ? 'class:raise-hand' : 'class:lower-hand';
-    socket.emit(eventName, { roomId, userId: user._id || user.id, userRole: user.role });
-  }, [socket, roomId, user]);
+    if (!socket) return;
+    socket.emit(isRaised ? 'class:raise-hand' : 'class:lower-hand', { roomId });
+  }, [socket, roomId]);
 
   const clearHand = useCallback((targetUserId) => {
-    if (!socket || !user) return;
-    socket.emit('class:clear-hand', { roomId, facultyId: user._id || user.id, userRole: user.role, targetUserId });
-  }, [socket, roomId, user]);
+    if (!socket) return;
+    socket.emit('class:clear-hand', { roomId, targetUserId });
+  }, [socket, roomId]);
 
   const sendReaction = useCallback((reaction) => {
-    if (!socket || !user) return;
-    socket.emit('class:reaction', { roomId, userId: user._id || user.id, userRole: user.role, name: user.name, reaction });
-  }, [socket, roomId, user]);
+    if (!socket) return;
+    socket.emit('class:reaction', { roomId, reaction });
+  }, [socket, roomId]);
+
+  // Only message content — identity resolved server-side from JWT
+  const sendChatMessage = useCallback((message) => {
+    if (!socket || !message?.trim()) return;
+    socket.emit('class:chat-message', { roomId, message: message.trim() });
+  }, [socket, roomId]);
 
   return {
     raisedHands,
     recentReactions,
+    chatMessages,
+    unreadCount,
+    setChatPanelOpen,
     toggleHand,
     clearHand,
-    sendReaction
+    sendReaction,
+    sendChatMessage,
   };
 }

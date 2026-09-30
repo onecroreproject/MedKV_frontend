@@ -149,14 +149,33 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   const [duration, setDuration] = useState('00:00:00');
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Initialize Realtime Hook
+  // Initialize Realtime Hook — single socket for all classroom events
   const { 
     raisedHands, 
     recentReactions, 
+    chatMessages,
+    unreadCount,
+    setChatPanelOpen,
     toggleHand, 
     clearHand, 
-    sendReaction 
+    sendReaction,
+    sendChatMessage,
   } = useClassroomRealtime(roomId, user);
+
+  // Sync chat panel open state with the realtime hook (for unread counter)
+  const handleSetChatOpen = (open) => {
+    setIsChatOpen(open);
+    setChatPanelOpen(open);
+    if (open) setIsPeopleOpen(false); // only one panel at a time
+  };
+
+  const handleSetPeopleOpen = (open) => {
+    setIsPeopleOpen(open);
+    if (open) {
+      setIsChatOpen(false);
+      setChatPanelOpen(false);
+    }
+  };
 
   // Simple duration timer
   useEffect(() => {
@@ -190,10 +209,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   };
 
   const isHandRaised = raisedHands.includes(user?._id || user?.id);
+  const handleToggleHand = () => toggleHand(!isHandRaised);
 
-  const handleToggleHand = () => {
-    toggleHand(!isHandRaised);
-  };
+  const currentUserId = user?._id || user?.id;
 
   return (
     <>
@@ -208,14 +226,16 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         
         {isChatOpen && (
           <ChatPanel 
-            onClose={() => setIsChatOpen(false)} 
-            onSendMessage={(msg) => triggerToast(msg)}
+            onClose={() => handleSetChatOpen(false)} 
+            messages={chatMessages}
+            onSendMessage={sendChatMessage}
+            currentUserId={currentUserId}
           />
         )}
         
         {isPeopleOpen && (
           <PeoplePanelManager 
-            onClose={() => setIsPeopleOpen(false)} 
+            onClose={() => handleSetPeopleOpen(false)} 
             userRole={userRole}
             admissionService={admissionService}
             roomId={roomId}
@@ -243,8 +263,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         {/* Toast Notification */}
         {toastMessage && (
           <div className="absolute bottom-4 left-4 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-lg shadow-2xl flex flex-col z-50 animate-in slide-in-from-bottom-4 fade-in">
-            <span className="font-semibold text-sm text-blue-400">{toastMessage.sender}</span>
-            <span className="text-sm text-slate-200 mt-1">{toastMessage.text}</span>
+            <span className="text-sm text-slate-200">{toastMessage}</span>
           </div>
         )}
       </div>
@@ -252,18 +271,20 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       <ControlsManager 
         userRole={userRole}
         isChatOpen={isChatOpen}
-        setIsChatOpen={setIsChatOpen}
+        setIsChatOpen={handleSetChatOpen}
         isPeopleOpen={isPeopleOpen}
-        setIsPeopleOpen={setIsPeopleOpen}
+        setIsPeopleOpen={handleSetPeopleOpen}
         isHandRaised={isHandRaised}
         setIsHandRaised={handleToggleHand}
         onLeave={handleLeave}
         onReaction={sendReaction}
+        unreadCount={unreadCount}
       />
       <RoomAudioRenderer />
     </>
   );
 }
+
 
 function HeaderManager({ duration }) {
   const participants = useParticipants();
@@ -342,16 +363,16 @@ function PeoplePanelManager({ onClose, userRole, admissionService, roomId, user,
       };
 
       // Fetch initial list
-      admissionService.getWaitingStudents(roomId, user?._id || user?.id, user?.role);
+      admissionService.getWaitingStudents(roomId);
     }
   }, [userRole, admissionService, roomId, user]);
 
   const handleAdmit = (targetUserId) => {
-    admissionService.admitStudent(roomId, user?._id || user?.id, user?.role, targetUserId);
+    admissionService.admitStudent(roomId, targetUserId);
   };
   
   const handleReject = (targetUserId) => {
-    admissionService.rejectStudent(roomId, user?._id || user?.id, user?.role, targetUserId);
+    admissionService.rejectStudent(roomId, targetUserId);
   };
 
   const normalize = (p) => ({
@@ -376,7 +397,7 @@ function PeoplePanelManager({ onClose, userRole, admissionService, roomId, user,
   );
 }
 
-function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, isHandRaised, setIsHandRaised, onLeave, onReaction }) {
+function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, isHandRaised, setIsHandRaised, onLeave, onReaction, unreadCount = 0 }) {
   const { localParticipant } = useLocalParticipant();
   
   const isMuted = !localParticipant?.isMicrophoneEnabled;
@@ -424,6 +445,7 @@ function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, se
       userRole={userRole}
       onLeave={onLeave}
       onReaction={onReaction}
+      unreadCount={unreadCount}
     />
   );
 }

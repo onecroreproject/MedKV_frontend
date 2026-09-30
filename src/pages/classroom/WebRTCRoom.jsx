@@ -299,7 +299,7 @@ export default function WebRTCRoom() {
     if (!lobbyStream && !mediaError) return;
     setHasJoined(true);
 
-    webrtcService.connect(roomId, user._id, user.role, user.name);
+    webrtcService.connect(roomId);
 
     webrtcService.onClassEnded = () => {
       playSound('end');

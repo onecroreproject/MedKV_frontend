@@ -16,7 +16,8 @@ export default function ClassroomControls({
   isHandRaised, setIsHandRaised,
   userRole,
   onLeave,
-  onReaction
+  onReaction,
+  unreadCount = 0
 }) {
   
   const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled, pulse }) => (
@@ -104,15 +105,20 @@ export default function ClassroomControls({
           pulse={isHandRaised}
         />
         
-        <IconButton 
-          active={isChatOpen} 
-          icon={MessageSquare} 
-          label="Chat" 
-          onClick={() => {
-            setIsChatOpen(!isChatOpen);
-            if (!isChatOpen) setIsPeopleOpen(false);
-          }} 
-        />
+        {/* Chat button with unread badge */}
+        <div className="relative">
+          <IconButton 
+            active={isChatOpen} 
+            icon={MessageSquare} 
+            label="Chat" 
+            onClick={() => setIsChatOpen(!isChatOpen)} 
+          />
+          {!isChatOpen && unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
         
         <IconButton 
           active={isPeopleOpen} 
