@@ -88,7 +88,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
   // Profile completion state
   const [profileCompletion, setProfileCompletion] = useState(100);
-  const [showIncompleteProfileModal, setShowIncompleteProfileModal] = useState(false);
+
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -207,18 +207,14 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
     if (isPurchased) {
       onNavigate('dashboard');
     } else if (userSession) {
-      if (profileCompletion < 100) {
-        setShowIncompleteProfileModal(true);
-      } else {
-        if (!course?.price || course?.price === 0 || course?.price === '0') {
-          const success = await enrollFreeCourse(course?.id || courseId);
-          if (success) {
-            onNavigate('dashboard');
-          }
-        } else {
-          // Use course.id (MongoDB _id) not the slug prop
-          onNavigate('enrollment-review', course?.id || courseId);
+      if (!course?.price || course?.price === 0 || course?.price === '0') {
+        const success = await enrollFreeCourse(course?.id || courseId);
+        if (success) {
+          onNavigate('dashboard');
         }
+      } else {
+        // Use course.id (MongoDB _id) not the slug prop
+        onNavigate('enrollment-review', course?.id || courseId);
       }
     } else {
       navigate(`/student/login?enroll=${courseId}`);
@@ -264,46 +260,6 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
       {/* Main layout with top margin for sticky header */}
       <main className="flex-grow pt-24 sm:pt-32 max-w-[1536px] mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-10">
-
-        {/* INCOMPLETE PROFILE NOTICE MODAL */}
-        {showIncompleteProfileModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative text-center">
-              <button 
-                onClick={() => setShowIncompleteProfileModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                ✕
-              </button>
-              <div className="mx-auto w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-6">
-                <span className="text-3xl">⚠️</span>
-              </div>
-              <h3 className="text-xl font-black text-[#0B1F4D] mb-2 uppercase tracking-wide">Action Required</h3>
-              <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-                Your profile is currently at <strong>{profileCompletion}%</strong> completion. You must complete your profile with all required details (such as your specialization, address, and mobile number) before you are eligible to purchase a course.
-              </p>
-              <div className="flex flex-col gap-3">
-                <Button 
-                  variant="primary" 
-                  className="w-full shadow-lg shadow-primary/25"
-                  onClick={() => {
-                    setShowIncompleteProfileModal(false);
-                    onNavigate('dashboard', 'profile-settings');
-                  }}
-                >
-                  Complete Profile Now
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setShowIncompleteProfileModal(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {isLoading ? (
           <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div></div>
