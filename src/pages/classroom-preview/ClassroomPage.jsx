@@ -44,13 +44,13 @@ const LOW_LATENCY_OPTIONS = {
   },
 };
 
-export default function ClassroomPage() {
+export default function ClassroomPage({ user: passedUser, admissionService }) {
   const { roomId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(location.state?.user || null);
-  const [loadingUser, setLoadingUser] = useState(!location.state?.user);
+  const [user, setUser] = useState(passedUser || location.state?.user || null);
+  const [loadingUser, setLoadingUser] = useState(!passedUser && !location.state?.user);
   const [isTeacher, setIsTeacher] = useState(false);
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
@@ -133,20 +133,30 @@ export default function ClassroomPage() {
       options={LOW_LATENCY_OPTIONS}
       className="h-screen w-full bg-[#0a0a0a] flex flex-col font-sans text-slate-200"
     >
-      <ClassroomInner userRole={isTeacher ? 'teacher' : 'student'} roomId={roomId} />
+      <ClassroomInner user={user} userRole={isTeacher ? 'teacher' : 'student'} roomId={roomId} admissionService={admissionService} />
     </LiveKitRoom>
   );
 }
 
-function ClassroomInner({ userRole, roomId }) {
+import { useClassroomRealtime } from './hooks/useClassroomRealtime';
+
+function ClassroomInner({ user, userRole, roomId, admissionService }) {
   const room = useRoomContext();
   const navigate = useNavigate();
   
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isPeopleOpen, setIsPeopleOpen] = useState(false);
-  const [isHandRaised, setIsHandRaised] = useState(false);
   const [duration, setDuration] = useState('00:00:00');
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Initialize Realtime Hook
+  const { 
+    raisedHands, 
+    recentReactions, 
+    toggleHand, 
+    clearHand, 
+    sendReaction 
+  } = useClassroomRealtime(roomId, user);
 
   // Simple duration timer
   useEffect(() => {
@@ -179,12 +189,22 @@ function ClassroomInner({ userRole, roomId }) {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const isHandRaised = raisedHands.includes(user?._id || user?.id);
+
+  const handleToggleHand = () => {
+    toggleHand(!isHandRaised);
+  };
+
   return (
     <>
       <HeaderManager duration={duration} />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <StageManager isHandRaised={isHandRaised} />
+        <StageManager 
+          isHandRaised={isHandRaised} 
+          raisedHands={raisedHands}
+          recentReactions={recentReactions}
+        />
         
         {isChatOpen && (
           <ChatPanel 
@@ -197,8 +217,28 @@ function ClassroomInner({ userRole, roomId }) {
           <PeoplePanelManager 
             onClose={() => setIsPeopleOpen(false)} 
             userRole={userRole}
+            admissionService={admissionService}
+            roomId={roomId}
+            user={user}
+            raisedHands={raisedHands}
+            onClearHand={clearHand}
           />
         )}
+
+        {/* Reaction Overlay */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-40">
+          {recentReactions.map(reaction => (
+            <div 
+              key={reaction.id}
+              className="absolute bottom-16 left-1/2 transform -translate-x-1/2 animate-float-up opacity-0 flex flex-col items-center justify-center"
+            >
+              <div className="text-4xl">{reaction.reaction}</div>
+              <div className="text-xs font-semibold text-white bg-black/50 px-2 py-0.5 rounded-full mt-1">
+                {reaction.name}
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* Toast Notification */}
         {toastMessage && (
@@ -216,8 +256,9 @@ function ClassroomInner({ userRole, roomId }) {
         isPeopleOpen={isPeopleOpen}
         setIsPeopleOpen={setIsPeopleOpen}
         isHandRaised={isHandRaised}
-        setIsHandRaised={setIsHandRaised}
+        setIsHandRaised={handleToggleHand}
         onLeave={handleLeave}
+        onReaction={sendReaction}
       />
       <RoomAudioRenderer />
     </>
@@ -235,7 +276,7 @@ function HeaderManager({ duration }) {
   );
 }
 
-function StageManager({ isHandRaised }) {
+function StageManager({ isHandRaised, raisedHands = [] }) {
   const participants = useParticipants();
   const [pinnedParticipantId, setPinnedParticipantId] = useState(null);
   
@@ -247,7 +288,7 @@ function StageManager({ isHandRaised }) {
   const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher'));
   const students = participants.filter(p => p.identity !== teacher?.identity);
 
-  // Normalize participants to our UI mock format if they don't exactly match
+  // Normalize participants — hand state driven by authoritative raisedHands array
   const normalize = (p) => {
     if (!p) return null;
     return {
@@ -257,7 +298,7 @@ function StageManager({ isHandRaised }) {
       isSpeaking: p.isSpeaking,
       participantIdentity: p.identity,
       lkParticipant: p, 
-      isHandRaised: p.isLocal && isHandRaised // simplified local state mock for now
+      isHandRaised: raisedHands.includes(p.identity)
     };
   };
 
@@ -276,10 +317,42 @@ function StageManager({ isHandRaised }) {
   );
 }
 
-function PeoplePanelManager({ onClose, userRole }) {
+function PeoplePanelManager({ onClose, userRole, admissionService, roomId, user, raisedHands = [], onClearHand }) {
   const participants = useParticipants();
   const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher')) || participants[0];
   const students = participants.filter(p => p.identity !== teacher?.identity);
+  
+  const [waitingStudents, setWaitingStudents] = useState([]);
+
+  useEffect(() => {
+    if (userRole === 'teacher' && admissionService) {
+      admissionService.onWaitingStudent = (student) => {
+        setWaitingStudents(prev => {
+          if (prev.find(s => s.userId === student.userId)) return prev;
+          return [...prev, student];
+        });
+      };
+      
+      admissionService.onWaitingStudentsList = (studentsList) => {
+        setWaitingStudents(studentsList);
+      };
+      
+      admissionService.onStudentLeftWaiting = (data) => {
+        setWaitingStudents(prev => prev.filter(s => s.userId !== data.userId));
+      };
+
+      // Fetch initial list
+      admissionService.getWaitingStudents(roomId, user?._id || user?.id, user?.role);
+    }
+  }, [userRole, admissionService, roomId, user]);
+
+  const handleAdmit = (targetUserId) => {
+    admissionService.admitStudent(roomId, user?._id || user?.id, user?.role, targetUserId);
+  };
+  
+  const handleReject = (targetUserId) => {
+    admissionService.rejectStudent(roomId, user?._id || user?.id, user?.role, targetUserId);
+  };
 
   const normalize = (p) => ({
     id: p.identity,
@@ -292,13 +365,18 @@ function PeoplePanelManager({ onClose, userRole }) {
     <PeoplePanel 
       onClose={onClose} 
       participants={students.map(normalize)} 
-      teacher={normalize(teacher)}
+      teacher={teacher ? normalize(teacher) : null}
       userRole={userRole}
+      waitingStudents={waitingStudents}
+      onAdmit={handleAdmit}
+      onReject={handleReject}
+      raisedHands={raisedHands}
+      onClearHand={onClearHand}
     />
   );
 }
 
-function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, isHandRaised, setIsHandRaised, onLeave }) {
+function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, isHandRaised, setIsHandRaised, onLeave, onReaction }) {
   const { localParticipant } = useLocalParticipant();
   
   const isMuted = !localParticipant?.isMicrophoneEnabled;
@@ -345,6 +423,7 @@ function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, se
       setIsHandRaised={setIsHandRaised}
       userRole={userRole}
       onLeave={onLeave}
+      onReaction={onReaction}
     />
   );
 }

@@ -5,6 +5,8 @@ import {
   Users, MoreVertical, PhoneOff, Smile 
 } from 'lucide-react';
 
+const ALLOWED_REACTIONS = ['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
+
 export default function ClassroomControls({
   isMuted, setIsMuted,
   isVideoOff, setIsVideoOff,
@@ -13,10 +15,11 @@ export default function ClassroomControls({
   isPeopleOpen, setIsPeopleOpen,
   isHandRaised, setIsHandRaised,
   userRole,
-  onLeave
+  onLeave,
+  onReaction
 }) {
   
-  const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled }) => (
+  const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled, pulse }) => (
     <button
       onClick={onClick}
       disabled={disabled}
@@ -27,6 +30,7 @@ export default function ClassroomControls({
           active ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 
           'bg-slate-700 hover:bg-slate-600 text-slate-200'
         }
+        ${pulse ? 'animate-pulse' : ''}
       `}
       aria-label={label}
       title={label}
@@ -68,6 +72,7 @@ export default function ClassroomControls({
         
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
         
+        {/* Real-time Reactions */}
         <div className="relative group/reaction flex items-center justify-center">
           <button
             className="p-3 rounded-full flex items-center justify-center transition-all bg-slate-700 hover:bg-slate-600 text-slate-200"
@@ -78,20 +83,11 @@ export default function ClassroomControls({
           </button>
           
           <div className="absolute bottom-full mb-2 hidden group-hover/reaction:flex bg-slate-800 p-2 rounded-lg shadow-xl border border-slate-700 space-x-1 z-50">
-            {['❤️', '👍', '🎉', '👏', '😂', '😮', '🤔'].map(emoji => (
+            {ALLOWED_REACTIONS.map(emoji => (
               <button 
                 key={emoji}
                 className="text-xl hover:scale-125 hover:bg-slate-700 p-2 rounded transition-transform"
-                onClick={() => {
-                  // Fake local state for now
-                  const el = document.createElement('div');
-                  el.innerText = emoji;
-                  el.className = 'fixed text-4xl animate-bounce pointer-events-none z-50';
-                  el.style.left = '50%';
-                  el.style.bottom = '100px';
-                  document.body.appendChild(el);
-                  setTimeout(() => el.remove(), 2000);
-                }}
+                onClick={() => onReaction && onReaction(emoji)}
               >
                 {emoji}
               </button>
@@ -99,11 +95,13 @@ export default function ClassroomControls({
           </div>
         </div>
         
+        {/* Raise Hand — pulses orange when raised */}
         <IconButton 
           active={isHandRaised} 
           icon={Hand} 
           label={isHandRaised ? "Lower hand" : "Raise hand"} 
-          onClick={() => setIsHandRaised(!isHandRaised)} 
+          onClick={() => setIsHandRaised(!isHandRaised)}
+          pulse={isHandRaised}
         />
         
         <IconButton 

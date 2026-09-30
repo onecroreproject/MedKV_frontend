@@ -4,13 +4,15 @@ import PreJoinScreen from './components/PreJoinScreen';
 import WaitingRoom from './components/WaitingRoom';
 import ClassroomPage from '../classroom-preview/ClassroomPage';
 import { getMe } from '../../services/userService'; 
+import { admissionService } from '../../services/admissionService';
 
 export default function ClassroomEntryPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const [entryState, setEntryState] = useState('PRE_JOIN'); // PRE_JOIN, WAITING, ADMITTED, CLASSROOM
+  const [entryState, setEntryState] = useState('PRE_JOIN'); 
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -35,6 +37,33 @@ export default function ClassroomEntryPage() {
     fetchUser();
   }, [navigate]);
 
+  useEffect(() => {
+    if (user) {
+      admissionService.connect();
+
+      admissionService.onAdmitted = () => {
+        setEntryState('ADMITTED');
+        setTimeout(() => {
+          setEntryState('CLASSROOM');
+        }, 500);
+      };
+
+      admissionService.onRejected = (data) => {
+        alert(data.message || 'Your request to join was rejected.');
+        setEntryState('PRE_JOIN');
+      };
+
+      admissionService.onWaitingRoomJoined = () => {
+        setEntryState('WAITING');
+      };
+
+      return () => {
+        // Disconnect if we navigate away entirely
+        admissionService.disconnect();
+      };
+    }
+  }, [user]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -48,14 +77,9 @@ export default function ClassroomEntryPage() {
 
   if (!user) return null;
 
-  const isFaculty = user.role === 'teacher' || user.role === 'admin' || user.role === 'faculty';
-
   const handleJoinPreJoin = () => {
-    if (isFaculty) {
-      setEntryState('CLASSROOM');
-    } else {
-      setEntryState('WAITING');
-    }
+    setErrorMsg(null);
+    admissionService.requestJoin(roomId, user._id || user.id, user.role, user.name);
   };
 
   const handleCancel = () => {
@@ -92,7 +116,8 @@ export default function ClassroomEntryPage() {
   }
 
   if (entryState === 'CLASSROOM') {
-    return <ClassroomPage />;
+    // Pass admissionService and user to ClassroomPage for faculty management
+    return <ClassroomPage admissionService={admissionService} user={user} />;
   }
 
   return null;
