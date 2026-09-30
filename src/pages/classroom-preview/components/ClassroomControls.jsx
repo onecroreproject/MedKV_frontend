@@ -20,7 +20,9 @@ export default function ClassroomControls({
   unreadCount = 0,
   recordingState,
   onToggleRecording,
-  onEndClass
+  onEndClass,
+  waitingStudentsCount = 0,
+  raisedHandsCount = 0
 }) {
   
   const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled, pulse }) => (
@@ -54,6 +56,7 @@ export default function ClassroomControls({
         
         <IconButton 
           active={!isMuted} 
+          danger={isMuted}
           icon={isMuted ? MicOff : Mic} 
           label={isMuted ? "Unmute" : "Mute"} 
           onClick={() => setIsMuted(!isMuted)} 
@@ -61,18 +64,20 @@ export default function ClassroomControls({
         
         <IconButton 
           active={!isVideoOff} 
+          danger={isVideoOff}
           icon={isVideoOff ? VideoOff : Video} 
           label={isVideoOff ? "Turn on camera" : "Turn off camera"} 
           onClick={() => setIsVideoOff(!isVideoOff)} 
         />
         
-        <IconButton 
-          active={isScreenSharing} 
-          icon={MonitorUp} 
-          label={isScreenSharing ? "Stop presenting" : "Present now"} 
-          onClick={() => setIsScreenSharing(!isScreenSharing)} 
-          disabled={userRole !== 'teacher'} 
-        />
+        {userRole === 'teacher' && (
+          <IconButton 
+            active={isScreenSharing} 
+            icon={MonitorUp} 
+            label={isScreenSharing ? "Stop presenting" : "Present now"} 
+            onClick={() => setIsScreenSharing(!isScreenSharing)} 
+          />
+        )}
 
         {userRole === 'teacher' && (
           <>
@@ -125,13 +130,20 @@ export default function ClassroomControls({
         </div>
         
         {/* Raise Hand — pulses orange when raised */}
-        <IconButton 
-          active={isHandRaised} 
-          icon={Hand} 
-          label={isHandRaised ? "Lower hand" : "Raise hand"} 
-          onClick={() => setIsHandRaised(!isHandRaised)}
-          pulse={isHandRaised}
-        />
+        <div className="relative">
+          <IconButton 
+            active={isHandRaised} 
+            icon={Hand} 
+            label={isHandRaised ? "Lower hand" : "Raise hand"} 
+            onClick={() => setIsHandRaised(!isHandRaised)}
+            pulse={isHandRaised}
+          />
+          {userRole === 'teacher' && raisedHandsCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+              {raisedHandsCount > 9 ? '9+' : raisedHandsCount}
+            </span>
+          )}
+        </div>
         
         {/* Chat button with unread badge */}
         <div className="relative">
@@ -148,22 +160,24 @@ export default function ClassroomControls({
           )}
         </div>
         
-        <IconButton 
-          active={isPeopleOpen} 
-          icon={Users} 
-          label="People" 
-          onClick={() => {
-            setIsPeopleOpen(!isPeopleOpen);
-            if (!isPeopleOpen) setIsChatOpen(false);
-          }} 
-        />
-        
-        <IconButton 
-          active={false} 
-          icon={MoreVertical} 
-          label="More options" 
-          onClick={() => {}} 
-        />
+        {userRole === 'teacher' && (
+          <div className="relative">
+            <IconButton 
+              active={isPeopleOpen} 
+              icon={Users} 
+              label="People" 
+              onClick={() => {
+                setIsPeopleOpen(!isPeopleOpen);
+                if (!isPeopleOpen) setIsChatOpen(false);
+              }} 
+            />
+            {!isPeopleOpen && (waitingStudentsCount > 0) && (
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                {waitingStudentsCount > 9 ? '9+' : waitingStudentsCount}
+              </span>
+            )}
+          </div>
+        )}
         
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
         

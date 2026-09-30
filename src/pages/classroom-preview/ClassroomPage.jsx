@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
@@ -8,9 +8,12 @@ import { Track, VideoPresets, AudioPresets, ConnectionState } from 'livekit-clie
 import ClassroomHeader from './components/ClassroomHeader';
 import VideoStage from './components/VideoStage';
 import ClassroomControls from './components/ClassroomControls';
+import ClassroomNotifications from './components/ClassroomNotifications';
 import ChatPanel from './components/ChatPanel';
 import PeoplePanel from './components/PeoplePanel';
 import { webrtcService } from '../../services/webrtcService';
+import { useClassroomNotifications, playNotificationSound } from './hooks/useClassroomNotifications';
+import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 
 const LOW_LATENCY_OPTIONS = {
   adaptiveStream: true,
@@ -140,7 +143,6 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
   );
 }
 
-import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 
 function ClassroomInner({ user, userRole, roomId, admissionService }) {
   console.log('[CLASSROOM] socket connected');
@@ -191,6 +193,24 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   } = useClassroomRealtime(roomId, user);
 
   const lkConnectionState = useConnectionState();
+  const participants = useParticipants();
+  const prevParticipantIds = useRef([]);
+
+  // ── Notifications (Host only) ─────────────────────────────────────────────
+  const {
+    notifications,
+    addNotification,
+    dismissNotification,
+    soundEnabled,
+    toggleSound,
+    canPlaySound,
+  } = useClassroomNotifications({
+    userRole,
+    chatMessages,
+    raisedHands,
+    waitingStudents,
+    isChatOpen,
+  });
 
   // Sync chat panel open state with the realtime hook (for unread counter)
   const handleSetChatOpen = (open) => {
@@ -198,6 +218,33 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     setChatPanelOpen(open);
     if (open) setIsPeopleOpen(false); // only one panel at a time
   };
+
+  // Track newly joined participants and notify Host
+  useEffect(() => {
+    if (userRole !== 'teacher') return;
+    const currentIds = participants.map(p => p.identity);
+    const newIds = currentIds.filter(id => !prevParticipantIds.current.includes(id));
+    prevParticipantIds.current = currentIds;
+    // Skip on initial mount (all are "new")
+    if (newIds.length === 0 || prevParticipantIds.current.length === participants.length) return;
+    newIds.forEach(identity => {
+      const name = identity.split('|')[0] || identity;
+      addNotification('join', '👤 Student Joined', `${name} joined the class`);
+      if (canPlaySound('join')) playNotificationSound('join');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participants]);
+
+  // Class-ended sound for students
+  const prevSocketAuthError = useRef(null);
+  useEffect(() => {
+    if (socketAuthError && socketAuthError !== prevSocketAuthError.current) {
+      prevSocketAuthError.current = socketAuthError;
+      if (socketAuthError === 'Class has ended.' && userRole !== 'teacher') {
+        playNotificationSound('ended');
+      }
+    }
+  }, [socketAuthError, userRole]);
 
   const handleSetPeopleOpen = (open) => {
     setIsPeopleOpen(open);
@@ -280,10 +327,12 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     );
   }
 
-  const triggerToast = (msg) => {
+  // Remove legacy classroom:toast listener (replaced by useClassroomNotifications)
+  // triggerToast kept for backward compat if anything still uses it
+  const triggerToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
-  };
+  }, []);
 
   const isHandRaised = raisedHands.includes(user?._id || user?.id);
   const handleToggleHand = () => toggleHand(!isHandRaised);
@@ -292,6 +341,16 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
 
   return (
     <>
+      {/* Notification overlay — always on top, works during screen share */}
+      {userRole === 'teacher' && (
+        <ClassroomNotifications
+          notifications={notifications}
+          onDismiss={dismissNotification}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+        />
+      )}
+
       <HeaderManager 
         duration={duration} 
         recordingState={recordingState}
@@ -415,6 +474,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         isCameraDisabledByFaculty={isCameraDisabledByFaculty}
         roomId={roomId}
         recordingState={recordingState}
+        waitingStudentsCount={waitingStudents.length}
+        raisedHandsCount={raisedHands.length}
       />
       <RoomAudioRenderer />
     </>
@@ -529,10 +590,22 @@ function PeoplePanelManager({
 
 function ControlsManager({ 
   userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, 
-  isHandRaised, setIsHandRaised, onLeave, onReaction, unreadCount = 0,
-  isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState
+  isHandRaised, setIsHandRaised, onLeave, onEndClass, onReaction, unreadCount = 0,
+  isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState,
+  waitingStudentsCount, raisedHandsCount
 }) {
   const { localParticipant } = useLocalParticipant();
+  const [hasInitCamera, setHasInitCamera] = useState(false);
+
+  useEffect(() => {
+    if (userRole === 'teacher' && localParticipant && !hasInitCamera) {
+      // Force camera off for Host by default on join
+      if (localParticipant.isCameraEnabled) {
+        localParticipant.setCameraEnabled(false);
+      }
+      setHasInitCamera(true);
+    }
+  }, [userRole, localParticipant, hasInitCamera]);
   
   const isMuted = !localParticipant?.isMicrophoneEnabled;
   const isVideoOff = !localParticipant?.isCameraEnabled;
@@ -611,10 +684,13 @@ function ControlsManager({
       isTeacher={userRole === 'teacher'}
       userRole={userRole}
       onLeave={onLeave}
+      onEndClass={onEndClass}
       onReaction={onReaction}
       unreadCount={unreadCount}
       recordingState={recordingState}
       onToggleRecording={handleToggleRecording}
+      waitingStudentsCount={waitingStudentsCount}
+      raisedHandsCount={raisedHandsCount}
     />
   );
 }
