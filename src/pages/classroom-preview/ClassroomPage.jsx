@@ -647,20 +647,26 @@ function ControlsManager({
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
     
     try {
+      let res;
       if (recordingState === 'recording' || recordingState === 'paused') {
         // Stop recording
-        await fetch(`${apiUrl}/class-recordings/stop`, {
+        res = await fetch(`${apiUrl}/class-recordings/stop`, {
           method: 'POST',
           headers,
           body: JSON.stringify({ roomName: roomId })
         });
       } else if (recordingState === 'idle' || recordingState === 'completed' || recordingState === 'failed') {
         // Start recording
-        await fetch(`${apiUrl}/class-recordings/start`, {
+        res = await fetch(`${apiUrl}/class-recordings/start`, {
           method: 'POST',
           headers,
           body: JSON.stringify({ roomName: roomId })
         });
+      }
+      
+      if (res && !res.ok) {
+        const errorText = await res.text();
+        console.error('Recording API failed:', res.status, errorText);
       }
     } catch (err) {
       console.error('Error toggling recording', err);
