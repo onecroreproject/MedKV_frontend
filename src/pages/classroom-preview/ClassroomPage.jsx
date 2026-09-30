@@ -131,7 +131,7 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
       token={token}
       connect={true}
       options={LOW_LATENCY_OPTIONS}
-      className="h-screen w-full bg-[#0a0a0a] flex flex-col font-sans text-slate-200"
+      className="h-[100dvh] w-full bg-[#0a0a0a] flex flex-col overflow-hidden font-sans text-slate-200"
     >
       <ClassroomInner user={user} userRole={isTeacher ? 'teacher' : 'student'} roomId={roomId} admissionService={admissionService} />
     </LiveKitRoom>

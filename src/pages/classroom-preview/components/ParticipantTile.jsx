@@ -51,7 +51,7 @@ export default function ParticipantTile({
       {cameraEnabled && trackRef ? (
         <VideoTrack
           trackRef={trackRef}
-          className={`w-full h-full object-cover transition-transform duration-300 ${!isPiP && isHovered ? 'scale-105' : ''} ${participant.isLocal ? '-scale-x-100' : ''}`}
+          className={`w-full h-full ${isPiP ? 'object-contain' : 'object-cover'} transition-transform duration-300 ${!isPiP && isHovered ? 'scale-105' : ''} ${participant.isLocal ? '-scale-x-100' : ''}`}
         />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col items-center justify-center">
