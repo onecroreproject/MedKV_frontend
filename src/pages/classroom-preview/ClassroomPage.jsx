@@ -146,6 +146,7 @@ function ClassroomInner({ userRole, roomId }) {
   const [isPeopleOpen, setIsPeopleOpen] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [duration, setDuration] = useState('00:00:00');
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Simple duration timer
   useEffect(() => {
@@ -173,18 +174,23 @@ function ClassroomInner({ userRole, roomId }) {
     navigate(-1);
   };
 
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   return (
     <>
-      <ClassroomHeader 
-        title="Dr. Sam Reefath Radiology Class" 
-        duration={duration} 
-      />
+      <HeaderManager duration={duration} />
 
       <div className="flex-1 flex overflow-hidden relative">
         <StageManager isHandRaised={isHandRaised} />
         
         {isChatOpen && (
-          <ChatPanel onClose={() => setIsChatOpen(false)} />
+          <ChatPanel 
+            onClose={() => setIsChatOpen(false)} 
+            onSendMessage={(msg) => triggerToast(msg)}
+          />
         )}
         
         {isPeopleOpen && (
@@ -192,6 +198,14 @@ function ClassroomInner({ userRole, roomId }) {
             onClose={() => setIsPeopleOpen(false)} 
             userRole={userRole}
           />
+        )}
+
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="absolute bottom-4 left-4 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-lg shadow-2xl flex flex-col z-50 animate-in slide-in-from-bottom-4 fade-in">
+            <span className="font-semibold text-sm text-blue-400">{toastMessage.sender}</span>
+            <span className="text-sm text-slate-200 mt-1">{toastMessage.text}</span>
+          </div>
         )}
       </div>
 
@@ -207,6 +221,17 @@ function ClassroomInner({ userRole, roomId }) {
       />
       <RoomAudioRenderer />
     </>
+  );
+}
+
+function HeaderManager({ duration }) {
+  const participants = useParticipants();
+  return (
+    <ClassroomHeader 
+      title="Dr. Sam Reefath Radiology Class" 
+      duration={duration} 
+      participantCount={participants.length}
+    />
   );
 }
 

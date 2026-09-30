@@ -31,17 +31,12 @@ export default function VideoStage({
     );
   }
 
-  // Determine what goes in the main stage vs the strip
-  const showPiP = isScreenSharing && teacher && teacher.lkParticipant?.isCameraEnabled;
-  
-  // People in the strip are everyone EXCEPT PiP teacher (if active)
-  // Wait, if screen sharing, all participants (except PiP teacher) go to strip.
-  // If pinning (and no screen share), all participants except pinned go to strip.
+  // If screen sharing, all participants including teacher go to the right column.
   let stripParticipants = [];
   let mainStageNode = null;
   
   if (isScreenSharing) {
-    stripParticipants = allParticipants.filter(p => !showPiP || p.id !== teacher?.id);
+    stripParticipants = allParticipants;
     mainStageNode = (
       <div className="absolute inset-0 bg-black flex items-center justify-center transition-all duration-300 ease-in-out">
         {screenShareTrack ? (
@@ -73,29 +68,19 @@ export default function VideoStage({
   }
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col p-4 space-y-4 overflow-hidden transition-opacity duration-300 ease-in-out opacity-100">
+    <div className={`flex-1 w-full h-full flex ${isScreenSharing ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}>
       {/* Main Stage Area */}
-      <div className="flex-1 relative bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800">
+      <div className={`relative bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing ? 'flex-1 h-2/3 md:h-full' : 'flex-1'}`}>
         
         {mainStageNode}
         
-        {/* Floating Teacher PiP (only when screen sharing and camera is ON) */}
-        {showPiP && (
-          <div className="absolute bottom-4 right-4 w-48 sm:w-56 aspect-video shadow-2xl rounded-xl overflow-hidden border border-slate-600/50 z-20 transition-all duration-300 hover:scale-105">
-             <ParticipantTile 
-               participant={teacher} 
-               isHost={true} 
-               isPiP={true} 
-             />
-          </div>
-        )}
       </div>
 
-      {/* Participant Strip (if there are people to show) */}
+      {/* Participant Strip/Column */}
       {stripParticipants.length > 0 && (
-        <div className="h-28 sm:h-36 shrink-0 w-full overflow-x-auto flex space-x-3 pb-2 custom-scrollbar transition-all duration-300 ease-in-out">
+        <div className={`shrink-0 flex custom-scrollbar transition-all duration-300 ease-in-out ${isScreenSharing ? 'h-1/3 md:h-full md:w-64 lg:w-72 flex-row md:flex-col space-x-3 md:space-x-0 md:space-y-3 overflow-x-auto md:overflow-y-auto' : 'h-28 sm:h-36 w-full overflow-x-auto flex-row space-x-3 pb-2'}`}>
           {stripParticipants.map((p) => (
-            <div key={p.id} className="h-full aspect-video shrink-0 transition-transform duration-300">
+            <div key={p.id} className={`shrink-0 transition-transform duration-300 ${isScreenSharing ? 'h-full md:h-auto md:w-full md:aspect-video aspect-video' : 'h-full aspect-video'}`}>
                <ParticipantTile 
                  participant={p} 
                  isHost={p.id === teacher?.id} 

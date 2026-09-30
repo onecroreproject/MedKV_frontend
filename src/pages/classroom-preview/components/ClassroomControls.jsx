@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, 
   MonitorUp, Hand, MessageSquare, 
-  Users, MoreVertical, PhoneOff 
+  Users, MoreVertical, PhoneOff, Smile 
 } from 'lucide-react';
 
 export default function ClassroomControls({
@@ -63,10 +63,41 @@ export default function ClassroomControls({
           icon={MonitorUp} 
           label={isScreenSharing ? "Stop presenting" : "Present now"} 
           onClick={() => setIsScreenSharing(!isScreenSharing)} 
-          disabled={userRole !== 'teacher' && isScreenSharing} // Mock logic: student can't stop teacher's share
+          disabled={userRole !== 'teacher'} 
         />
         
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
+        
+        <div className="relative group/reaction flex items-center justify-center">
+          <button
+            className="p-3 rounded-full flex items-center justify-center transition-all bg-slate-700 hover:bg-slate-600 text-slate-200"
+            aria-label="Reactions"
+            title="Reactions"
+          >
+            <Smile size={20} />
+          </button>
+          
+          <div className="absolute bottom-full mb-2 hidden group-hover/reaction:flex bg-slate-800 p-2 rounded-lg shadow-xl border border-slate-700 space-x-1 z-50">
+            {['❤️', '👍', '🎉', '👏', '😂', '😮', '🤔'].map(emoji => (
+              <button 
+                key={emoji}
+                className="text-xl hover:scale-125 hover:bg-slate-700 p-2 rounded transition-transform"
+                onClick={() => {
+                  // Fake local state for now
+                  const el = document.createElement('div');
+                  el.innerText = emoji;
+                  el.className = 'fixed text-4xl animate-bounce pointer-events-none z-50';
+                  el.style.left = '50%';
+                  el.style.bottom = '100px';
+                  document.body.appendChild(el);
+                  setTimeout(() => el.remove(), 2000);
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
         
         <IconButton 
           active={isHandRaised} 
