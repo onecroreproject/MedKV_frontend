@@ -12,15 +12,27 @@ export function useClassroomRealtime(roomId, user) {
   const [chatMessages, setChatMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Use ref so callbacks always see latest value without re-creating listeners
+  // ── Moderation state ────────────────────────────────────────────────────────
+  // { userId: true } — tracks who is faculty-muted / camera-disabled / removed
+  const [mutedParticipants, setMutedParticipants] = useState({});
+  const [cameraDisabledParticipants, setCameraDisabledParticipants] = useState({});
+  // State for the current user
+  const [isMutedByFaculty, setIsMutedByFaculty] = useState(false);
+  const [isCameraDisabledByFaculty, setIsCameraDisabledByFaculty] = useState(false);
+  const [removedFromClass, setRemovedFromClass] = useState(false);
+  const [removedReason, setRemovedReason] = useState('');
+  // Unmute requests received by faculty
+  const [unmuteRequests, setUnmuteRequests] = useState([]);
+
   const isChatOpenRef = useRef(false);
+  const currentUserId = user?._id || user?.id;
 
   useEffect(() => {
     if (!roomId || !user) return;
 
     const token = localStorage.getItem('token');
 
-    const newSocket = io(SOCKET_URL, { 
+    const newSocket = io(SOCKET_URL, {
       transports: ['websocket'],
       auth: { token }
     });
@@ -34,7 +46,7 @@ export function useClassroomRealtime(roomId, user) {
       console.warn('[ClassroomRealtime] socket auth error:', err.message);
     });
 
-    // ── Raise Hand ─────────────────────────────────────────────────────────
+    // ── Raise Hand ───────────────────────────────────────────────────────────
     newSocket.on('class:hand-updated', ({ userId, action }) => {
       setRaisedHands(prev => {
         if (action === 'raised') {
@@ -50,7 +62,7 @@ export function useClassroomRealtime(roomId, user) {
       setRaisedHands(hands);
     });
 
-    // ── Reactions ───────────────────────────────────────────────────────────
+    // ── Reactions ─────────────────────────────────────────────────────────────
     newSocket.on('class:reaction', (payload) => {
       const newReaction = {
         ...payload,
@@ -62,10 +74,9 @@ export function useClassroomRealtime(roomId, user) {
       }, 3000);
     });
 
-    // ── Chat ────────────────────────────────────────────────────────────────
+    // ── Chat ──────────────────────────────────────────────────────────────────
     newSocket.on('class:chat-message', (msg) => {
       setChatMessages(prev => [...prev, msg]);
-      // Only increment unread when panel is closed
       if (!isChatOpenRef.current) {
         setUnreadCount(prev => prev + 1);
       }
@@ -73,7 +84,57 @@ export function useClassroomRealtime(roomId, user) {
 
     newSocket.on('class:chat-error', ({ code }) => {
       console.warn('[Chat] error:', code);
-      // Expose via a toast if needed — for now just log
+    });
+
+    // ── Moderation ────────────────────────────────────────────────────────────
+    newSocket.on('class:participant-muted', ({ targetUserId }) => {
+      setMutedParticipants(prev => ({ ...prev, [targetUserId]: true }));
+      if (targetUserId === currentUserId) {
+        setIsMutedByFaculty(true);
+      }
+    });
+
+    newSocket.on('class:unmute-approved', ({ targetUserId }) => {
+      setMutedParticipants(prev => { const n = { ...prev }; delete n[targetUserId]; return n; });
+      if (targetUserId === currentUserId) {
+        setIsMutedByFaculty(false);
+      }
+    });
+
+    newSocket.on('class:camera-disabled', ({ targetUserId }) => {
+      setCameraDisabledParticipants(prev => ({ ...prev, [targetUserId]: true }));
+      if (targetUserId === currentUserId) {
+        setIsCameraDisabledByFaculty(true);
+      }
+    });
+
+    newSocket.on('class:removed-from-class', ({ targetUserId, reason }) => {
+      if (targetUserId === currentUserId) {
+        setRemovedFromClass(true);
+        setRemovedReason(reason || 'Removed by faculty');
+      }
+    });
+
+    // Faculty receives unmute requests
+    newSocket.on('class:unmute-request', (req) => {
+      setUnmuteRequests(prev => {
+        if (prev.find(r => r.userId === req.userId)) return prev;
+        return [...prev, req];
+      });
+      // Auto-dismiss after 30s
+      setTimeout(() => {
+        setUnmuteRequests(prev => prev.filter(r => r.userId !== req.userId));
+      }, 30000);
+    });
+
+    newSocket.on('class:participant-removed', ({ targetUserId }) => {
+      // Clean local moderation state for removed participant
+      setMutedParticipants(prev => { const n = { ...prev }; delete n[targetUserId]; return n; });
+      setCameraDisabledParticipants(prev => { const n = { ...prev }; delete n[targetUserId]; return n; });
+    });
+
+    newSocket.on('class:moderation-error', ({ code }) => {
+      console.warn('[Moderation] error:', code);
     });
 
     return () => {
@@ -87,7 +148,12 @@ export function useClassroomRealtime(roomId, user) {
     if (open) setUnreadCount(0);
   }, []);
 
-  // ── Actions ─────────────────────────────────────────────────────────────
+  // ── Dismiss unmute request (after faculty acts) ───────────────────────────
+  const dismissUnmuteRequest = useCallback((userId) => {
+    setUnmuteRequests(prev => prev.filter(r => r.userId !== userId));
+  }, []);
+
+  // ── Actions ──────────────────────────────────────────────────────────────
   const toggleHand = useCallback((isRaised) => {
     if (!socket) return;
     socket.emit(isRaised ? 'class:raise-hand' : 'class:lower-hand', { roomId });
@@ -103,13 +169,45 @@ export function useClassroomRealtime(roomId, user) {
     socket.emit('class:reaction', { roomId, reaction });
   }, [socket, roomId]);
 
-  // Only message content — identity resolved server-side from JWT
   const sendChatMessage = useCallback((message) => {
     if (!socket || !message?.trim()) return;
     socket.emit('class:chat-message', { roomId, message: message.trim() });
   }, [socket, roomId]);
 
+  // ── Moderation actions ────────────────────────────────────────────────────
+  const muteParticipant = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:mute-participant', { roomId, targetUserId });
+  }, [socket, roomId]);
+
+  const requestUnmute = useCallback(() => {
+    if (!socket) return;
+    socket.emit('class:request-unmute', { roomId });
+  }, [socket, roomId]);
+
+  const allowUnmute = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:allow-unmute', { roomId, targetUserId });
+    dismissUnmuteRequest(targetUserId);
+  }, [socket, roomId, dismissUnmuteRequest]);
+
+  const disableCamera = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:disable-camera', { roomId, targetUserId });
+  }, [socket, roomId]);
+
+  const removeParticipant = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:remove-participant', { roomId, targetUserId });
+  }, [socket, roomId]);
+
+  const clearParticipantHand = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:clear-participant-hand', { roomId, targetUserId });
+  }, [socket, roomId]);
+
   return {
+    // Existing
     raisedHands,
     recentReactions,
     chatMessages,
@@ -119,5 +217,21 @@ export function useClassroomRealtime(roomId, user) {
     clearHand,
     sendReaction,
     sendChatMessage,
+    // Moderation state
+    mutedParticipants,
+    cameraDisabledParticipants,
+    isMutedByFaculty,
+    isCameraDisabledByFaculty,
+    removedFromClass,
+    removedReason,
+    unmuteRequests,
+    // Moderation actions
+    muteParticipant,
+    requestUnmute,
+    allowUnmute,
+    disableCamera,
+    removeParticipant,
+    clearParticipantHand,
+    dismissUnmuteRequest,
   };
 }

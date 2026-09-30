@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Pin, PinOff, Hand } from 'lucide-react';
+import { Mic, MicOff, Pin, PinOff, Hand, CameraOff } from 'lucide-react';
 import { VideoTrack, AudioTrack } from '@livekit/components-react';
 
 export default function ParticipantTile({ participant, isHost, isPiP = false, isPinned = false, onTogglePin }) {
   if (!participant) return null;
   
   const [isHovered, setIsHovered] = useState(false);
-  const { name, isMuted, isSpeaking, lkParticipant, isHandRaised } = participant;
+  const { name, isMuted, isSpeaking, lkParticipant, isHandRaised, isModerationMuted, isModerationCameraDisabled } = participant;
   
   return (
     <div 
@@ -56,8 +56,11 @@ export default function ParticipantTile({ participant, isHost, isPiP = false, is
       {/* Overlay Details */}
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
         <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg flex items-center space-x-2 max-w-[85%] border border-white/10">
-          {isMuted ? (
-            <MicOff size={14} className="text-red-400 shrink-0" />
+          {isModerationCameraDisabled && (
+            <CameraOff size={14} className="text-red-500 shrink-0" title="Camera Disabled by Faculty" />
+          )}
+          {isMuted || isModerationMuted ? (
+            <MicOff size={14} className={`${isModerationMuted ? "text-red-500" : "text-red-400"} shrink-0`} title={isModerationMuted ? "Muted by Faculty" : "Muted"} />
           ) : (
             <Mic size={14} className="text-slate-300 shrink-0" />
           )}

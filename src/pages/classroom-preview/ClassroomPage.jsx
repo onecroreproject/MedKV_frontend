@@ -160,6 +160,19 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     clearHand, 
     sendReaction,
     sendChatMessage,
+    mutedParticipants,
+    cameraDisabledParticipants,
+    isMutedByFaculty,
+    isCameraDisabledByFaculty,
+    removedFromClass,
+    removedReason,
+    unmuteRequests,
+    muteParticipant,
+    requestUnmute,
+    allowUnmute,
+    disableCamera,
+    removeParticipant,
+    clearParticipantHand,
   } = useClassroomRealtime(roomId, user);
 
   // Sync chat panel open state with the realtime hook (for unread counter)
@@ -203,6 +216,21 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     navigate(-1);
   };
 
+  // If removed from class by faculty
+  if (removedFromClass) {
+    room?.disconnect();
+    webrtcService.disconnect();
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-red-400">
+        <h2 className="text-xl font-semibold mb-2">Removed</h2>
+        <p>{removedReason}</p>
+        <button onClick={() => navigate(-1)} className="mt-6 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   const triggerToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -222,6 +250,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           isHandRaised={isHandRaised} 
           raisedHands={raisedHands}
           recentReactions={recentReactions}
+          mutedParticipants={mutedParticipants}
+          cameraDisabledParticipants={cameraDisabledParticipants}
         />
         
         {isChatOpen && (
@@ -242,6 +272,13 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
             user={user}
             raisedHands={raisedHands}
             onClearHand={clearHand}
+            mutedParticipants={mutedParticipants}
+            cameraDisabledParticipants={cameraDisabledParticipants}
+            onMuteParticipant={muteParticipant}
+            onDisableCamera={disableCamera}
+            onRemoveParticipant={removeParticipant}
+            unmuteRequests={unmuteRequests}
+            onAllowUnmute={allowUnmute}
           />
         )}
 
@@ -258,6 +295,26 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Banners for Moderation */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col space-y-2 z-50">
+          {isMutedByFaculty && (
+            <div className="bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg flex items-center justify-between min-w-[300px]">
+              <span className="text-sm font-medium">🔇 Muted by faculty</span>
+              <button 
+                onClick={() => { requestUnmute(); triggerToast('Unmute request sent'); }}
+                className="text-xs bg-black/20 hover:bg-black/30 px-3 py-1 rounded transition-colors"
+              >
+                Request Unmute
+              </button>
+            </div>
+          )}
+          {isCameraDisabledByFaculty && (
+            <div className="bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg flex items-center justify-between min-w-[300px]">
+              <span className="text-sm font-medium">📷 Camera disabled by faculty</span>
+            </div>
+          )}
         </div>
 
         {/* Toast Notification */}
@@ -279,6 +336,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         onLeave={handleLeave}
         onReaction={sendReaction}
         unreadCount={unreadCount}
+        isMutedByFaculty={isMutedByFaculty}
+        isCameraDisabledByFaculty={isCameraDisabledByFaculty}
       />
       <RoomAudioRenderer />
     </>
@@ -297,7 +356,7 @@ function HeaderManager({ duration }) {
   );
 }
 
-function StageManager({ isHandRaised, raisedHands = [] }) {
+function StageManager({ isHandRaised, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {} }) {
   const participants = useParticipants();
   const [pinnedParticipantId, setPinnedParticipantId] = useState(null);
   
@@ -319,7 +378,9 @@ function StageManager({ isHandRaised, raisedHands = [] }) {
       isSpeaking: p.isSpeaking,
       participantIdentity: p.identity,
       lkParticipant: p, 
-      isHandRaised: raisedHands.includes(p.identity)
+      isHandRaised: raisedHands.includes(p.identity),
+      isModerationMuted: !!mutedParticipants[p.identity],
+      isModerationCameraDisabled: !!cameraDisabledParticipants[p.identity]
     };
   };
 
@@ -338,7 +399,13 @@ function StageManager({ isHandRaised, raisedHands = [] }) {
   );
 }
 
-function PeoplePanelManager({ onClose, userRole, admissionService, roomId, user, raisedHands = [], onClearHand }) {
+function PeoplePanelManager({ 
+  onClose, userRole, admissionService, roomId, user, 
+  raisedHands = [], onClearHand,
+  mutedParticipants, cameraDisabledParticipants,
+  onMuteParticipant, onDisableCamera, onRemoveParticipant,
+  unmuteRequests, onAllowUnmute
+}) {
   const participants = useParticipants();
   const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher')) || participants[0];
   const students = participants.filter(p => p.identity !== teacher?.identity);
@@ -393,11 +460,22 @@ function PeoplePanelManager({ onClose, userRole, admissionService, roomId, user,
       onReject={handleReject}
       raisedHands={raisedHands}
       onClearHand={onClearHand}
+      mutedParticipants={mutedParticipants}
+      cameraDisabledParticipants={cameraDisabledParticipants}
+      onMuteParticipant={onMuteParticipant}
+      onDisableCamera={onDisableCamera}
+      onRemoveParticipant={onRemoveParticipant}
+      unmuteRequests={unmuteRequests}
+      onAllowUnmute={onAllowUnmute}
     />
   );
 }
 
-function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, isHandRaised, setIsHandRaised, onLeave, onReaction, unreadCount = 0 }) {
+function ControlsManager({ 
+  userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, 
+  isHandRaised, setIsHandRaised, onLeave, onReaction, unreadCount = 0,
+  isMutedByFaculty, isCameraDisabledByFaculty
+}) {
   const { localParticipant } = useLocalParticipant();
   
   const isMuted = !localParticipant?.isMicrophoneEnabled;
@@ -406,12 +484,14 @@ function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, se
 
   const toggleMic = async () => {
     if (localParticipant) {
+      if (isMutedByFaculty && !localParticipant.isMicrophoneEnabled) return; // Prevent turning on
       await localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled);
     }
   };
 
   const toggleCamera = async () => {
     if (localParticipant) {
+      if (isCameraDisabledByFaculty && !localParticipant.isCameraEnabled) return; // Prevent turning on
       await localParticipant.setCameraEnabled(!localParticipant.isCameraEnabled);
     }
   };
@@ -421,9 +501,7 @@ function ControlsManager({ userRole, isChatOpen, setIsChatOpen, isPeopleOpen, se
       if (isScreenSharing) {
         await localParticipant.setScreenShareEnabled(false);
       } else {
-        await localParticipant.setScreenShareEnabled(true, {
-           resolution: VideoPresets.h1080.resolution,
-        });
+        await localParticipant.setScreenShareEnabled(true);
       }
     }
   };
