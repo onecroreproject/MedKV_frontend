@@ -97,19 +97,25 @@ export function useClassroomRealtime(roomId, user) {
 
     // ── Recording Events ──────────────────────────────────────────────────────
     newSocket.on('class:recording-started', (payload) => {
+      console.log('[Recording][Socket] Received recording-started');
+      console.log('[Recording][Socket] Room:', payload.roomId);
+      console.log('[Recording][Socket] Recording ID:', payload.recordingId);
       setRecordingState(payload.status || 'recording');
       setRecordingStartedAt(payload.startedAt || new Date());
     });
 
     newSocket.on('class:recording-stopping', (payload) => {
+      console.log('[Recording][Socket] Received recording-stopping');
       setRecordingState('stopping');
     });
 
     newSocket.on('class:recording-completed', (payload) => {
+      console.log('[Recording][Socket] Received recording-completed');
       setRecordingState('completed');
     });
 
     newSocket.on('class:recording-failed', (payload) => {
+      console.log('[Recording][Socket] Received recording-failed');
       setRecordingState('failed');
     });
 

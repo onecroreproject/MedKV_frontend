@@ -637,6 +637,14 @@ function ControlsManager({
   const handleToggleRecording = async () => {
     if (userRole !== 'teacher' && userRole !== 'admin' && userRole !== 'Faculty') return;
     
+    console.log('[Recording][UI] ================================');
+    console.log('[Recording][UI] Record button clicked');
+    console.log('[Recording][UI] Room ID:', roomId);
+    console.log('[Recording][UI] User ID:', user?._id || user?.id);
+    console.log('[Recording][UI] User Role:', userRole);
+    console.log('[Recording][UI] Current State:', recordingState);
+    console.log('[Recording][UI] Time:', new Date().toISOString());
+
     const token = localStorage.getItem('token');
     const headers = {
       'Content-Type': 'application/json',
@@ -649,26 +657,44 @@ function ControlsManager({
       let res;
       if (recordingState === 'recording' || recordingState === 'paused') {
         // Stop recording
+        console.log('[Recording][API] STOP request');
+        console.log('[Recording][API] Room ID:', roomId);
         res = await fetch(`${apiUrl}/class-recordings/stop`, {
           method: 'POST',
           headers,
           body: JSON.stringify({ roomName: roomId })
         });
+        
+        console.log('[Recording][API] STOP response');
+        console.log('[Recording][API] HTTP Status:', res.status);
       } else if (recordingState === 'idle' || recordingState === 'completed' || recordingState === 'failed') {
         // Start recording
+        console.log('[Recording][API] START request');
+        console.log('[Recording][API] Room ID:', roomId);
         res = await fetch(`${apiUrl}/class-recordings/start`, {
           method: 'POST',
           headers,
           body: JSON.stringify({ roomName: roomId })
         });
+        
+        console.log('[Recording][API] START response');
+        console.log('[Recording][API] HTTP Status:', res.status);
       }
       
-      if (res && !res.ok) {
-        const errorText = await res.text();
-        console.error('Recording API failed:', res.status, errorText);
+      if (res) {
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('[Recording][API] FAILED');
+          console.error('[Recording][API] Status:', res.status);
+          console.error('[Recording][API] Response:', errorText);
+        } else {
+          const data = await res.json();
+          console.log('[Recording][API] Response Data:', data);
+        }
       }
     } catch (err) {
-      console.error('Error toggling recording', err);
+      console.error('[Recording][API] FAILED EXCEPTION');
+      console.error('[Recording][API] Message:', err.message);
     }
   };
 
