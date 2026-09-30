@@ -61,7 +61,8 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
       getMe().then(res => {
         if (res?.data) {
           setUser(res.data);
-          setIsTeacher(res.data.role === 'Faculty' || res.data.role === 'admin' || res.data.role === 'teacher');
+          const r = (res.data.role || '').toLowerCase();
+          setIsTeacher(r === 'faculty' || r === 'admin' || r === 'teacher');
         }
       }).catch(err => {
         console.error('Failed to fetch user', err);
@@ -70,7 +71,8 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
         setLoadingUser(false);
       });
     } else {
-      setIsTeacher(user.role === 'Faculty' || user.role === 'admin' || user.role === 'teacher');
+      const r = (user.role || '').toLowerCase();
+      setIsTeacher(r === 'faculty' || r === 'admin' || r === 'teacher');
     }
   }, [user]);
 
@@ -606,6 +608,7 @@ function ControlsManager({
       setIsPeopleOpen={setIsPeopleOpen}
       isHandRaised={isHandRaised}
       setIsHandRaised={setIsHandRaised}
+      isTeacher={userRole === 'teacher'}
       userRole={userRole}
       onLeave={onLeave}
       onReaction={onReaction}
