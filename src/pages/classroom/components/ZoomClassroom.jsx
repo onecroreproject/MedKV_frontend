@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import api from '../../../services/api';
+import axiosInstance from '../../../services/axiosInstance';
 
 const ZoomClassroom = ({ liveClassId, user }) => {
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
         zoomClientRef.current = client;
         
         // Fetch credentials and signature dynamically from the backend
-        const res = await api.get(`/zoom/sdk-credentials/${liveClassId}`);
+        const res = await axiosInstance.get(`/zoom/sdk-credentials/${liveClassId}`);
         const { signature, meetingNumber, passcode, userName, userEmail, zak, sdkKey } = res.data;
 
         if (!isMounted) return;
