@@ -508,10 +508,12 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                           <Button
                             variant={isLive ? 'primary' : 'outline'}
                             size="sm"
-                            onClick={() => navigate('/student/login')}
+                            onClick={handleEnrollClick}
                             className="w-full text-[10px] py-2.5 uppercase tracking-widest font-black"
                           >
-                            {isLive ? 'Attend Live Class' : 'Access Recorded Replays'}
+                            {isLive 
+                              ? (isPurchased ? 'Join Live Class' : 'Attend Live Class') 
+                              : (isPurchased ? 'View Recorded Replays' : 'Access Recorded Replays')}
                           </Button>
                         </div>
                       </div>
