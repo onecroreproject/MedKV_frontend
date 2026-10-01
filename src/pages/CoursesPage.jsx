@@ -134,7 +134,9 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
       difficulty: c.level || '',
       earlyBird: c.earlyBird,
       registrationCount: c.registrationCount || 0,
-      imageType: getFallbackImage(c.category?.name || c.category)
+      imageType: getFallbackImage(c.category?.name || c.category),
+      hasRecordings: c.hasRecordings,
+      recordingsCount: c.recordingsCount
     })).filter((course) => {
       // Search Match
       const matchesSearch =
@@ -515,23 +517,34 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                   {/* Course Details Block */}
                   <div className="p-6 flex-grow flex flex-col justify-between text-left space-y-4">
                     <div className="space-y-2">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 flex-wrap text-[10px] text-accent font-bold uppercase tracking-wider">
-                          <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : course.duration}</span>
-                          <span>•</span>
-                          <span>{course.lessons} Lectures</span>
-                          {course.startDate && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/10 rounded text-accent whitespace-nowrap font-extrabold tracking-widest">
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
-                              </span>
-                            </>
-                          )}
-                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-wrap text-[10px] text-accent font-bold uppercase tracking-wider">
+                            <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : course.duration}</span>
+                            <span>•</span>
+                            <span>{course.lessons} Lectures</span>
+                            {course.hasRecordings && (
+                              <>
+                                <span>•</span>
+                                <span className="text-emerald-500 font-extrabold flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                  </svg>
+                                  {course.recordingsCount} Recorded Session{course.recordingsCount > 1 ? 's' : ''}
+                                </span>
+                              </>
+                            )}
+                            {course.startDate && (
+                              <>
+                                <span>•</span>
+                                <span className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/10 rounded text-accent whitespace-nowrap font-extrabold tracking-widest">
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                                </span>
+                              </>
+                            )}
+                          </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 flex-wrap">
                             {course.difficulty && (

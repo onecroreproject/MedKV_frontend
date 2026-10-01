@@ -19,6 +19,7 @@ const loadScript = (src) => {
 
 export const PurchaseProvider = ({ children }) => {
   const [purchasedCourses, setPurchasedCourses] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Load purchased courses from the backend on mount or login
@@ -27,6 +28,9 @@ export const PurchaseProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         const res = await getMe();
+        if (res?.data) {
+          setUser(res.data);
+        }
         if (res?.data?.enrolledCourses) {
           // Normalize to strings to safely compare with any ID format
           const courseIds = res.data.enrolledCourses.map(c => {
@@ -107,9 +111,9 @@ export const PurchaseProvider = ({ children }) => {
               }
             },
             prefill: {
-              name: 'Student Name',
-              email: 'student@example.com',
-              contact: '9999999999'
+              name: user?.name || 'Student Name',
+              email: user?.email || 'student@example.com',
+              contact: user?.phoneNumber || '9999999999'
             },
             theme: {
               color: '#C89B3C' // accent color

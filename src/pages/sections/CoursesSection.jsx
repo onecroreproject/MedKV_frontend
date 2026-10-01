@@ -43,7 +43,9 @@ export default function CoursesSection({ onViewChange }) {
         const data = await getPublishedCourses();
         const mappedData = (data?.data || []).map(c => ({
           ...c,
-          category: c.category?.name || c.category
+          category: c.category?.name || c.category,
+          hasRecordings: c.hasRecordings,
+          recordingsCount: c.recordingsCount
         }));
         setCourses(mappedData);
       } catch (err) {
@@ -243,20 +245,28 @@ export default function CoursesSection({ onViewChange }) {
               {/* Body Content */}
               <CardBody className="p-6 space-y-4 flex-grow flex flex-col justify-between bg-white text-left">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center text-[10px] text-accent font-bold uppercase tracking-wider flex-wrap gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : (course.duration || 'Flexible Timeline')}</span>
-                      {course.startDate && (
-                        <span className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/10 rounded text-accent whitespace-nowrap">
-                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] text-accent font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{course.duration?.toLowerCase() === 'lifetime' ? 'Self-Paced' : (course.duration || 'Flexible Timeline')}</span>
+                        {course.startDate && (
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/10 rounded text-accent whitespace-nowrap">
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-primary bg-soft-gray px-2 py-0.5 rounded border border-slate-200/40">ONLINE</span>
                     </div>
-                    <span className="text-primary bg-soft-gray px-2 py-0.5 rounded border border-slate-200/40">ONLINE</span>
-                  </div>
+                    {course.hasRecordings && (
+                      <div className="text-emerald-500 font-extrabold text-[10px] flex items-center gap-1 uppercase tracking-wider">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        {course.recordingsCount} Recorded Session{course.recordingsCount > 1 ? 's' : ''}
+                      </div>
+                    )}
                   <h4 
                     onClick={() => navigate(`/courses/${course.slug || course._id}`)}
                     className="text-primary font-bold text-base leading-tight group-hover:text-accent transition-colors cursor-pointer"
