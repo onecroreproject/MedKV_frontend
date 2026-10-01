@@ -3,7 +3,9 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import PreJoinScreen from './components/PreJoinScreen';
 import WaitingRoom from './components/WaitingRoom';
 import ClassroomPage from '../classroom-preview/ClassroomPage';
+import ZoomClassroom from '../classroom/components/ZoomClassroom';
 import { getMe } from '../../services/userService'; 
+import { getLiveClass } from '../../services/liveClassService';
 import { admissionService } from '../../services/admissionService';
 
 export default function ClassroomEntryPage() {
@@ -12,6 +14,7 @@ export default function ClassroomEntryPage() {
   const location = useLocation();
   const [entryState, setEntryState] = useState('PRE_JOIN'); 
   const [user, setUser] = useState(null);
+  const [liveClass, setLiveClass] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -36,6 +39,19 @@ export default function ClassroomEntryPage() {
         const res = await getMe();
         if (res && res.data) {
           setUser(res.data);
+          
+          // Fetch LiveClass details to determine meetingProvider
+          try {
+            const classRes = await getLiveClass(roomId);
+            if (classRes && classRes.data) {
+              setLiveClass(classRes.data);
+            } else {
+              setErrorMsg("Class not found.");
+            }
+          } catch (err) {
+            setErrorMsg("Error fetching class details.");
+          }
+          
         } else {
           navigate('/student/login');
         }
@@ -49,7 +65,7 @@ export default function ClassroomEntryPage() {
   }, [navigate, location.search]);
 
   useEffect(() => {
-    if (user) {
+    if (user && liveClass && liveClass.meetingProvider !== 'zoom') {
       admissionService.connect();
 
       admissionService.onAdmitted = () => {
@@ -73,7 +89,7 @@ export default function ClassroomEntryPage() {
         admissionService.disconnect();
       };
     }
-  }, [user]);
+  }, [user, liveClass]);
 
   if (isLoading) {
     return (
@@ -103,6 +119,22 @@ export default function ClassroomEntryPage() {
       setEntryState('CLASSROOM');
     }, 500);
   };
+
+  if (errorMsg) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
+        <p>{errorMsg}</p>
+        <button onClick={handleCancel} className="mt-6 px-4 py-2 bg-blue-600 rounded">Go Back</button>
+      </div>
+    );
+  }
+
+  // Zoom meetings bypass the WebRTC pre-join screen and waiting room,
+  // as the Zoom SDK handles its own device checks and waiting rooms natively.
+  if (liveClass && liveClass.meetingProvider === 'zoom') {
+    return <ZoomClassroom liveClassId={roomId} user={user} />;
+  }
 
   if (entryState === 'PRE_JOIN') {
     return (
