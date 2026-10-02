@@ -214,6 +214,12 @@ export function useClassroomRealtime(roomId, user) {
       console.warn('[Moderation] error:', code);
     });
 
+    newSocket.on('class:host-requested-unmute', ({ targetUserId }) => {
+      if (targetUserId === currentUserId) {
+        window.dispatchEvent(new CustomEvent('host-requested-unmute'));
+      }
+    });
+
     // ── Admission / Waiting Room ─────────────────────────────────────────────
     newSocket.on('class:waiting-student', (student) => {
       console.log(`[REALTIME] class:waiting-student RECEIVED`, student);
@@ -309,6 +315,11 @@ export function useClassroomRealtime(roomId, user) {
     dismissUnmuteRequest(targetUserId);
   }, [socket, roomId, dismissUnmuteRequest]);
 
+  const hostRequestUnmute = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:host-request-unmute', { roomId, targetUserId });
+  }, [socket, roomId]);
+
   const disableCamera = useCallback((targetUserId) => {
     if (!socket) return;
     socket.emit('class:disable-camera', { roomId, targetUserId });
@@ -363,6 +374,7 @@ export function useClassroomRealtime(roomId, user) {
     muteParticipant,
     requestUnmute,
     allowUnmute,
+    hostRequestUnmute,
     disableCamera,
     removeParticipant,
     clearParticipantHand,

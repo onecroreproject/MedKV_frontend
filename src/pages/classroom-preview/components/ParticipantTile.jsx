@@ -98,6 +98,7 @@ function ParticipantTile({
   canModerate = false,
   onMuteClick,
   onAllowUnmuteClick,
+  onHostRequestUnmuteClick,
 }) {
   if (!participant) return null;
 
@@ -131,12 +132,14 @@ function ParticipantTile({
   // Stable memoised handler — avoids prop recreation for descendant buttons
   const handleMuteClick = useCallback((e) => {
     e.stopPropagation();
-    if (isMuted || isModerationMuted) {
+    if (isModerationMuted) {
       if (onAllowUnmuteClick) onAllowUnmuteClick(identity);
+    } else if (isMuted) {
+      if (onHostRequestUnmuteClick) onHostRequestUnmuteClick(identity);
     } else {
       if (onMuteClick) onMuteClick(identity);
     }
-  }, [onMuteClick, onAllowUnmuteClick, identity, isMuted, isModerationMuted]);
+  }, [onMuteClick, onAllowUnmuteClick, onHostRequestUnmuteClick, identity, isMuted, isModerationMuted]);
 
   return (
     <div

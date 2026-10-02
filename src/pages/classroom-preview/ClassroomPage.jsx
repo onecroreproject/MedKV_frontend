@@ -356,6 +356,15 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     setTimeout(() => setToastMessage(null), 3000);
   }, []);
 
+  useEffect(() => {
+    const handleHostRequestUnmute = () => {
+      setToastMessage('The host is requesting you to unmute your microphone.');
+      setTimeout(() => setToastMessage(null), 8000);
+    };
+    window.addEventListener('host-requested-unmute', handleHostRequestUnmute);
+    return () => window.removeEventListener('host-requested-unmute', handleHostRequestUnmute);
+  }, []);
+
   const isHandRaised = raisedHands.includes(currentUserId);
   const handleToggleHand = () => toggleHand(!isHandRaised);
 
@@ -407,6 +416,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           canModerate={canModerate}
           onMuteParticipant={muteParticipant}
           onAllowUnmute={allowUnmute}
+          onHostRequestUnmute={hostRequestUnmute}
         />
         
         {isChatOpen && (
@@ -526,7 +536,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute }) {
+function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -567,6 +577,7 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
       canModerate={canModerate}
       onMuteParticipant={onMuteParticipant}
       onAllowUnmute={onAllowUnmute}
+      onHostRequestUnmute={onHostRequestUnmute}
     />
   );
 }

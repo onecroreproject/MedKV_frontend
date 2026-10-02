@@ -63,7 +63,7 @@ function ClassroomControls({
 
   return (
     <div className="bg-slate-900 border-t border-slate-800 p-2 sm:p-4 pb-4 sm:pb-4 safe-area-bottom w-full flex-shrink-0 z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between sm:justify-center gap-1 sm:gap-4 flex-wrap sm:flex-nowrap">
+      <div className="max-w-7xl mx-auto flex items-center justify-center relative gap-1 sm:gap-4 h-full">
         
         <IconButton 
           active={isMuted} 
@@ -192,12 +192,14 @@ function ClassroomControls({
         />
 
         {userRole === 'teacher' && (
-          <button
-            onClick={onEndClass}
-            className="ml-auto bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-xs sm:text-sm shadow-lg shadow-red-600/20 whitespace-nowrap"
-          >
-            End Class
-          </button>
+          <div className="absolute right-0 hidden sm:block">
+            <button
+              onClick={onEndClass}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-xs sm:text-sm shadow-lg shadow-red-600/20 whitespace-nowrap"
+            >
+              End Class
+            </button>
+          </div>
         )}
       </div>
     </div>

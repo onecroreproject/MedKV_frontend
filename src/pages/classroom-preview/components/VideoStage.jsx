@@ -33,6 +33,7 @@ export default function VideoStage({
   canModerate = false,
   onMuteParticipant,
   onAllowUnmute,
+  onHostRequestUnmute,
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const stageRef = useRef(null);
@@ -99,6 +100,7 @@ export default function VideoStage({
           canModerate={canModerate}
           onMuteParticipant={onMuteParticipant}
           onAllowUnmute={onAllowUnmute}
+          onHostRequestUnmute={onHostRequestUnmute}
         />
         {/* Maximize: always visible on mobile and desktop */}
         <button
@@ -152,6 +154,7 @@ export default function VideoStage({
           canModerate={canModerate && pinnedIdentityStr !== teacherIdentity}
           onMuteClick={onMuteParticipant}
           onAllowUnmuteClick={onAllowUnmute}
+          onHostRequestUnmuteClick={onHostRequestUnmute}
         />
       </div>
     );
@@ -191,6 +194,7 @@ export default function VideoStage({
                   canModerate={canModerate && identity !== teacherIdentity}
                   onMuteClick={onMuteParticipant}
                   onAllowUnmuteClick={onAllowUnmute}
+                  onHostRequestUnmuteClick={onHostRequestUnmute}
                 />
               </div>
             );
