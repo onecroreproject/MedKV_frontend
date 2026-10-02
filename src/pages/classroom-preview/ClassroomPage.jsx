@@ -158,6 +158,33 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   const [duration, setDuration] = useState('00:00:00');
   const [toastMessage, setToastMessage] = useState(null);
 
+  // ── Co-host management (host-only: admin can promote faculty to co-host) ────
+  // coHosts = Set of participant identities that have been promoted
+  const [coHosts, setCoHosts] = useState(new Set());
+  const isHost = userRole === 'teacher'; // True for the admin organizer
+  const currentUserId = user?._id || user?.id;
+
+  // Is the CURRENT USER a co-host? Check if their identity is in coHosts.
+  // Identity format: "Name|userId"
+  const isCoHost = !isHost && [...coHosts].some(identity => identity.includes(currentUserId));
+
+  // Effective role for UI: 'teacher' = host, 'cohost' = co-host, 'student' = everyone else
+  const effectiveRole = isHost ? 'teacher' : isCoHost ? 'cohost' : 'student';
+
+  const handleAssignCoHost = (participantIdentity) => {
+    setCoHosts(prev => {
+      const next = new Set(prev);
+      if (next.has(participantIdentity)) {
+        next.delete(participantIdentity);
+        console.log(`[CoHost] Removed co-host: ${participantIdentity}`);
+      } else {
+        next.add(participantIdentity);
+        console.log(`[CoHost] Assigned co-host: ${participantIdentity}`);
+      }
+      return next;
+    });
+  };
+
   // Initialize Realtime Hook — single socket for all classroom events
   const { 
     raisedHands, 
@@ -335,15 +362,13 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     setTimeout(() => setToastMessage(null), 3000);
   }, []);
 
-  const isHandRaised = raisedHands.includes(user?._id || user?.id);
+  const isHandRaised = raisedHands.includes(currentUserId);
   const handleToggleHand = () => toggleHand(!isHandRaised);
-
-  const currentUserId = user?._id || user?.id;
 
   return (
     <>
       {/* Notification overlay — always on top, works during screen share */}
-      {userRole === 'teacher' && (
+      {(isHost || isCoHost) && (
         <ClassroomNotifications
           notifications={notifications}
           onDismiss={dismissNotification}
@@ -399,6 +424,10 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           <PeoplePanelManager 
             onClose={() => handleSetPeopleOpen(false)} 
             userRole={userRole}
+            effectiveRole={effectiveRole}
+            isHost={isHost}
+            coHosts={coHosts}
+            onAssignCoHost={handleAssignCoHost}
             roomId={roomId}
             user={user}
             raisedHands={raisedHands}
@@ -460,7 +489,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       </div>
 
       <ControlsManager 
-        userRole={userRole}
+        userRole={effectiveRole}
         isChatOpen={isChatOpen}
         setIsChatOpen={handleSetChatOpen}
         isPeopleOpen={isPeopleOpen}
@@ -541,7 +570,8 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
 
 
 function PeoplePanelManager({ 
-  onClose, userRole, roomId, user, 
+  onClose, userRole, effectiveRole, isHost, coHosts = new Set(), onAssignCoHost,
+  roomId, user, 
   raisedHands = [], onClearHand,
   mutedParticipants, cameraDisabledParticipants,
   onMuteParticipant, onDisableCamera, onRemoveParticipant,
@@ -550,23 +580,27 @@ function PeoplePanelManager({
 }) {
   console.log('[PEOPLE PANEL] waitingStudents:', waitingStudents);
   const participants = useParticipants();
-  const teacher = participants.find(p => p.identity.includes('teacher') || p.identity.includes('admin') || p.identity.includes('faculty') || (p.metadata && JSON.parse(p.metadata).role === 'teacher')) || participants[0];
-  const students = participants.filter(p => p.identity !== teacher?.identity);
 
-  const handleAdmit = (targetUserId) => {
-    onAdmitStudent(targetUserId);
-  };
-  
-  const handleReject = (targetUserId) => {
-    onRejectStudent(targetUserId);
-  };
+  // Find the host (teacher) participant
+  const teacher = participants.find(p => {
+    try {
+      const meta = p.metadata ? JSON.parse(p.metadata) : {};
+      return meta.role === 'teacher' || meta.isTeacher;
+    } catch { return false; }
+  }) || participants[0];
+
+  const students = participants.filter(p => p.identity !== teacher?.identity);
 
   const normalize = (p) => ({
     id: p.identity,
-    name: p.name || p.identity,
+    name: p.name || p.identity.split('|')[0],
     isMuted: !p.isMicrophoneEnabled,
     isSpeaking: p.isSpeaking,
+    isCoHost: coHosts.has(p.identity),
   });
+
+  // Can moderate = host OR co-host
+  const canModerate = effectiveRole === 'teacher' || effectiveRole === 'cohost';
 
   return (
     <PeoplePanel 
@@ -574,9 +608,13 @@ function PeoplePanelManager({
       participants={students.map(normalize)} 
       teacher={teacher ? normalize(teacher) : null}
       userRole={userRole}
+      effectiveRole={effectiveRole}
+      isHost={isHost}
+      canModerate={canModerate}
+      onAssignCoHost={isHost ? onAssignCoHost : null}
       waitingStudents={waitingStudents}
-      onAdmit={handleAdmit}
-      onReject={handleReject}
+      onAdmit={onAdmitStudent}
+      onReject={onRejectStudent}
       raisedHands={raisedHands}
       onClearHand={onClearHand}
       mutedParticipants={mutedParticipants}

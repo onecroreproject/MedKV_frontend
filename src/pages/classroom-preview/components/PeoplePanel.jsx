@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Mic, MicOff, MoreVertical, CameraOff, LogOut, Check } from 'lucide-react';
+import { X, Mic, MicOff, MoreVertical, CameraOff, LogOut, Shield, ShieldOff } from 'lucide-react';
 
 export default function PeoplePanel({ 
   onClose, participants, teacher, userRole, 
+  effectiveRole, isHost = false, canModerate = false, onAssignCoHost,
   waitingStudents = [], onAdmit, onReject,
   raisedHands = [], onClearHand,
   mutedParticipants = {},
@@ -37,7 +38,8 @@ export default function PeoplePanel({
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-        {userRole === 'teacher' && (
+        {/* Host-level controls */}
+        {canModerate && (
           <div className="px-2 py-3 flex space-x-2">
             <button className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm py-2 rounded-lg transition-colors border border-slate-700">
               Mute All
@@ -49,7 +51,7 @@ export default function PeoplePanel({
         )}
 
         {/* Unmute Requests */}
-        {userRole === 'teacher' && unmuteRequests.length > 0 && (
+        {canModerate && unmuteRequests.length > 0 && (
           <div className="mb-4">
             <div className="px-3 py-2 text-xs font-semibold text-blue-400 uppercase tracking-wider mt-2 border-b border-slate-800 pb-2">
               Unmute Requests ({unmuteRequests.length})
@@ -71,7 +73,7 @@ export default function PeoplePanel({
         )}
 
         {/* Waiting to join */}
-        {userRole === 'teacher' && waitingStudents.length > 0 && (
+        {canModerate && waitingStudents.length > 0 && (
           <div className="mb-4">
             <div className="px-3 py-2 text-xs font-semibold text-orange-400 uppercase tracking-wider mt-2 border-b border-slate-800 pb-2">
               Waiting to join ({waitingStudents.length})
@@ -80,9 +82,9 @@ export default function PeoplePanel({
               <div key={student.userId} className="flex items-center justify-between px-3 py-2 hover:bg-slate-800/50 rounded-lg group transition-colors">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
-                    {student.name.charAt(0)}
+                    {student.name ? student.name.charAt(0) : '?'}
                   </div>
-                  <div className="text-sm text-slate-200 font-medium">{student.name}</div>
+                  <div className="text-sm text-slate-200 font-medium">{student.name || 'Unknown Student'}</div>
                 </div>
                 <div className="flex items-center space-x-1">
                   <button 
@@ -167,7 +169,10 @@ export default function PeoplePanel({
           <ParticipantListItem 
             key={p.id} 
             participant={p} 
-            isHost={false} 
+            isHost={false}
+            canModerate={canModerate}
+            isCurrentUserHost={isHost}
+            onAssignCoHost={onAssignCoHost}
             userRole={userRole}
             hasRaisedHand={raisedHands.includes(p.id)}
             isModerationMuted={!!mutedParticipants[p.id]}
@@ -186,6 +191,9 @@ export default function PeoplePanel({
 function ParticipantListItem({ 
   participant, 
   isHost, 
+  canModerate,
+  isCurrentUserHost,
+  onAssignCoHost,
   userRole, 
   hasRaisedHand,
   isModerationMuted,
@@ -214,17 +222,22 @@ function ParticipantListItem({
     };
   }, [menuOpen]);
 
-  const showModeration = userRole === 'teacher' && !isHost;
+  // Show three-dot menu only if current user can moderate AND the target is not the host
+  const showModeration = canModerate && !isHost;
+  const displayName = participant.name || (participant.identity ? participant.identity.split('|')[0] : 'Unknown');
+  const isCoHost = participant.isCoHost;
 
   return (
     <div className="relative flex items-center justify-between px-3 py-2 hover:bg-slate-800/50 rounded-lg group transition-colors">
       <div className="flex items-center space-x-3">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${hasRaisedHand ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-300' : 'bg-slate-700 text-slate-300'}`}>
-          {hasRaisedHand ? '✋' : participant.name.charAt(0)}
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${hasRaisedHand ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-300' : isCoHost ? 'bg-purple-500/20 border border-purple-500/50 text-purple-300' : 'bg-slate-700 text-slate-300'}`}>
+          {hasRaisedHand ? '✋' : displayName.charAt(0)}
         </div>
         <div>
-          <div className="text-sm text-slate-200 font-medium">
-            {participant.name} {isHost && <span className="text-xs text-blue-400 font-normal ml-1">(Host)</span>}
+          <div className="text-sm text-slate-200 font-medium flex items-center gap-1">
+            {displayName}
+            {isHost && <span className="text-xs text-blue-400 font-normal ml-1">(Host)</span>}
+            {isCoHost && !isHost && <span className="text-xs text-purple-400 font-normal ml-1">(Co-Host)</span>}
           </div>
           {hasRaisedHand && <div className="text-xs text-yellow-400">Hand raised</div>}
         </div>
@@ -251,7 +264,7 @@ function ParticipantListItem({
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-1 z-50">
+              <div className="absolute right-0 top-full mt-1 w-52 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-1 z-50">
                 {confirmRemove ? (
                   <div className="p-2">
                     <p className="text-xs text-slate-300 mb-2 text-center">Remove this student?</p>
@@ -272,6 +285,20 @@ function ParticipantListItem({
                   </div>
                 ) : (
                   <>
+                    {/* Co-Host assign — only the host (admin) can do this */}
+                    {isCurrentUserHost && onAssignCoHost && (
+                      <>
+                        <button 
+                          onClick={() => { onAssignCoHost(participant.id); setMenuOpen(false); }}
+                          className="w-full text-left px-4 py-2 text-sm text-purple-300 hover:bg-slate-700 flex items-center space-x-2"
+                        >
+                          {isCoHost ? <ShieldOff size={14} /> : <Shield size={14} />}
+                          <span>{isCoHost ? 'Remove Co-Host' : 'Make Co-Host'}</span>
+                        </button>
+                        <div className="h-px bg-slate-700 my-1"></div>
+                      </>
+                    )}
+
                     {!isModerationMuted && (
                       <button 
                         onClick={() => { onMute(); setMenuOpen(false); }}

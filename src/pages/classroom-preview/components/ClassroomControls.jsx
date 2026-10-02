@@ -76,7 +76,7 @@ export default function ClassroomControls({
           onClick={() => setIsVideoOff(!isVideoOff)} 
         />
         
-        {userRole === 'teacher' && (
+        {(userRole === 'teacher' || userRole === 'cohost') && (
           <IconButton 
             active={isScreenSharing} 
             icon={MonitorUp} 
@@ -85,7 +85,7 @@ export default function ClassroomControls({
           />
         )}
 
-        {userRole === 'teacher' && (
+        {(userRole === 'teacher' || userRole === 'cohost') && (
           <>
             <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
             <IconButton 
@@ -166,7 +166,7 @@ export default function ClassroomControls({
           )}
         </div>
         
-        {userRole === 'teacher' && (
+        {(userRole === 'teacher' || userRole === 'cohost') && (
           <div className="relative">
             <IconButton 
               active={isPeopleOpen} 
