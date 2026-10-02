@@ -205,6 +205,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
 
   // Effective role for UI: 'teacher' = host, 'cohost' = co-host, 'student' = everyone else
   const effectiveRole = isHost ? 'teacher' : isCoHost ? 'cohost' : 'student';
+  const canModerate = effectiveRole === 'teacher' || effectiveRole === 'cohost';
 
   // handleAssignCoHost: emit socket event + toggle (server will broadcast back to all)
   const handleAssignCoHost = (participantIdentity) => {
@@ -404,7 +405,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           cameraDisabledParticipants={cameraDisabledParticipants}
           coHosts={coHosts}
           canModerate={canModerate}
-          onMuteParticipant={onMuteParticipant}
+          onMuteParticipant={muteParticipant}
         />
         
         {isChatOpen && (
