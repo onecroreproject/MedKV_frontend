@@ -36,7 +36,7 @@ export default function ClassroomControls({
       onClick={onClick}
       disabled={disabled}
       className={`
-        relative group p-3 rounded-full flex items-center justify-center transition-all
+        relative group p-2.5 sm:p-3 rounded-full flex items-center justify-center transition-all
         ${disabled ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500' : 
           danger ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20' :
           active ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 
@@ -47,18 +47,17 @@ export default function ClassroomControls({
       aria-label={label}
       title={label}
     >
-      <Icon size={20} />
-      
-      {/* Tooltip */}
-      <div className="absolute bottom-full mb-2 hidden group-hover:block whitespace-nowrap bg-slate-800 text-xs text-slate-200 px-2 py-1 rounded shadow-lg border border-slate-700 pointer-events-none">
+      <Icon size={18} />
+      {/* Tooltip — hidden on mobile to save space */}
+      <div className="absolute bottom-full mb-2 hidden sm:group-hover:block whitespace-nowrap bg-slate-800 text-xs text-slate-200 px-2 py-1 rounded shadow-lg border border-slate-700 pointer-events-none z-50">
         {label}
       </div>
     </button>
   );
 
   return (
-    <div className="h-20 bg-slate-900 border-t border-slate-800 flex items-center justify-center px-6 z-20">
-      <div className="flex items-center space-x-3 md:space-x-4">
+    <div className="bg-slate-900 border-t border-slate-800 flex items-center justify-center px-2 sm:px-4 z-20 py-2 sm:py-3 min-h-[60px] sm:min-h-[72px]">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap justify-center">
         
         <IconButton 
           active={!isMuted} 
@@ -87,7 +86,7 @@ export default function ClassroomControls({
 
         {(userRole === 'teacher' || userRole === 'cohost') && (
           <>
-            <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
+            <div className="w-px h-6 sm:h-8 bg-slate-700 mx-0.5 sm:mx-1" />
             <IconButton 
               active={recordingState === 'recording'} 
               danger={recordingState === 'recording' || recordingState === 'paused' || recordingState === 'stopping'}
@@ -109,9 +108,10 @@ export default function ClassroomControls({
             />
           </>
         )}
+
+        <div className="w-px h-6 sm:h-8 bg-slate-700 mx-0.5 sm:mx-1" />
         
-        <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
-        
+
         {/* Real-time Reactions */}
         <div className="relative group/reaction flex items-center justify-center">
           <button
@@ -185,23 +185,23 @@ export default function ClassroomControls({
           </div>
         )}
         
-        <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2"></div>
+        <div className="w-px h-6 sm:h-8 bg-slate-700 mx-0.5 sm:mx-1" />
         
         {userRole === 'teacher' ? (
           <button
-            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-medium flex items-center space-x-2 transition-colors shadow-lg shadow-red-500/20"
+            className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium flex items-center gap-1.5 transition-colors shadow-lg shadow-red-500/20 text-sm sm:text-base"
             onClick={onEndClass}
           >
-            <PhoneOff size={20} />
-            <span className="hidden sm:inline">End Class</span>
+            <PhoneOff size={17} />
+            <span className="hidden xs:inline sm:inline">End Class</span>
           </button>
         ) : (
           <button
-            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-medium flex items-center space-x-2 transition-colors shadow-lg shadow-red-500/20"
+            className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium flex items-center gap-1.5 transition-colors shadow-lg shadow-red-500/20 text-sm sm:text-base"
             onClick={onLeave}
           >
-            <PhoneOff size={20} />
-            <span className="hidden sm:inline">Leave</span>
+            <PhoneOff size={17} />
+            <span className="hidden xs:inline sm:inline">Leave</span>
           </button>
         )}
 
