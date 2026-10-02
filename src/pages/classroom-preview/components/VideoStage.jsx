@@ -19,6 +19,7 @@ import { VideoTrack, TrackRefContext } from '@livekit/components-react';
  *   cameraDisabledParticipants — { [identity]: true }
  */
 export default function VideoStage({
+  currentUserId,
   isScreenSharing,
   screenShareTrack,
   cameraTrackRefs = [],
@@ -165,6 +166,11 @@ export default function VideoStage({
         />
       </div>
     );
+  }
+
+  // If fullscreen, hide the local user's own video tile from the strip
+  if (isFullscreen && currentUserId) {
+    stripParticipants = stripParticipants.filter(p => !p.identity.startsWith(currentUserId));
   }
 
   return (

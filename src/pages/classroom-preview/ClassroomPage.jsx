@@ -238,6 +238,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     waitingStudents,
     isChatOpen,
     participants,
+    unmuteRequests,
+    cameraRequests,
   });
 
   // Sync chat panel open state with the realtime hook (for unread counter)
@@ -459,6 +461,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
 
       <div className="flex-1 flex overflow-hidden relative">
         <StageManager
+          currentUserId={currentUserId}
           raisedHands={raisedHands}
           mutedParticipants={mutedParticipants}
           cameraDisabledParticipants={cameraDisabledParticipants}
@@ -600,7 +603,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
+function StageManager({ currentUserId, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -627,6 +630,7 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
 
   return (
     <VideoStage
+      currentUserId={currentUserId}
       isScreenSharing={isScreenSharing}
       screenShareTrack={screenShareTracks[0]}
       cameraTrackRefs={cameraTrackRefs}
