@@ -478,6 +478,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
             onRemoveParticipant={removeParticipant}
             unmuteRequests={unmuteRequests}
             onAllowUnmute={allowUnmute}
+            onHostRequestUnmute={hostRequestUnmute}
             waitingStudents={waitingStudents}
             onAdmitStudent={admitStudent}
             onRejectStudent={rejectStudent}
@@ -622,7 +623,7 @@ function PeoplePanelManager({
   raisedHands = [], onClearHand,
   mutedParticipants, cameraDisabledParticipants,
   onMuteParticipant, onDisableCamera, onRemoveParticipant,
-  unmuteRequests, onAllowUnmute,
+  unmuteRequests, onAllowUnmute, onHostRequestUnmute,
   waitingStudents = [], onAdmitStudent, onRejectStudent
 }) {
   console.log('[PEOPLE PANEL] waitingStudents:', waitingStudents);
@@ -672,6 +673,7 @@ function PeoplePanelManager({
       onRemoveParticipant={onRemoveParticipant}
       unmuteRequests={unmuteRequests}
       onAllowUnmute={onAllowUnmute}
+      onHostRequestUnmute={onHostRequestUnmute}
     />
   );
 }
