@@ -226,7 +226,6 @@ const ZoomClassroom = ({ liveClassId, user }) => {
             </div>
           ))}
         </div>
-          </div>
         </div>
       )}
 
