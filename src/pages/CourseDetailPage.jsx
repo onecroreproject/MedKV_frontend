@@ -951,6 +951,8 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                   src={getFullUrl(previewVideo)} 
                   controls 
                   autoPlay 
+                  controlsList="nodownload noremoteplayback"
+                  onContextMenu={(e) => e.preventDefault()}
                   className="absolute inset-0 w-full h-full object-contain"
                 >
                   Your browser does not support the video tag.

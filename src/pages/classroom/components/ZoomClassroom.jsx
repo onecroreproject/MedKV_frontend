@@ -1,11 +1,68 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axiosInstance from '../../../services/axiosInstance';
+import { AlertCircle } from 'lucide-react';
 
 const ZoomClassroom = ({ liveClassId, user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [warningCount, setWarningCount] = useState(0);
   const zoomClientRef = useRef(null);
+  const containerRef = useRef(null);
   
+  // Format masked mobile number (e.g., 9876543210 -> 98******10)
+  const maskMobile = (mobile) => {
+    if (!mobile || mobile.length < 4) return 'N/A';
+    const str = String(mobile);
+    return `${str.substring(0, 2)}${'*'.repeat(Math.max(str.length - 4, 2))}${str.substring(str.length - 2)}`;
+  };
+  
+  // Update timestamp for dynamic watermark
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Strict Anti-Recording Event Listeners
+  useEffect(() => {
+    // 1. Block Context Menu (Right Click)
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // 2. Block Keyboard Shortcuts (PrintScreen, DevTools, Copy)
+    const handleKeyDown = (e) => {
+      if (
+        e.key === 'PrintScreen' ||
+        (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'c')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5'))
+      ) {
+        e.preventDefault();
+        setWarningCount(prev => prev + 1);
+        console.warn("Screen capture shortcuts are strictly prohibited.");
+      }
+    };
+
+    // 3. Monitor visibility change (often indicates switching to a recording tool)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setWarningCount(prev => prev + 1);
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     
@@ -101,7 +158,22 @@ const ZoomClassroom = ({ liveClassId, user }) => {
   }
 
   return (
-    <div className="w-full h-full min-h-[600px] relative bg-slate-950 flex flex-col">
+    <div ref={containerRef} className="w-full h-full min-h-[600px] relative bg-slate-950 flex flex-col select-none" style={{ WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>
+      
+      {/* Strict Prohibition Notice */}
+      <div className="w-full bg-red-600/90 text-white text-xs font-semibold px-4 py-1.5 flex items-center justify-center gap-2 z-50">
+        <AlertCircle className="w-4 h-4" />
+        <span>
+          <strong>STRICT WARNING:</strong> Unauthorized recording, downloading, or screen capture is strictly prohibited and actively monitored. Violations will result in immediate account termination.
+        </span>
+      </div>
+
+      {warningCount > 0 && (
+        <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-xl z-50 animate-pulse border border-red-400">
+          Suspicious activity detected ({warningCount}). Screen capture tools are prohibited.
+        </div>
+      )}
+
       {loading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 z-10 text-white">
           <svg className="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -111,8 +183,25 @@ const ZoomClassroom = ({ liveClassId, user }) => {
           <p>Connecting to Zoom Meeting...</p>
         </div>
       )}
-      {/* Zoom will inject its UI into this element */}
-      <div id="zoom-meeting-root" className="w-full flex-grow relative"></div>
+      
+      {/* Zoom SDK Container */}
+      <div id="zoom-meeting-root" className="w-full flex-grow relative z-0"></div>
+
+      {/* Dynamic Watermark Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden mix-blend-difference flex flex-col justify-around">
+        {[...Array(5)].map((_, rowIndex) => (
+          <div key={rowIndex} className="w-full flex justify-around opacity-[0.15] text-white font-mono text-sm lg:text-base font-bold select-none rotate-[-15deg] whitespace-nowrap">
+            {[...Array(3)].map((_, colIndex) => (
+              <div key={colIndex} className="flex flex-col items-center">
+                <span>{user?.name || 'Student'}</span>
+                <span>{maskMobile(user?.mobile || user?.email || 'Unknown')}</span>
+                <span>ID: {liveClassId?.slice(-6)}</span>
+                <span>{currentTime.toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

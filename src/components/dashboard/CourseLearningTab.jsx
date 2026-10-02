@@ -219,8 +219,17 @@ function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted, user }) {
               animation: floatAroundPlayer 35s linear infinite;
             }
           `}</style>
-          <div className="floating-watermark-player text-xs sm:text-sm font-black text-white/10 whitespace-nowrap tracking-widest drop-shadow-md bg-black/5 px-4 py-2 rounded-xl backdrop-blur-[1px]">
-            {user?.name} • {user?.phone || user?.phoneNumber || user?.email || 'Student'}
+          <div className="floating-watermark-player flex flex-col items-center gap-1 text-[10px] sm:text-xs font-black text-white/20 whitespace-nowrap tracking-widest drop-shadow-md bg-black/10 px-4 py-2 rounded-xl backdrop-blur-[2px] pointer-events-none select-none">
+            <span>{user?.name || 'Student'}</span>
+            <span>
+              {user?.phone || user?.phoneNumber || user?.mobile ? 
+                (String(user.phone || user.phoneNumber || user.mobile).length >= 4 ? 
+                  `${String(user.phone || user.phoneNumber || user.mobile).substring(0, 2)}${'*'.repeat(Math.max(String(user.phone || user.phoneNumber || user.mobile).length - 4, 2))}${String(user.phone || user.phoneNumber || user.mobile).slice(-2)}` 
+                  : 'N/A') 
+                : (user?.email ? `${user.email.substring(0, 2)}***@${user.email.split('@')[1] || 'domain.com'}` : 'Unknown')}
+            </span>
+            <span>ID: {activeLesson?._id?.slice(-6) || 'LIVE'}</span>
+            <span>{new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
           </div>
         </div>
         
@@ -242,7 +251,10 @@ function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted, user }) {
           <video 
             ref={videoRef}
             src={videoSrc}
-            className="w-full h-full object-cover cursor-pointer"
+            className="w-full h-full object-cover cursor-pointer select-none pointer-events-auto"
+            controlsList="nodownload nofullscreen noremoteplayback"
+            disablePictureInPicture
+            onContextMenu={(e) => e.preventDefault()}
             onTimeUpdate={handleTimeUpdate}
             onEnded={() => setPlaying(false)}
             onClick={() => {
