@@ -64,8 +64,7 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
       getMe().then(res => {
         if (res?.data) {
           setUser(res.data);
-          const r = (res.data.role || '').toLowerCase();
-          setIsTeacher(r === 'faculty' || r === 'admin' || r === 'teacher');
+          // isTeacher will be determined authoritatively by the backend token endpoint
         }
       }).catch(err => {
         console.error('Failed to fetch user', err);
@@ -73,10 +72,8 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
       }).finally(() => {
         setLoadingUser(false);
       });
-    } else {
-      const r = (user.role || '').toLowerCase();
-      setIsTeacher(r === 'faculty' || r === 'admin' || r === 'teacher');
     }
+    // No local isTeacher computation here — handled by backend
   }, [user]);
 
   // 2. Fetch LiveKit Token
@@ -93,6 +90,11 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         
+        // Use the server's authoritative isTeacher decision
+        // Backend checks: admin = always teacher, faculty = only if assigned to THIS class
+        const serverIsTeacher = response.data.isTeacher === true;
+        console.log(`[CLASSROOM] Server says isTeacher=${serverIsTeacher} for user role=${user.role}`);
+        setIsTeacher(serverIsTeacher);
         setToken(response.data.token);
       } catch (err) {
         console.error("Failed to fetch LiveKit token", err);
