@@ -479,6 +479,14 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
              if (res.data.modules[0].lessons && res.data.modules[0].lessons.length > 0) {
                setActiveLesson(res.data.modules[0].lessons[0]);
              }
+           } else if (res.data.liveSessions && res.data.liveSessions.length > 0) {
+             // If no modules, default the active lesson to the first available recording
+             const firstRecording = res.data.liveSessions.find(ls => ls.sessionType === 'Recording' && ls.videoUrl);
+             if (firstRecording) setActiveLesson(firstRecording);
+           }
+           
+           if (res.data.liveSessions) {
+             setCourseLiveClasses(res.data.liveSessions);
            }
         }
         const recRes = await getRecordings();
@@ -868,7 +876,14 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
                             Join Class
                           </button>
                         ) : (
-                          <button onClick={() => setActiveTab('recorded')} className="shrink-0 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
+                          <button onClick={() => {
+                            if (sess.videoUrl) {
+                              setActiveLesson(sess);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            } else {
+                              setActiveTab('recorded');
+                            }
+                          }} className="shrink-0 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
                             Watch Recording
                           </button>
                         )}

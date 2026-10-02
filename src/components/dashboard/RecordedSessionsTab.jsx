@@ -163,102 +163,133 @@ export function RecordedSessionsTab({
                 >
                   <div className="overflow-hidden">
                     <div className="p-4 bg-white border-t border-slate-100 space-y-3">
-                      {(!course.modules || course.modules.length === 0) ? (
-                        <p className="text-slate-500 text-xs text-center py-2">No modules available.</p>
-                      ) : course.modules.map((module, idx) => (
-                        <div key={module._id} className="border border-slate-200 rounded-lg overflow-hidden">
-                           <button 
-                             onClick={() => toggleModule(module._id)} 
-                             className="w-full px-4 py-3 flex justify-between items-center bg-slate-50 hover:bg-slate-100 focus:outline-none transition-colors"
-                           >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-slate-400">Mod {idx + 1}</span>
-                                <h4 className="text-[#0B1F4D] font-bold text-xs uppercase">{module.title}</h4>
+                      {(!course.modules || course.modules.length === 0) && recordings.filter(r => String(r.courseId) === String(course._id)).length === 0 ? (
+                        <p className="text-slate-500 text-xs text-center py-2">No modules or recordings available.</p>
+                      ) : (
+                        <>
+                          {/* Display Standalone Recordings */}
+                          {recordings.filter(r => String(r.courseId) === String(course._id) && !r.lessonId).map((session, idx) => {
+                            const { isExpired } = calculateAccess(session, enrolledCourses);
+                            return (
+                              <div key={`standalone-${session.id}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 mb-3 transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-xs shrink-0 text-accent">
+                                    ▶
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-[#0B1F4D] uppercase tracking-wide">{session.title}</span>
+                                    <span className="text-[10px] font-medium text-slate-500">Standalone Recording</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  {!isExpired ? (
+                                    <button 
+                                      onClick={() => onEnterCourse(session.courseId)}
+                                      className="bg-accent hover:bg-[#A07C2E] text-white font-black text-[10px] uppercase tracking-widest py-1.5 px-4 rounded-md transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                                    >
+                                      ▶ Play Video
+                                    </button>
+                                  ) : (
+                                    <div className="text-rose-500 text-[10px] font-bold tracking-wider uppercase bg-rose-50 px-3 py-1 rounded-md border border-rose-100">Expired</div>
+                                  )}
+                                </div>
                               </div>
-                              <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${expandedModules[module._id] ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                              </svg>
-                           </button>
-                           
-                           <div 
-                             className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-                               expandedModules[module._id] ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                             }`}
-                           >
-                             <div className="overflow-hidden">
-                               <div className="bg-white divide-y divide-slate-100">
-                                  {(!module.lessons || module.lessons.length === 0) ? (
-                                    <p className="text-slate-400 text-xs text-center py-3">No lessons available.</p>
-                                  ) : module.lessons.map((lesson) => {
-                                     const lessonRecordings = getRecordingsForLesson(lesson._id);
-                                     
-                                     return (
-                                       <div key={lesson._id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 transition-colors">
-                                          <div className="flex items-center gap-3">
-                                            <div className="h-6 w-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] shrink-0 text-slate-500">
-                                              ▶
-                                            </div>
-                                            <span className="text-sm font-semibold text-slate-700">{lesson.title}</span>
-                                          </div>
-                                          
-                                          <div className="flex flex-col sm:items-end gap-2 shrink-0">
-                                            <div className="flex flex-col sm:items-end gap-2">
-                                              {lessonRecordings.length > 0 ? lessonRecordings.map(session => {
-                                                const { isExpired } = calculateAccess(session, enrolledCourses);
-                                                return (
-                                                  <div key={session.id} className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                                    {!isExpired ? (
-                                                      <>
-                                                        <button 
-                                                          onClick={() => {
-                                                            if (session.courseId) {
-                                                              onEnterCourse(session.courseId);
-                                                            } else {
-                                                              alert('This recording is not associated with a specific course.');
-                                                            }
-                                                          }}
-                                                          className="bg-accent hover:bg-[#A07C2E] text-white font-black text-[10px] uppercase tracking-widest py-1.5 px-3 rounded-md transition-all flex items-center gap-1 shadow-sm"
-                                                        >
-                                                          ▶ Play
-                                                        </button>
-                                                      </>
-                                                    ) : (
-                                                      <>
-                                                        <div className="text-rose-500 text-[9px] font-bold tracking-wider uppercase">Expired</div>
-                                                      </>
-                                                    )}
-                                                  </div>
-                                                )
-                                              }) : (
-                                                <span className="text-xs text-slate-400 italic bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">Video not uploaded yet</span>
-                                              )}
-                                            </div>
-                                            
-                                            {/* Render resources if available */}
-                                            {lesson.resources && lesson.resources.length > 0 && (
-                                              <div className="flex flex-wrap gap-2 justify-end mt-1">
-                                                {lesson.resources.map((res, idx) => (
-                                                  <a 
-                                                    key={idx} 
-                                                    href={`${import.meta.env.VITE_BASE_URL}${res.fileUrl}`} 
-                                                    target="_blank" 
-                                                    rel="noreferrer" 
-                                                    className="flex items-center gap-1.5 bg-[#0B1F4D]/5 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1.5 rounded-md border border-[#0B1F4D]/10 hover:bg-[#0B1F4D]/10 transition-colors"
-                                                  >
-                                                    📄 {res.title}
-                                                  </a>
-                                                ))}
+                            );
+                          })}
+
+                          {/* Display Modules */}
+                          {course.modules?.map((module, idx) => (
+                            <div key={module._id} className="border border-slate-200 rounded-lg overflow-hidden mb-2">
+                               <button 
+                                 onClick={() => toggleModule(module._id)} 
+                                 className="w-full px-4 py-3 flex justify-between items-center bg-slate-50 hover:bg-slate-100 focus:outline-none transition-colors"
+                               >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-slate-400">Mod {idx + 1}</span>
+                                    <h4 className="text-[#0B1F4D] font-bold text-xs uppercase">{module.title}</h4>
+                                  </div>
+                                  <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${expandedModules[module._id] ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                               </button>
+                               
+                               <div 
+                                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                                   expandedModules[module._id] ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                                 }`}
+                               >
+                                 <div className="overflow-hidden">
+                                   <div className="bg-white divide-y divide-slate-100">
+                                      {(!module.lessons || module.lessons.length === 0) ? (
+                                        <p className="text-slate-400 text-xs text-center py-3">No lessons available.</p>
+                                      ) : module.lessons.map((lesson) => {
+                                         const lessonRecordings = getRecordingsForLesson(lesson._id);
+                                         
+                                         return (
+                                           <div key={lesson._id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 transition-colors">
+                                              <div className="flex items-center gap-3">
+                                                <div className="h-6 w-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] shrink-0 text-slate-500">
+                                                  ▶
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-700">{lesson.title}</span>
                                               </div>
-                                            )}
-                                          </div>
-                                       </div>
-                                     )
-                                  })}
+                                              
+                                              <div className="flex flex-col sm:items-end gap-2 shrink-0">
+                                                <div className="flex flex-col sm:items-end gap-2">
+                                                  {lessonRecordings.length > 0 ? lessonRecordings.map(session => {
+                                                    const { isExpired } = calculateAccess(session, enrolledCourses);
+                                                    return (
+                                                      <div key={session.id} className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                                                        {!isExpired ? (
+                                                          <button 
+                                                            onClick={() => {
+                                                              if (session.courseId) {
+                                                                onEnterCourse(session.courseId);
+                                                              } else {
+                                                                alert('This recording is not associated with a specific course.');
+                                                              }
+                                                            }}
+                                                            className="bg-accent hover:bg-[#A07C2E] text-white font-black text-[10px] uppercase tracking-widest py-1.5 px-3 rounded-md transition-all flex items-center gap-1 shadow-sm"
+                                                          >
+                                                            ▶ Play
+                                                          </button>
+                                                        ) : (
+                                                          <div className="text-rose-500 text-[9px] font-bold tracking-wider uppercase">Expired</div>
+                                                        )}
+                                                      </div>
+                                                    )
+                                                  }) : (
+                                                    <span className="text-xs text-slate-400 italic bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">Video not uploaded yet</span>
+                                                  )}
+                                                </div>
+                                                
+                                                {/* Render resources if available */}
+                                                {lesson.resources && lesson.resources.length > 0 && (
+                                                  <div className="flex flex-wrap gap-2 justify-end mt-1">
+                                                    {lesson.resources.map((res, idx) => (
+                                                      <a 
+                                                        key={idx} 
+                                                        href={`${import.meta.env.VITE_BASE_URL}${res.fileUrl}`} 
+                                                        target="_blank" 
+                                                        rel="noreferrer" 
+                                                        className="flex items-center gap-1.5 bg-[#0B1F4D]/5 text-[#0B1F4D] text-[10px] font-bold px-2.5 py-1.5 rounded-md border border-[#0B1F4D]/10 hover:bg-[#0B1F4D]/10 transition-colors"
+                                                      >
+                                                        📄 {res.title}
+                                                      </a>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </div>
+                                           </div>
+                                         )
+                                      })}
+                                   </div>
+                                 </div>
                                </div>
-                             </div>
-                           </div>
-                        </div>
-                      ))}
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
