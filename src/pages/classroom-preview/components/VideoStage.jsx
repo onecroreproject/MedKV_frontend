@@ -22,6 +22,7 @@ export default function VideoStage({
   isScreenSharing,
   screenShareTrack,
   cameraTrackRefs = [],
+  participants = [],
   teacherIdentity,
   coHosts,
   pinnedIdentity,
@@ -85,6 +86,7 @@ export default function VideoStage({
     return (
       <div ref={stageRef} className="flex-1 w-full h-full relative group">
         <ParticipantGrid
+          participants={participants}
           cameraTrackRefs={cameraTrackRefs}
           teacherIdentity={teacherIdentity}
           coHosts={coHosts}
