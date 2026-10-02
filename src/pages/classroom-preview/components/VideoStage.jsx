@@ -123,7 +123,8 @@ export default function VideoStage({
   let stripParticipants = [];
 
   if (isScreenSharing) {
-    stripParticipants = participants;
+    const screenShareIdentity = screenShareTrack?.participant?.identity;
+    stripParticipants = participants.filter(p => p.identity !== screenShareIdentity);
     mainStageNode = (
       <div className="absolute inset-0 bg-black flex items-center justify-center transition-all duration-300 ease-in-out">
         {screenShareTrack ? (
