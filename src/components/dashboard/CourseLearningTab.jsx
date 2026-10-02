@@ -228,7 +228,7 @@ function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted, user }) {
                   : 'N/A') 
                 : (user?.email ? `${user.email.substring(0, 2)}***@${user.email.split('@')[1] || 'domain.com'}` : 'Unknown')}
             </span>
-            <span>ID: {activeLesson?._id?.slice(-6) || 'LIVE'}</span>
+            <span>ID: {lesson?._id?.slice(-6) || 'LIVE'}</span>
             <span>{new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
           </div>
         </div>
