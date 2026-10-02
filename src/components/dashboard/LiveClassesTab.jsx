@@ -966,7 +966,7 @@ export function LiveClassesTab({ setActiveTab, onEnterCourse, ENROLLED_COURSES =
                   <div className={`text-[9px] font-black uppercase tracking-wider ${day.day === today ? 'text-accent' : 'text-slate-400'}`}>{day.day}</div>
                   <div className={`font-black text-sm ${day.day === today ? 'text-white' : 'text-slate-700'}`}>{day.date.split(' ')[0]}</div>
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent pr-1">
                   {day.sessions.length === 0 ? (
                     <div className={`h-1 w-3 rounded mx-auto ${day.day === today ? 'bg-white/20' : 'bg-slate-200'}`} />
                   ) : (

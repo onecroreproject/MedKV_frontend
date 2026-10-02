@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCourseById } from '../../services/courseService';
+import { getCourseById, getPublishedCourses } from '../../services/courseService';
 import { getRecordings } from '../../services/recordingService';
 import { getMe, logStudyTime, markLessonComplete } from '../../services/userService';
 import { getLiveClasses } from '../../services/liveClassService';
 
 
 // Removed mock arrays
+
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function ProgressRing({ percent, size = 56, stroke = 5 }) {
@@ -440,6 +446,7 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
   const [activeLesson, setActiveLesson] = useState(null);
   const [courseLiveClasses, setCourseLiveClasses] = useState([]);
   const [recordings, setRecordings] = useState([]);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [weeklyData] = useState([65, 72, 58, 81, 74, 90, 68]);
 
   const [now, setNow] = useState(Date.now());
@@ -493,6 +500,16 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
         if (recRes.success) {
           setRecordings(recRes.data);
         }
+        
+        try {
+          const pubRes = await getPublishedCourses();
+          if (pubRes && pubRes.data) {
+            const others = pubRes.data.filter(c => String(c._id) !== String(courseId)).slice(0, 2);
+            setRecommendedCourses(others);
+          }
+        } catch (e) {
+          console.warn("Failed to load recommended courses");
+        }
       } catch (err) {
         console.error("Failed to load course:", err);
         setError("Failed to load course content.");
@@ -536,7 +553,7 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
 
   const course = {
     title: courseData.title || 'Course Title',
-    subtitle: courseData.description || 'Course Description',
+    subtitle: courseData.description ? stripHtml(courseData.description) : 'Course Description',
     mentor: courseData.instructor?.name || 'Instructor',
     mentorRole: 'Instructor',
     mentorAvatar: courseData.instructor?.profileImage ? '🧑‍⚕️' : '🧑‍⚕️',
@@ -684,38 +701,36 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-[#0B1F4D] font-black text-base uppercase tracking-wide mb-3">Course Description</h4>
-                    <p className="text-slate-600 text-sm font-light leading-relaxed">
-                      This comprehensive FRCR Part 2A course provides expert-led, case-based radiology training designed for clinical radiology registrars preparing for the FRCR, DNB, DMRD, and MDRD examinations. The curriculum covers systemic radiology with real DICOM case spotters, pattern recognition training, and mock board vivas with Dr. Sam Reefath.
-                    </p>
+                    <div 
+                      className="text-slate-600 text-sm font-light leading-relaxed prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: courseData.description || 'No description available.' }}
+                    />
                   </div>
                   <div>
                     <h4 className="text-[#0B1F4D] font-black text-base uppercase tracking-wide mb-3">Learning Objectives</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {[
-                        'Master systematic MRI brain interpretation with case-based differentials',
-                        'Recognise acute ischaemic stroke, demyelination, and neoplastic patterns on DWI/FLAIR',
-                        'Apply ACR reporting standards and structured radiology reports',
-                        'Achieve confidence in FRCR 2A rapid reporting and viva format',
-                        'Interpret chest CT patterns including pulmonary, mediastinal, and pleural disease',
-                        'Perform FRCR 2A mock examinations under timed, board-calibrated conditions',
-                      ].map((obj, i) => (
-                        <div key={i} className="flex items-start space-x-2.5 bg-slate-50 rounded-xl p-3 border border-slate-100">
-                          <div className="h-5 w-5 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0 mt-0.5">
-                            <svg className="w-2.5 h-2.5 text-accent" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
+                      {courseData.learningOutcomes && courseData.learningOutcomes.length > 0 ? (
+                        courseData.learningOutcomes.map((obj, i) => (
+                          <div key={i} className="flex items-start space-x-2.5 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                            <div className="h-5 w-5 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0 mt-0.5">
+                              <svg className="w-2.5 h-2.5 text-accent" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <span className="text-slate-600 text-xs font-medium leading-relaxed">{obj}</span>
                           </div>
-                          <span className="text-slate-600 text-xs font-medium leading-relaxed">{obj}</span>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <div className="col-span-1 sm:col-span-2 text-slate-500 text-sm font-light">No specific learning objectives listed for this course.</div>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: 'Exam Prep', value: 'FRCR / DNB', icon: '🎓' },
-                      { label: 'Level', value: 'Advanced', icon: '📊' },
-                      { label: 'Certificate', value: 'On Completion', icon: '🏅' },
-                      { label: 'Support', value: 'Faculty Q&A', icon: '💬' },
+                      { label: 'Category', value: courseData.category?.name || courseData.category || 'N/A', icon: '🎓' },
+                      { label: 'Level', value: courseData.level || 'All Levels', icon: '📊' },
+                      { label: 'Certificate', value: courseData.certificate ? 'On Completion' : 'None', icon: '🏅' },
+                      { label: 'Language', value: courseData.language || 'English', icon: '💬' },
                     ].map(s => (
                       <div key={s.label} className="bg-gradient-to-br from-[#030919] to-[#0B1F4D] border border-accent/15 rounded-2xl p-4 text-center">
                         <div className="text-2xl mb-1.5">{s.icon}</div>
@@ -948,6 +963,17 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
               <p className="text-slate-400 text-xs font-light mt-0.5">Courses, cases, and resources matched to your learning path</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {recommendedCourses.map(c => (
+                <div key={c._id} onClick={() => window.open('/course/' + (c.slug || c._id), '_blank')} className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 hover:border-accent/30 transition-all cursor-pointer flex flex-col justify-between">
+                  <div>
+                    <span className="bg-accent/15 border border-accent/30 text-accent text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded">{c.category?.name || c.category || 'Course'}</span>
+                    <h4 className="text-white font-black text-sm uppercase tracking-wide mt-2 line-clamp-2">{c.title}</h4>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-slate-400 text-[10px] font-bold">Learn More &rarr;</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

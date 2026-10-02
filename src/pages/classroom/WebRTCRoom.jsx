@@ -609,7 +609,7 @@ function ActiveStudentClassroom({ user, roomId, isTeacher, isFocused }) {
     }
   });
 
-  const allTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: false });
+  const allTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare]);
   const teacherTracks = allTracks.filter(t => t.participant.identity === teacherParticipant?.identity);
   
   const studentParticipants = participants.filter(p => p.identity !== teacherParticipant?.identity);

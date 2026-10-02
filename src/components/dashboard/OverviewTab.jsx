@@ -55,12 +55,12 @@ export function OverviewTab({
             <button onClick={() => setActiveTab('courses')} className="text-accent hover:text-[#0B1F4D] hover:underline text-xs font-bold focus:outline-none transition-colors duration-200 cursor-pointer">View All Courses →</button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {ENROLLED_COURSES.slice(0, 2).map((course) => (
+          <div className="flex overflow-x-auto gap-5 pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+            {ENROLLED_COURSES.map((course) => (
               <div
                 key={course.id}
                 onClick={() => onEnterCourse(course.id)}
-                className="bg-white border border-slate-200/80 hover:border-accent/40 rounded-2xl p-5 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:-translate-y-1 hover:scale-[1.01] hover:shadow-md transition-all duration-300 ease-in-out transform-gpu will-change-transform group"
+                className="shrink-0 w-[280px] sm:w-[320px] snap-start bg-white border border-slate-200/80 hover:border-accent/40 rounded-2xl p-5 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:-translate-y-1 hover:scale-[1.01] hover:shadow-md transition-all duration-300 ease-in-out transform-gpu will-change-transform group"
               >
                 <div className="space-y-2">
                   <span className="bg-accent/10 text-accent text-[9px] font-black px-2.5 py-1 rounded-lg border border-accent/20 uppercase tracking-wider">
@@ -76,7 +76,7 @@ export function OverviewTab({
                   </div>
                   <div className="flex justify-between items-center text-[9.5px] text-slate-500 font-bold">
                     <span>{course.remaining} Lectures Left</span>
-                    <span className="text-accent uppercase tracking-widest group-hover:underline">Resume →</span>
+                    <span className="text-accent uppercase tracking-widest group-hover:underline">Resume &rarr;</span>
                   </div>
                 </div>
               </div>

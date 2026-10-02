@@ -9,6 +9,12 @@ import { usePurchase } from '../context/PurchaseContext';
 import { getCourseById, getPublishedCourses } from '../services/courseService';
 import { getMe } from '../services/userService';
 
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+};
+
 // Fallback dummy images mapping since we don't have them in backend
 const getFallbackImage = (category) => {
   if(category?.includes('FRCR Part 1')) return 'physics';
@@ -101,7 +107,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             id: data._id,
             title: data.title,
             category: data.category?.name || data.category,
-            tagline: data.description?.substring(0, 50) + '...',
+            tagline: data.description ? stripHtml(data.description).substring(0, 50) + '...' : '',
             description: data.description,
             faculty: data.instructor?.name || 'Unknown Faculty',
             rating: 5.0,
