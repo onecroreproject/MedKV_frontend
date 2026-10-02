@@ -26,6 +26,8 @@ const ZoomClassroom = ({ liveClassId, user }) => {
 
   // Strict Anti-Recording Event Listeners
   useEffect(() => {
+    if (user?.role === 'Admin') return; // Disable for Admin
+
     // 1. Block Context Menu (Right Click)
     const handleContextMenu = (e) => {
       e.preventDefault();
@@ -193,8 +195,9 @@ const ZoomClassroom = ({ liveClassId, user }) => {
       </div>
 
       {/* Academy Security Overlay - Positioned securely ABOVE the Zoom Container */}
-      <div className="academy-security-overlay absolute inset-0 flex flex-col pointer-events-none" style={{ zIndex: 999999 }}>
-        {/* Strict Prohibition Notice */}
+      {user?.role !== 'Admin' && (
+        <div className="academy-security-overlay absolute inset-0 flex flex-col pointer-events-none" style={{ zIndex: 999999 }}>
+          {/* Strict Prohibition Notice */}
         <div className="w-full bg-red-600/90 text-white text-xs font-semibold px-4 py-1.5 flex items-center justify-center gap-2 pointer-events-auto">
           <AlertCircle className="w-4 h-4" />
           <span>
@@ -223,7 +226,9 @@ const ZoomClassroom = ({ liveClassId, user }) => {
             </div>
           ))}
         </div>
-      </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

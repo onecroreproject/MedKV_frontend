@@ -18,15 +18,24 @@
 <body>
     <div id="zoom-root"></div>
     <script>
+        console.log('[Zoom Frame] loaded');
+        if (window.ZoomMtgEmbedded) {
+            console.log('[Zoom Frame] SDK loaded');
+        } else {
+            console.error('[Zoom Frame] SDK NOT loaded');
+        }
+
         window.addEventListener('message', function(event) {
             if (!event.data || event.data.type !== 'INIT_ZOOM') return;
 
+            console.log('[Zoom Frame] received credentials');
             const { signature, sdkKey, appKey, meetingNumber, passcode, userName, userEmail, customerKey, zak } = event.data.payload;
 
             try {
                 const client = window.ZoomMtgEmbedded.createClient();
                 const meetingRoot = document.getElementById('zoom-root');
 
+                console.log('[Zoom Frame] init started');
                 client.init({
                     zoomAppRoot: meetingRoot,
                     language: 'en-US',
@@ -40,6 +49,8 @@
                         }
                     }
                 }).then(() => {
+                    console.log('[Zoom Frame] init success');
+                    console.log('[Zoom Frame] join started');
                     client.join({
                         signature: signature,
 
@@ -50,11 +61,15 @@
                         customerKey: customerKey,
                         zak: zak
                     }).then(() => {
+                        console.log('[Zoom Frame] join success');
                         window.parent.postMessage({ type: 'ZOOM_JOINED' }, '*');
                     }).catch((e) => {
-                        console.error('[Zoom SDK Join Error Inside Iframe]', e);
+                        console.error('[Zoom Frame] join error', e);
                         window.parent.postMessage({ type: 'ZOOM_ERROR', error: e }, '*');
                     });
+                }).catch((e) => {
+                    console.error('[Zoom Frame] init error', e);
+                    window.parent.postMessage({ type: 'ZOOM_ERROR', error: e }, '*');
                 });
             } catch (err) {
                 console.error('[Zoom SDK Init Error Inside Iframe]', err);
