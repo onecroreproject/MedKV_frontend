@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axiosInstance from '../../../services/axiosInstance';
 import { AlertCircle } from 'lucide-react';
+import { getLiveClass } from '../../../services/liveClassService';
 
 const ZoomClassroom = ({ liveClassId, user }) => {
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,33 @@ const ZoomClassroom = ({ liveClassId, user }) => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // Poll for Authoritative Meeting Ended Status
+  useEffect(() => {
+    let isMounted = true;
+    const interval = setInterval(async () => {
+      try {
+        const res = await getLiveClass(liveClassId);
+        if (isMounted && res?.data?.status === 'Completed') {
+          // The authoritative webhook has confirmed the meeting is over
+          if (user?.role === 'Admin' || user?.role === 'Faculty') {
+            const adminBase = import.meta.env.VITE_ADMIN_URL || (window.location.origin.includes('localhost') ? 'http://localhost:5174' : 'https://admin.drsamreefathradiologyacademy.com');
+            window.location.href = `${adminBase}/live-classes`;
+          } else {
+            // Send student back to their dashboard
+            window.location.href = '/dashboard';
+          }
+        }
+      } catch (err) {
+        console.error('Failed to poll class status:', err);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [liveClassId, user]);
 
   useEffect(() => {
     let isMounted = true;
