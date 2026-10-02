@@ -55,6 +55,10 @@
                 const client = window.ZoomMtgEmbedded.createClient();
                 const meetingRoot = document.getElementById('zoom-root');
 
+                const containerW = document.documentElement.clientWidth;
+                const containerH = document.documentElement.clientHeight;
+                console.log('[Zoom Frame] container dimensions:', containerW, 'x', containerH);
+                console.log('[Zoom Frame] window inner dimensions:', window.innerWidth, 'x', window.innerHeight);
                 console.log('[Zoom Frame] init started');
                 client.init({
                     zoomAppRoot: meetingRoot,
@@ -63,7 +67,7 @@
                         video: {
                             isResizable: false,
                             viewSizes: {
-                                default: { width: window.innerWidth, height: window.innerHeight }
+                                default: { width: containerW, height: containerH }
                             }
                         }
                     }
