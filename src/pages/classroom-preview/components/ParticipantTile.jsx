@@ -125,7 +125,7 @@ function ParticipantTile({
 
   const muteBtnClass = isMuted || isModerationMuted
     ? 'bg-red-500/80 hover:bg-red-400 opacity-100'
-    : 'bg-black/50 hover:bg-red-500/80 opacity-0 group-hover:opacity-100';
+    : 'bg-black/50 hover:bg-red-500/80 opacity-100';
 
   // Stable memoised handler — avoids prop recreation for descendant buttons
   const handleMuteClick = useCallback((e) => {
