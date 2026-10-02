@@ -134,25 +134,34 @@ function ParticipantTile({
   // Stable memoised handler — avoids prop recreation for descendant buttons
   const handleMuteClick = useCallback((e) => {
     e.stopPropagation();
+    const userId = identity ? identity.split('|')[0] : null;
+    if (!userId) return;
+    
     if (isModerationMuted) {
-      if (onAllowUnmuteClick) onAllowUnmuteClick(identity);
+      if (onAllowUnmuteClick) onAllowUnmuteClick(userId);
     } else if (isMuted) {
-      if (onHostRequestUnmuteClick) onHostRequestUnmuteClick(identity);
+      if (onHostRequestUnmuteClick) onHostRequestUnmuteClick(userId);
     } else {
-      if (onMuteClick) onMuteClick(identity);
+      if (onMuteClick) onMuteClick(userId);
     }
   }, [onMuteClick, onAllowUnmuteClick, onHostRequestUnmuteClick, identity, isMuted, isModerationMuted]);
 
   const handleRemoveClick = useCallback((e) => {
     e.stopPropagation();
+    const userId = identity ? identity.split('|')[0] : null;
+    if (!userId) return;
+
     if (window.confirm(`Are you sure you want to remove ${name} from the class?`)) {
-      if (onRemoveClick) onRemoveClick(identity);
+      if (onRemoveClick) onRemoveClick(userId);
     }
   }, [onRemoveClick, identity, name]);
 
   const handleCameraOffClick = useCallback((e) => {
     e.stopPropagation();
-    if (onDisableCameraClick) onDisableCameraClick(identity);
+    const userId = identity ? identity.split('|')[0] : null;
+    if (!userId) return;
+
+    if (onDisableCameraClick) onDisableCameraClick(userId);
   }, [onDisableCameraClick, identity]);
 
   return (
