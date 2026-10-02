@@ -97,6 +97,7 @@ function ParticipantTile({
   isModerationCameraDisabled = false,
   canModerate = false,
   onMuteClick,
+  onAllowUnmuteClick,
 }) {
   if (!participant) return null;
 
@@ -130,8 +131,12 @@ function ParticipantTile({
   // Stable memoised handler — avoids prop recreation for descendant buttons
   const handleMuteClick = useCallback((e) => {
     e.stopPropagation();
-    if (onMuteClick) onMuteClick(identity);
-  }, [onMuteClick, identity]);
+    if (isMuted || isModerationMuted) {
+      if (onAllowUnmuteClick) onAllowUnmuteClick(identity);
+    } else {
+      if (onMuteClick) onMuteClick(identity);
+    }
+  }, [onMuteClick, onAllowUnmuteClick, identity, isMuted, isModerationMuted]);
 
   return (
     <div
@@ -162,7 +167,7 @@ function ParticipantTile({
           <SignalBars quality={quality} />
         </div>
 
-        {canModerate && onMuteClick && (
+        {canModerate && (onMuteClick || onAllowUnmuteClick) && (
           <button
             onClick={handleMuteClick}
             className={`p-1.5 rounded-full backdrop-blur-sm border border-white/10 text-white transition-opacity duration-150 shadow ${muteBtnClass}`}

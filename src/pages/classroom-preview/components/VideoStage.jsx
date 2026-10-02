@@ -32,6 +32,7 @@ export default function VideoStage({
   cameraDisabledParticipants = {},
   canModerate = false,
   onMuteParticipant,
+  onAllowUnmute,
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const stageRef = useRef(null);
@@ -97,6 +98,7 @@ export default function VideoStage({
           onTogglePin={handleTogglePin}
           canModerate={canModerate}
           onMuteParticipant={onMuteParticipant}
+          onAllowUnmute={onAllowUnmute}
         />
         {/* Maximize: always visible on mobile and desktop */}
         <button
@@ -147,6 +149,9 @@ export default function VideoStage({
           isHandRaised={raisedHands.includes(pinnedIdentityStr)}
           isModerationMuted={!!mutedParticipants[pinnedIdentityStr]}
           isModerationCameraDisabled={!!cameraDisabledParticipants[pinnedIdentityStr]}
+          canModerate={canModerate && !isHost}
+          onMuteClick={onMuteParticipant}
+          onAllowUnmuteClick={onAllowUnmute}
         />
       </div>
     );
@@ -183,6 +188,9 @@ export default function VideoStage({
                   isHandRaised={raisedHands.includes(identity)}
                   isModerationMuted={!!mutedParticipants[identity]}
                   isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
+                  canModerate={canModerate && !isHost}
+                  onMuteClick={onMuteParticipant}
+                  onAllowUnmuteClick={onAllowUnmute}
                 />
               </div>
             );

@@ -406,6 +406,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           coHosts={coHosts}
           canModerate={canModerate}
           onMuteParticipant={muteParticipant}
+          onAllowUnmute={allowUnmute}
         />
         
         {isChatOpen && (
@@ -525,7 +526,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant }) {
+function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -565,6 +566,7 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
       cameraDisabledParticipants={cameraDisabledParticipants}
       canModerate={canModerate}
       onMuteParticipant={onMuteParticipant}
+      onAllowUnmute={onAllowUnmute}
     />
   );
 }

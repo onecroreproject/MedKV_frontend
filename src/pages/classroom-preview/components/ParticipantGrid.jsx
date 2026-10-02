@@ -40,6 +40,7 @@ function ParticipantGrid({
   onTogglePin,
   canModerate = false,
   onMuteParticipant,
+  onAllowUnmute,
 }) {
   // ── Sort: speaking → hand raised → host → rest ───────────────────────────
   // Only recalculate when the participant list or speaking/hand state changes
@@ -93,6 +94,7 @@ function ParticipantGrid({
             isPiP={true}
             canModerate={canModerate && !isHost}
             onMuteClick={onMuteParticipant}
+            onAllowUnmuteClick={onAllowUnmute}
           />
         </div>
       </div>
@@ -122,6 +124,7 @@ function ParticipantGrid({
               isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
               canModerate={canModerate && !isHost}
               onMuteClick={onMuteParticipant}
+              onAllowUnmuteClick={onAllowUnmute}
             />
           );
         })}
