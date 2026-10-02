@@ -4,6 +4,7 @@ import { X, Mic, MicOff, MoreVertical, CameraOff, LogOut, Shield, ShieldOff } fr
 export default function PeoplePanel({ 
   onClose, participants, teacher, userRole, 
   effectiveRole, isHost = false, canModerate = false, onAssignCoHost,
+  coHosts,
   waitingStudents = [], onAdmit, onReject,
   raisedHands = [], onClearHand,
   mutedParticipants = {},
@@ -15,12 +16,13 @@ export default function PeoplePanel({
   onAllowUnmute
 }) {
   const allParticipants = [teacher, ...participants].filter(Boolean);
-
-  // Build a map from userId → participant name for display
   const allById = {};
   allParticipants.forEach(p => { if (p) allById[p.id] = p; });
 
-  // Participants who have raised hands (in chronological order from raisedHands array)
+  // Split co-hosts vs students
+  const coHostParticipants = participants.filter(p => coHosts && coHosts.has(String(p.id)));
+  const studentParticipants = participants.filter(p => !coHosts || !coHosts.has(String(p.id)));
+
   const raisedHandParticipants = raisedHands
     .map(userId => allById[userId])
     .filter(Boolean);
@@ -148,9 +150,9 @@ export default function PeoplePanel({
           </div>
         )}
 
-        {/* Host */}
+        {/* Host section — includes co-hosts */}
         <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4">
-          Host
+          Host {coHostParticipants.length > 0 && `& Co-Hosts (${1 + coHostParticipants.length})`}
         </div>
         {teacher && (
           <ParticipantListItem 
@@ -160,16 +162,36 @@ export default function PeoplePanel({
             hasRaisedHand={raisedHands.includes(teacher.id)}
           />
         )}
+        {coHostParticipants.map(p => (
+          <ParticipantListItem
+            key={p.id}
+            participant={p}
+            isHost={false}
+            isCoHost={true}
+            canModerate={canModerate}
+            isCurrentUserHost={isHost}
+            onAssignCoHost={onAssignCoHost}
+            userRole={userRole}
+            hasRaisedHand={raisedHands.includes(p.id)}
+            isModerationMuted={!!mutedParticipants[p.id]}
+            isModerationCameraDisabled={!!cameraDisabledParticipants[p.id]}
+            onMute={() => onMuteParticipant && onMuteParticipant(p.id)}
+            onDisableCamera={() => onDisableCamera && onDisableCamera(p.id)}
+            onRemove={() => onRemoveParticipant && onRemoveParticipant(p.id)}
+            onClearHand={() => onClearHand && onClearHand(p.id)}
+          />
+        ))}
 
         {/* Students */}
         <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4">
-          Students ({participants.length})
+          Students ({studentParticipants.length})
         </div>
-        {participants.map(p => (
+        {studentParticipants.map(p => (
           <ParticipantListItem 
             key={p.id} 
             participant={p} 
             isHost={false}
+            isCoHost={false}
             canModerate={canModerate}
             isCurrentUserHost={isHost}
             onAssignCoHost={onAssignCoHost}

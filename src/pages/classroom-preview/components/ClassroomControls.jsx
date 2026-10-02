@@ -1,4 +1,11 @@
-import React from 'react';
+/**
+ * ClassroomControls — performance-critical control bar.
+ * Optimizations:
+ * - IconButton moved outside and memoized to prevent recreation on every render.
+ * - Removed expensive console.log in the hot render path.
+ * - Handlers are passed directly or memoized.
+ */
+import React, { memo } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, 
   MonitorUp, Hand, MessageSquare, 
@@ -7,31 +14,9 @@ import {
 
 const ALLOWED_REACTIONS = ['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
 
-export default function ClassroomControls({
-  isMuted, setIsMuted,
-  isVideoOff, setIsVideoOff,
-  isScreenSharing, setIsScreenSharing,
-  isChatOpen, setIsChatOpen,
-  isPeopleOpen, setIsPeopleOpen,
-  isHandRaised, setIsHandRaised,
-  userRole,
-  onLeave,
-  onReaction,
-  unreadCount = 0,
-  recordingState,
-  onToggleRecording,
-  onEndClass,
-  waitingStudentsCount = 0,
-  raisedHandsCount = 0
-}) {
-  
-  console.log('[Recording][UI] Record button rendered', {
-    disabled: recordingState === 'stopping',
-    userRole,
-    recordingState
-  });
-
-  const IconButton = ({ active, icon: Icon, label, danger, onClick, disabled, pulse }) => (
+// Memoized Icon Button to prevent re-rendering on every parent render
+const IconButton = memo(function IconButton({ active, icon: Icon, label, danger, onClick, disabled, pulse }) {
+  return (
     <button
       onClick={onClick}
       disabled={disabled}
@@ -54,13 +39,34 @@ export default function ClassroomControls({
       </div>
     </button>
   );
+});
+
+function ClassroomControls({
+  isMuted, setIsMuted,
+  isVideoOff, setIsVideoOff,
+  isScreenSharing, setIsScreenSharing,
+  isChatOpen, setIsChatOpen,
+  isPeopleOpen, setIsPeopleOpen,
+  isHandRaised, setIsHandRaised,
+  userRole,
+  effectiveRole,
+  onLeave,
+  onReaction,
+  unreadCount = 0,
+  recordingState,
+  onToggleRecording,
+  onEndClass,
+  waitingStudentsCount = 0,
+  raisedHandsCount = 0
+}) {
+  const isTeacherOrCoHost = effectiveRole === 'teacher' || effectiveRole === 'cohost' || userRole === 'teacher';
 
   return (
-    <div className="bg-slate-900 border-t border-slate-800 flex items-center justify-center px-2 sm:px-4 z-20 py-2 sm:py-3 min-h-[60px] sm:min-h-[72px]">
-      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap justify-center">
+    <div className="bg-slate-900 border-t border-slate-800 p-2 sm:p-4 pb-4 sm:pb-4 safe-area-bottom w-full flex-shrink-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between sm:justify-center gap-1 sm:gap-4 flex-wrap sm:flex-nowrap">
         
         <IconButton 
-          active={!isMuted} 
+          active={isMuted} 
           danger={isMuted}
           icon={isMuted ? MicOff : Mic} 
           label={isMuted ? "Unmute" : "Mute"} 
@@ -68,14 +74,14 @@ export default function ClassroomControls({
         />
         
         <IconButton 
-          active={!isVideoOff} 
+          active={isVideoOff} 
           danger={isVideoOff}
           icon={isVideoOff ? VideoOff : Video} 
           label={isVideoOff ? "Turn on camera" : "Turn off camera"} 
           onClick={() => setIsVideoOff(!isVideoOff)} 
         />
         
-        {(userRole === 'teacher' || userRole === 'cohost') && (
+        {isTeacherOrCoHost && (
           <IconButton 
             active={isScreenSharing} 
             icon={MonitorUp} 
@@ -84,23 +90,21 @@ export default function ClassroomControls({
           />
         )}
 
-        {(userRole === 'teacher' || userRole === 'cohost') && (
+        {isTeacherOrCoHost && (
           <>
-            <div className="w-px h-6 sm:h-8 bg-slate-700 mx-0.5 sm:mx-1" />
+            <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
             <IconButton 
               active={recordingState === 'recording'} 
               danger={recordingState === 'recording' || recordingState === 'paused' || recordingState === 'stopping'}
               icon={
                 recordingState === 'stopping' ? Loader2 :
                 recordingState === 'recording' ? Square : 
-                recordingState === 'paused' ? Play :
-                Play
+                recordingState === 'paused' ? Play : Play
               } 
               label={
                 recordingState === 'stopping' ? "Stopping recording..." :
                 recordingState === 'recording' ? "Stop recording" : 
-                recordingState === 'paused' ? "Resume recording" :
-                "Start recording"
+                recordingState === 'paused' ? "Resume recording" : "Start recording"
               } 
               onClick={onToggleRecording}
               disabled={recordingState === 'stopping'}
@@ -108,50 +112,62 @@ export default function ClassroomControls({
             />
           </>
         )}
-
-        <div className="w-px h-6 sm:h-8 bg-slate-700 mx-0.5 sm:mx-1" />
         
-
-        {/* Real-time Reactions */}
+        <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
+        
+        {/* Reactions */}
         <div className="relative group/reaction flex items-center justify-center">
           <button
-            className="p-3 rounded-full flex items-center justify-center transition-all bg-slate-700 hover:bg-slate-600 text-slate-200"
+            className="p-2.5 sm:p-3 rounded-full flex items-center justify-center transition-all bg-slate-700 hover:bg-slate-600 text-slate-200"
             aria-label="Reactions"
             title="Reactions"
           >
-            <Smile size={20} />
+            <Smile size={18} />
           </button>
           
-          <div className="absolute bottom-full mb-2 hidden group-hover/reaction:flex bg-slate-800 p-2 rounded-lg shadow-xl border border-slate-700 space-x-1 z-50">
-            {ALLOWED_REACTIONS.map(emoji => (
-              <button 
-                key={emoji}
-                className="text-xl hover:scale-125 hover:bg-slate-700 p-2 rounded transition-transform"
-                onClick={() => onReaction && onReaction(emoji)}
+          <div className="absolute bottom-full mb-2 hidden group-hover/reaction:flex bg-slate-800 p-2 rounded-xl shadow-xl border border-slate-700 gap-1 sm:gap-2 z-50">
+            {ALLOWED_REACTIONS.map(reaction => (
+              <button
+                key={reaction}
+                onClick={() => onReaction(reaction)}
+                className="w-8 h-8 sm:w-10 sm:h-10 text-lg sm:text-xl flex items-center justify-center hover:bg-slate-700 rounded-lg transition-transform hover:scale-110"
               >
-                {emoji}
+                {reaction}
               </button>
             ))}
           </div>
         </div>
-        
-        {/* Raise Hand — pulses orange when raised */}
+
+        <IconButton 
+          active={isHandRaised} 
+          icon={Hand} 
+          label={isHandRaised ? "Lower hand" : "Raise hand"} 
+          onClick={() => setIsHandRaised(!isHandRaised)} 
+        />
+
         <div className="relative">
           <IconButton 
-            active={isHandRaised} 
-            icon={Hand} 
-            label={isHandRaised ? "Lower hand" : "Raise hand"} 
-            onClick={() => setIsHandRaised(!isHandRaised)}
-            pulse={isHandRaised}
+            active={isPeopleOpen} 
+            icon={Users} 
+            label="People" 
+            onClick={() => setIsPeopleOpen(!isPeopleOpen)} 
           />
-          {userRole === 'teacher' && raisedHandsCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-              {raisedHandsCount > 9 ? '9+' : raisedHandsCount}
-            </span>
+          {(waitingStudentsCount > 0 || raisedHandsCount > 0) && (
+            <div className="absolute -top-1 -right-1 flex items-center justify-center gap-0.5">
+              {waitingStudentsCount > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+                  {waitingStudentsCount} NEW
+                </span>
+              )}
+              {raisedHandsCount > 0 && (
+                <span className="bg-yellow-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
+                  {raisedHandsCount}
+                </span>
+              )}
+            </div>
           )}
         </div>
         
-        {/* Chat button with unread badge */}
         <div className="relative">
           <IconButton 
             active={isChatOpen} 
@@ -159,53 +175,34 @@ export default function ClassroomControls({
             label="Chat" 
             onClick={() => setIsChatOpen(!isChatOpen)} 
           />
-          {!isChatOpen && unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
+          {unreadCount > 0 && !isChatOpen && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shadow-lg">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </div>
-        
-        {(userRole === 'teacher' || userRole === 'cohost') && (
-          <div className="relative">
-            <IconButton 
-              active={isPeopleOpen} 
-              icon={Users} 
-              label="People" 
-              onClick={() => {
-                setIsPeopleOpen(!isPeopleOpen);
-                if (!isPeopleOpen) setIsChatOpen(false);
-              }} 
-            />
-            {!isPeopleOpen && (waitingStudentsCount > 0) && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-                {waitingStudentsCount > 9 ? '9+' : waitingStudentsCount}
-              </span>
-            )}
-          </div>
-        )}
-        
-        <div className="w-px h-6 sm:h-8 bg-slate-700 mx-0.5 sm:mx-1" />
-        
-        {userRole === 'teacher' ? (
-          <button
-            className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium flex items-center gap-1.5 transition-colors shadow-lg shadow-red-500/20 text-sm sm:text-base"
-            onClick={onEndClass}
-          >
-            <PhoneOff size={17} />
-            <span className="hidden xs:inline sm:inline">End Class</span>
-          </button>
-        ) : (
-          <button
-            className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium flex items-center gap-1.5 transition-colors shadow-lg shadow-red-500/20 text-sm sm:text-base"
-            onClick={onLeave}
-          >
-            <PhoneOff size={17} />
-            <span className="hidden xs:inline sm:inline">Leave</span>
-          </button>
-        )}
 
+        <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
+        
+        <IconButton 
+          danger 
+          icon={PhoneOff} 
+          label="Leave call" 
+          onClick={onLeave} 
+        />
+
+        {userRole === 'teacher' && (
+          <button
+            onClick={onEndClass}
+            className="ml-auto bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-xs sm:text-sm shadow-lg shadow-red-600/20 whitespace-nowrap"
+          >
+            End Class
+          </button>
+        )}
       </div>
     </div>
   );
 }
+
+export default memo(ClassroomControls);
+

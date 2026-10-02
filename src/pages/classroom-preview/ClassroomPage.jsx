@@ -402,6 +402,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           raisedHands={raisedHands}
           mutedParticipants={mutedParticipants}
           cameraDisabledParticipants={cameraDisabledParticipants}
+          coHosts={coHosts}
+          canModerate={canModerate}
+          onMuteParticipant={onMuteParticipant}
         />
         
         {isChatOpen && (
@@ -521,7 +524,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {} }) {
+function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -552,11 +555,14 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
       screenShareTrack={screenShareTracks[0]}
       cameraTrackRefs={cameraTrackRefs}
       teacherIdentity={teacherIdentity}
+      coHosts={coHosts}
       pinnedIdentity={pinnedIdentity}
       setPinnedIdentity={setPinnedIdentity}
       raisedHands={raisedHands}
       mutedParticipants={mutedParticipants}
       cameraDisabledParticipants={cameraDisabledParticipants}
+      canModerate={canModerate}
+      onMuteParticipant={onMuteParticipant}
     />
   );
 }
@@ -605,6 +611,7 @@ function PeoplePanelManager({
       isHost={isHost}
       canModerate={canModerate}
       onAssignCoHost={isHost ? onAssignCoHost : null}
+      coHosts={coHosts}
       waitingStudents={waitingStudents}
       onAdmit={onAdmitStudent}
       onReject={onRejectStudent}

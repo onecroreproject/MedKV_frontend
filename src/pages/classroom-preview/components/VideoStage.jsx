@@ -23,11 +23,14 @@ export default function VideoStage({
   screenShareTrack,
   cameraTrackRefs = [],
   teacherIdentity,
+  coHosts,
   pinnedIdentity,
   setPinnedIdentity,
   raisedHands = [],
   mutedParticipants = {},
   cameraDisabledParticipants = {},
+  canModerate = false,
+  onMuteParticipant,
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const stageRef = useRef(null);
@@ -65,11 +68,11 @@ export default function VideoStage({
     ? cameraTrackRefs.find(t => t.participant.identity === pinnedIdentity)
     : null;
 
-  // Maximize button overlay (shown on hover over main stage)
+  // Maximize button: always visible on mobile, hover-only on desktop
   const MaximizeButton = () => (
     <button
       onClick={toggleFullscreen}
-      className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
+      className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
       title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
       aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
     >
@@ -84,16 +87,19 @@ export default function VideoStage({
         <ParticipantGrid
           cameraTrackRefs={cameraTrackRefs}
           teacherIdentity={teacherIdentity}
+          coHosts={coHosts}
           raisedHands={raisedHands}
           mutedParticipants={mutedParticipants}
           cameraDisabledParticipants={cameraDisabledParticipants}
           pinnedIdentity={pinnedIdentity}
           onTogglePin={handleTogglePin}
+          canModerate={canModerate}
+          onMuteParticipant={onMuteParticipant}
         />
-        {/* Maximize button — always accessible in grid mode */}
+        {/* Maximize: always visible on mobile, hover on desktop */}
         <button
           onClick={toggleFullscreen}
-          className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
+          className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
         >
           {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}

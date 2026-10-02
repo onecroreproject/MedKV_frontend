@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MoreVertical, Users, Clock } from 'lucide-react';
+import { Users, Clock } from 'lucide-react';
 import darkLogo from '../../../assets/dark_logo_transparent.png';
 
 export default function ClassroomHeader({ title, duration, participantCount, recordingState, recordingStartedAt, recordingAccumulatedDuration }) {
@@ -76,14 +76,6 @@ export default function ClassroomHeader({ title, duration, participantCount, rec
             {participantCount ?? 0}
           </span>
         </div>
-
-        {/* More options */}
-        <button
-          className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-300 shrink-0"
-          aria-label="More options"
-        >
-          <MoreVertical size={18} />
-        </button>
       </div>
     </div>
   );
