@@ -78,7 +78,7 @@ export default function VideoStage({
   const MaximizeButton = () => (
     <button
       onClick={toggleFullscreen}
-      className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
+      className="absolute bottom-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
       title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
       aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
     >
@@ -110,7 +110,7 @@ export default function VideoStage({
         {/* Maximize: always visible on mobile and desktop */}
         <button
           onClick={toggleFullscreen}
-          className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
+          className="absolute bottom-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
         >
           {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
