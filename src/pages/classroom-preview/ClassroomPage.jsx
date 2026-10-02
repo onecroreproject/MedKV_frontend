@@ -382,6 +382,18 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     return () => window.removeEventListener('host-requested-unmute', handleHostRequestUnmute);
   }, [localParticipant]);
 
+  // Sync local tracks with moderation state
+  useEffect(() => {
+    if (localParticipant) {
+      if (isMutedByFaculty && localParticipant.isMicrophoneEnabled) {
+        localParticipant.setMicrophoneEnabled(false).catch(e => console.warn('Failed to mute local mic', e));
+      }
+      if (isCameraDisabledByFaculty && localParticipant.isCameraEnabled) {
+        localParticipant.setCameraEnabled(false).catch(e => console.warn('Failed to disable local camera', e));
+      }
+    }
+  }, [isMutedByFaculty, isCameraDisabledByFaculty, localParticipant, localParticipant?.isMicrophoneEnabled, localParticipant?.isCameraEnabled]);
+
   const isHandRaised = raisedHands.includes(currentUserId);
   const handleToggleHand = () => toggleHand(!isHandRaised);
 
