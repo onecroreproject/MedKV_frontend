@@ -149,7 +149,7 @@ export default function VideoStage({
           isHandRaised={raisedHands.includes(pinnedIdentityStr)}
           isModerationMuted={!!mutedParticipants[pinnedIdentityStr]}
           isModerationCameraDisabled={!!cameraDisabledParticipants[pinnedIdentityStr]}
-          canModerate={canModerate && !isHost}
+          canModerate={canModerate && pinnedIdentityStr !== teacherIdentity}
           onMuteClick={onMuteParticipant}
           onAllowUnmuteClick={onAllowUnmute}
         />
@@ -188,7 +188,7 @@ export default function VideoStage({
                   isHandRaised={raisedHands.includes(identity)}
                   isModerationMuted={!!mutedParticipants[identity]}
                   isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
-                  canModerate={canModerate && !isHost}
+                  canModerate={canModerate && identity !== teacherIdentity}
                   onMuteClick={onMuteParticipant}
                   onAllowUnmuteClick={onAllowUnmute}
                 />
