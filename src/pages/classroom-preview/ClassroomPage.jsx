@@ -672,20 +672,32 @@ function ControlsManager({
 }) {
   const { localParticipant } = useLocalParticipant();
 
-  const isMuted = !localParticipant?.isMicrophoneEnabled;
-  const isVideoOff = !localParticipant?.isCameraEnabled;
+  const isMuted = isMutedByFaculty || !localParticipant?.isMicrophoneEnabled;
+  const isVideoOff = isCameraDisabledByFaculty || !localParticipant?.isCameraEnabled;
   const isScreenSharing = localParticipant?.isScreenShareEnabled;
 
   const toggleMic = async () => {
     if (localParticipant) {
-      if (isMutedByFaculty && !localParticipant.isMicrophoneEnabled) return; // Prevent turning on
+      if (isMutedByFaculty && !localParticipant.isMicrophoneEnabled) {
+        if (setToastMessage) {
+          setToastMessage('You are muted by faculty. Please use the "Request Unmute" button.');
+          setTimeout(() => setToastMessage(null), 3000);
+        }
+        return;
+      }
       await localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled);
     }
   };
 
   const toggleCamera = async () => {
     if (localParticipant) {
-      if (isCameraDisabledByFaculty && !localParticipant.isCameraEnabled) return; // Prevent turning on
+      if (isCameraDisabledByFaculty && !localParticipant.isCameraEnabled) {
+        if (setToastMessage) {
+          setToastMessage('Your camera has been disabled by the faculty.');
+          setTimeout(() => setToastMessage(null), 3000);
+        }
+        return;
+      }
       const next = !localParticipant.isCameraEnabled;
       try {
         await localParticipant.setCameraEnabled(next);

@@ -231,7 +231,9 @@ function ParticipantTile({
         style={{ background: 'linear-gradient(to top,rgba(0,0,0,0.8)0%,transparent 100%)' }}
       >
         <div className="flex items-center gap-1.5 min-w-0 pointer-events-none">
-          {isModerationCameraDisabled && <CameraOff size={12} className="text-red-400 shrink-0" />}
+          {!cameraEnabled || isModerationCameraDisabled ? (
+            <CameraOff size={12} className={`${isModerationCameraDisabled ? 'text-red-400' : 'text-slate-400'} shrink-0`} />
+          ) : null /* To save space, we only show CameraOff in the grid, not Camera on */}
           {isMuted || isModerationMuted
             ? <MicOff size={12} className={`${isModerationMuted ? 'text-red-400' : 'text-red-300'} shrink-0`} />
             : <Mic size={12} className={`${isSpeaking ? 'text-blue-400' : 'text-slate-400'} shrink-0`} />

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Mic, MicOff, MoreVertical, CameraOff, LogOut, Shield, ShieldOff } from 'lucide-react';
+import { X, Mic, MicOff, MoreVertical, Camera, CameraOff, LogOut, Shield, ShieldOff } from 'lucide-react';
 
 export default function PeoplePanel({ 
   onClose, participants, teacher, userRole, 
@@ -272,8 +272,10 @@ function ParticipantListItem({
           <Mic size={16} className={participant.isSpeaking ? "text-blue-400" : "text-slate-400"} />
         )}
         
-        {isModerationCameraDisabled && (
-           <CameraOff size={16} className="text-red-500" title="Camera Disabled by Faculty" />
+        {isModerationCameraDisabled || !participant.isCameraEnabled ? (
+           <CameraOff size={16} className={isModerationCameraDisabled ? "text-red-500" : "text-slate-400"} title={isModerationCameraDisabled ? "Camera Disabled by Faculty" : "Camera Off"} />
+        ) : (
+           <Camera size={16} className="text-blue-400" title="Camera On" />
         )}
 
         {showModeration && (
