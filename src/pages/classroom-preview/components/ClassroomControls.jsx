@@ -184,22 +184,20 @@ function ClassroomControls({
 
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
         
-        <IconButton 
-          danger 
-          icon={PhoneOff} 
-          label="Leave call" 
-          onClick={onLeave} 
-        />
-
-        {userRole === 'teacher' && (
-          <div className="absolute right-0 hidden sm:block">
-            <button
-              onClick={onEndClass}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-xs sm:text-sm shadow-lg shadow-red-600/20 whitespace-nowrap"
-            >
-              End Class
-            </button>
-          </div>
+        {userRole === 'teacher' ? (
+          <button
+            onClick={onEndClass}
+            className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-xs sm:text-sm shadow-lg shadow-red-600/20 whitespace-nowrap"
+          >
+            End Class
+          </button>
+        ) : (
+          <IconButton 
+            danger 
+            icon={PhoneOff} 
+            label="Leave call" 
+            onClick={onLeave} 
+          />
         )}
       </div>
     </div>

@@ -185,6 +185,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     muteParticipant,
     requestUnmute,
     allowUnmute,
+    hostRequestUnmute,
     disableCamera,
     removeParticipant,
     clearParticipantHand,
