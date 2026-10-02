@@ -10,14 +10,14 @@ const ZoomClassroom = ({ liveClassId, user }) => {
   const [warningCount, setWarningCount] = useState(0);
   const zoomClientRef = useRef(null);
   const containerRef = useRef(null);
-  
+
   // Format masked mobile number (e.g., 9876543210 -> 98******10)
   const maskMobile = (mobile) => {
     if (!mobile || mobile.length < 4) return 'N/A';
     const str = String(mobile);
     return `${str.substring(0, 2)}${'*'.repeat(Math.max(str.length - 4, 2))}${str.substring(str.length - 2)}`;
   };
-  
+
   // Update timestamp for dynamic watermark
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -93,7 +93,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const initZoom = async () => {
       try {
         // Fetch credentials and signature dynamically from the backend
@@ -161,7 +161,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
 
   return (
     <div ref={containerRef} className="academy-classroom-wrapper relative w-full h-full min-h-[600px] overflow-hidden bg-slate-950 flex flex-col select-none" style={{ WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', isolation: 'isolate' }}>
-      
+
       {/* Zoom Meeting Container - Stacking Context Barrier */}
       <div className="zoom-meeting-container relative w-full h-full flex-grow z-0 overflow-hidden" style={{ position: 'relative', zIndex: 0 }}>
         {loading && (
@@ -174,7 +174,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
           </div>
         )}
         {/* Isolated Zoom Meeting SDK Iframe */}
-        <iframe 
+        <iframe
           id="zoom-iframe"
           src="/zoom-frame.html"
           allow="camera; microphone; display-capture; fullscreen"
