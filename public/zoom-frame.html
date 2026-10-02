@@ -58,7 +58,15 @@
                 console.log('[Zoom Frame] init started');
                 client.init({
                     zoomAppRoot: meetingRoot,
-                    language: 'en-US'
+                    language: 'en-US',
+                    customize: {
+                        video: {
+                            isResizable: false,
+                            viewSizes: {
+                                default: { width: window.innerWidth, height: window.innerHeight }
+                            }
+                        }
+                    }
                 }).then(() => {
                     console.log('[Zoom Frame] init success');
                     console.log('[Zoom Frame] join started');
@@ -74,6 +82,12 @@
                     }).then(() => {
                         console.log('[Zoom Frame] join success');
                         window.parent.postMessage({ type: 'ZOOM_JOINED' }, '*');
+                        // Keep Zoom SDK responsive on window resize
+                        window.addEventListener('resize', function() {
+                            try {
+                                client.setVideoSize({ width: window.innerWidth, height: window.innerHeight });
+                            } catch(e) { /* ignore if not supported */ }
+                        });
                     }).catch((e) => {
                         console.error('[Zoom Frame] join error', e);
                         window.parent.postMessage({ type: 'ZOOM_ERROR', error: e }, '*');
