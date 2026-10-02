@@ -4,23 +4,27 @@
     <meta charset="utf-8">
     <title>Zoom SDK Frame</title>
     <style>
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
-        #zoom-root {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
         }
-        /* Force Zoom SDK component view to fill container */
-        #zoom-root > div,
-        .zmwebsdk-makeStyles-root,
-        .zmwebsdk-makeStyles-meetingClient { 
-            width: 100% !important; 
-            height: 100% !important; 
+        #zoom-root {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Contain all Zoom SDK children inside the viewport */
+        #zoom-root > div {
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
         }
     </style>
     <!-- Use standard CDN for Zoom Meeting SDK 3.8.0 -->
@@ -54,16 +58,7 @@
                 console.log('[Zoom Frame] init started');
                 client.init({
                     zoomAppRoot: meetingRoot,
-                    language: 'en-US',
-                    customize: {
-                        video: {
-                            isResizable: true,
-                            viewSizes: {
-                                default: { width: window.innerWidth, height: window.innerHeight - 60 },
-                                ribbon: { width: 300, height: window.innerHeight - 60 }
-                            }
-                        }
-                    }
+                    language: 'en-US'
                 }).then(() => {
                     console.log('[Zoom Frame] init success');
                     console.log('[Zoom Frame] join started');
