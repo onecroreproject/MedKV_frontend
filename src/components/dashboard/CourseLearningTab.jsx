@@ -172,8 +172,12 @@ function VideoPlayer({ lesson, onAddNotes, isExpired, isCompleted, user }) {
     if (url.includes('youtube.com') || url.includes('youtu.be')) return null; // We are handling raw mp4
     let cleanUrl = url.replace(/\\/g, '/');
     if (!cleanUrl.startsWith('http')) {
-      if (!cleanUrl.startsWith('/uploads/')) {
+      if (!cleanUrl.startsWith('/uploads/') && !cleanUrl.startsWith('/api/v1/')) {
         cleanUrl = '/uploads/' + cleanUrl;
+      }
+      if (cleanUrl.startsWith('/api/v1/')) {
+        const token = localStorage.getItem('token');
+        cleanUrl = `${cleanUrl}?token=${encodeURIComponent(token || '')}`;
       }
       return `${import.meta.env.VITE_BASE_URL}${cleanUrl}`;
     }

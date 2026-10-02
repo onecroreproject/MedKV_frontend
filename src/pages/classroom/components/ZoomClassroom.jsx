@@ -17,7 +17,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
         
         // Fetch credentials and signature dynamically from the backend
         const res = await axiosInstance.get(`/zoom/sdk-credentials/${liveClassId}`);
-        const { signature, meetingNumber, passcode, userName, userEmail, zak, sdkKey } = res.data;
+        const { signature, meetingNumber, passcode, userName, userEmail, customerKey, zak, sdkKey } = res.data;
 
         if (!isMounted) return;
 
@@ -38,7 +38,6 @@ const ZoomClassroom = ({ liveClassId, user }) => {
         });
 
         // Join using the secure signature.
-        // For hosts, 'zak' will be populated. For students, 'zak' will be undefined.
         client.join({
           signature: signature,
           sdkKey: sdkKey,
@@ -46,13 +45,14 @@ const ZoomClassroom = ({ liveClassId, user }) => {
           password: passcode,
           userName: userName,
           userEmail: userEmail,
+          customerKey: customerKey,
           zak: zak
         }).then(() => {
           if (isMounted) setLoading(false);
         }).catch((e) => {
           console.error("Zoom join error:", e);
           if (isMounted) {
-            setError("Failed to join the meeting.");
+            setError("Unable to connect to the Zoom classroom. Please try again.");
             setLoading(false);
           }
         });
@@ -60,7 +60,14 @@ const ZoomClassroom = ({ liveClassId, user }) => {
       } catch (err) {
         console.error("Zoom SDK Init Error:", err);
         if (isMounted) {
-          setError(err.response?.data?.message || "Failed to initialize Zoom meeting.");
+          let errorMsg = "Zoom is temporarily unavailable. Please try again.";
+          if (err.response) {
+            const status = err.response.status;
+            if (status === 404) errorMsg = "This class is no longer available.";
+            else if (status === 403 || status === 401) errorMsg = "You are not authorized to join this class.";
+            else if (status === 400 && err.response.data?.message?.includes('OAuth')) errorMsg = "Your Zoom host account is not connected.";
+          }
+          setError(errorMsg);
           setLoading(false);
         }
       }
@@ -73,7 +80,10 @@ const ZoomClassroom = ({ liveClassId, user }) => {
       // Cleanup Zoom SDK when unmounting component
       if (zoomClientRef.current) {
          try {
-           ZoomMtgEmbedded.destroyClient();
+           // We safely attempt to clear the meeting if the method exists on the client
+           if (typeof zoomClientRef.current.leaveMeeting === 'function') {
+             zoomClientRef.current.leaveMeeting();
+           }
          } catch(e) {
            console.error("Zoom cleanup error", e);
          }
