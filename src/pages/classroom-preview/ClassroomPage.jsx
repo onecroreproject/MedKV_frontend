@@ -555,6 +555,7 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
       isScreenSharing={isScreenSharing}
       screenShareTrack={screenShareTracks[0]}
       cameraTrackRefs={cameraTrackRefs}
+      participants={participants}
       teacherIdentity={teacherIdentity}
       coHosts={coHosts}
       pinnedIdentity={pinnedIdentity}
