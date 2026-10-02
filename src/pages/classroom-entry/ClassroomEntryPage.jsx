@@ -133,7 +133,11 @@ export default function ClassroomEntryPage() {
   // Zoom meetings bypass the WebRTC pre-join screen and waiting room,
   // as the Zoom SDK handles its own device checks and waiting rooms natively.
   if (liveClass && liveClass.meetingProvider === 'zoom') {
-    return <ZoomClassroom liveClassId={roomId} user={user} />;
+    return (
+      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#000' }}>
+        <ZoomClassroom liveClassId={roomId} user={user} />
+      </div>
+    );
   }
 
   if (entryState === 'PRE_JOIN') {

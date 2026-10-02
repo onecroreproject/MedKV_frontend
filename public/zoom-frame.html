@@ -59,8 +59,8 @@
                         video: {
                             isResizable: true,
                             viewSizes: {
-                                default: { width: '100%', height: '100%' },
-                                ribbon: { width: 300, height: 700 }
+                                default: { width: window.innerWidth, height: window.innerHeight - 60 },
+                                ribbon: { width: 300, height: window.innerHeight - 60 }
                             }
                         }
                     }
