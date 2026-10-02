@@ -204,6 +204,30 @@ export function useClassroomRealtime(roomId, user) {
       }, 30000);
     });
 
+    // Faculty receives camera enable requests
+    newSocket.on('class:camera-request', (req) => {
+      setCameraRequests(prev => {
+        if (prev.find(r => r.userId === req.userId)) return prev;
+        return [...prev, req];
+      });
+      setTimeout(() => {
+        setCameraRequests(prev => prev.filter(r => r.userId !== req.userId));
+      }, 30000);
+    });
+
+    newSocket.on('class:camera-approved', ({ targetUserId }) => {
+      setCameraDisabledParticipants(prev => { const n = { ...prev }; delete n[targetUserId]; return n; });
+      if (targetUserId === currentUserId) {
+        setIsCameraDisabledByFaculty(false);
+      }
+    });
+
+    newSocket.on('class:host-requested-camera', ({ targetUserId }) => {
+      if (targetUserId === currentUserId) {
+        window.dispatchEvent(new CustomEvent('host-requested-camera'));
+      }
+    });
+
     newSocket.on('class:participant-removed', ({ targetUserId }) => {
       // Clean local moderation state for removed participant
       setMutedParticipants(prev => { const n = { ...prev }; delete n[targetUserId]; return n; });
@@ -325,6 +349,16 @@ export function useClassroomRealtime(roomId, user) {
     socket.emit('class:disable-camera', { roomId, targetUserId });
   }, [socket, roomId]);
 
+  const allowCamera = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:allow-camera', { roomId, targetUserId });
+  }, [socket, roomId]);
+
+  const hostRequestCamera = useCallback((targetUserId) => {
+    if (!socket) return;
+    socket.emit('class:host-request-camera', { roomId, targetUserId });
+  }, [socket, roomId]);
+
   const removeParticipant = useCallback((targetUserId) => {
     if (!socket) return;
     socket.emit('class:remove-participant', { roomId, targetUserId });
@@ -370,11 +404,15 @@ export function useClassroomRealtime(roomId, user) {
     removedFromClass,
     removedReason,
     unmuteRequests,
+    cameraRequests,
     // Moderation actions
     muteParticipant,
     requestUnmute,
+    requestCamera,
     allowUnmute,
+    allowCamera,
     hostRequestUnmute,
+    hostRequestCamera,
     disableCamera,
     removeParticipant,
     clearParticipantHand,

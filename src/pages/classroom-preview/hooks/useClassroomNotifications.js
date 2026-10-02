@@ -62,7 +62,7 @@ export const playNotificationSound = (type) => {
 
 const COOLDOWN_MS = 1500;
 
-export function useClassroomNotifications({ userRole, chatMessages, raisedHands, waitingStudents, isChatOpen, participants }) {
+export function useClassroomNotifications({ userRole, chatMessages, raisedHands, waitingStudents, isChatOpen, participants, unmuteRequests, cameraRequests }) {
   const [notifications, setNotifications] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try { return localStorage.getItem('classroom_sound') !== 'false'; } catch { return true; }
@@ -73,6 +73,8 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
   const cooldowns = useRef({});
   const prevRaisedHands = useRef([]);
   const prevWaiting = useRef([]);
+  const prevUnmuteReqs = useRef([]);
+  const prevCameraReqs = useRef([]);
   const isInitialWaitingSync = useRef(true);
   const prevChatLen = useRef(0);
   const isHost = userRole === 'teacher';
@@ -160,6 +162,38 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
       if (canPlaySound('waiting')) playNotificationSound('waiting');
     });
   }, [waitingStudents, isHost, addNotification, canPlaySound]);
+
+  // React to Unmute Requests
+  useEffect(() => {
+    if (!isHost) { prevUnmuteReqs.current = unmuteRequests || []; return; }
+    const prev = prevUnmuteReqs.current;
+    const reqs = unmuteRequests || [];
+    const newReqs = reqs.filter(r => !prev.find(pr => pr.userId === r.userId));
+    prevUnmuteReqs.current = reqs;
+
+    if (newReqs.length === 0) return;
+
+    newReqs.forEach(req => {
+      addNotification('message', '🎤 Unmute Request', `${req.name || 'A student'} requested to unmute.`);
+    });
+    if (canPlaySound('message')) playNotificationSound('message');
+  }, [unmuteRequests, isHost, addNotification, canPlaySound]);
+
+  // React to Camera Requests
+  useEffect(() => {
+    if (!isHost) { prevCameraReqs.current = cameraRequests || []; return; }
+    const prev = prevCameraReqs.current;
+    const reqs = cameraRequests || [];
+    const newReqs = reqs.filter(r => !prev.find(pr => pr.userId === r.userId));
+    prevCameraReqs.current = reqs;
+
+    if (newReqs.length === 0) return;
+
+    newReqs.forEach(req => {
+      addNotification('message', '📷 Camera Request', `${req.name || 'A student'} requested to turn on their camera.`);
+    });
+    if (canPlaySound('message')) playNotificationSound('message');
+  }, [cameraRequests, isHost, addNotification, canPlaySound]);
 
   return { notifications, addNotification, dismissNotification, soundEnabled, toggleSound, canPlaySound };
 }

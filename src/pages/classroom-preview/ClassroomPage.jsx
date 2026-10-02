@@ -183,10 +183,14 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     removedFromClass,
     removedReason,
     unmuteRequests,
+    cameraRequests,
     muteParticipant,
     requestUnmute,
+    requestCamera,
     allowUnmute,
+    allowCamera,
     hostRequestUnmute,
+    hostRequestCamera,
     disableCamera,
     removeParticipant,
     clearParticipantHand,
@@ -379,7 +383,24 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       }
     };
     window.addEventListener('host-requested-unmute', handleHostRequestUnmute);
-    return () => window.removeEventListener('host-requested-unmute', handleHostRequestUnmute);
+    
+    const handleHostRequestCamera = async () => {
+      setToastMessage('The host is requesting you to turn on your camera.');
+      setTimeout(() => setToastMessage(null), 8000);
+      try {
+        if (localParticipant) {
+          await localParticipant.setCameraEnabled(true);
+        }
+      } catch (err) {
+        console.warn('Browser blocked auto-camera', err);
+      }
+    };
+    window.addEventListener('host-requested-camera', handleHostRequestCamera);
+
+    return () => {
+      window.removeEventListener('host-requested-unmute', handleHostRequestUnmute);
+      window.removeEventListener('host-requested-camera', handleHostRequestCamera);
+    };
   }, [localParticipant]);
 
   // Sync local tracks with moderation state
@@ -448,6 +469,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           onHostRequestUnmute={hostRequestUnmute}
           onRemoveParticipant={removeParticipant}
           onDisableCamera={disableCamera}
+          onAllowCamera={allowCamera}
+          onHostRequestCamera={hostRequestCamera}
         />
         
         {isChatOpen && (
@@ -477,8 +500,11 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
             onDisableCamera={disableCamera}
             onRemoveParticipant={removeParticipant}
             unmuteRequests={unmuteRequests}
+            cameraRequests={cameraRequests}
             onAllowUnmute={allowUnmute}
             onHostRequestUnmute={hostRequestUnmute}
+            onAllowCamera={allowCamera}
+            onHostRequestCamera={hostRequestCamera}
             waitingStudents={waitingStudents}
             onAdmitStudent={admitStudent}
             onRejectStudent={rejectStudent}
@@ -516,6 +542,12 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           {isCameraDisabledByFaculty && (
             <div className="bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg flex items-center justify-between min-w-[300px]">
               <span className="text-sm font-medium">📷 Camera disabled by faculty</span>
+              <button 
+                onClick={() => { requestCamera(); triggerToast('Camera request sent'); }}
+                className="text-xs bg-black/20 hover:bg-black/30 px-3 py-1 rounded transition-colors"
+              >
+                Request Camera
+              </button>
             </div>
           )}
         </div>
@@ -623,7 +655,8 @@ function PeoplePanelManager({
   raisedHands = [], onClearHand,
   mutedParticipants, cameraDisabledParticipants,
   onMuteParticipant, onDisableCamera, onRemoveParticipant,
-  unmuteRequests, onAllowUnmute, onHostRequestUnmute,
+  unmuteRequests, cameraRequests, onAllowUnmute, onHostRequestUnmute,
+  onAllowCamera, onHostRequestCamera,
   waitingStudents = [], onAdmitStudent, onRejectStudent
 }) {
   console.log('[PEOPLE PANEL] waitingStudents:', waitingStudents);
@@ -672,8 +705,11 @@ function PeoplePanelManager({
       onDisableCamera={onDisableCamera}
       onRemoveParticipant={onRemoveParticipant}
       unmuteRequests={unmuteRequests}
+      cameraRequests={cameraRequests}
       onAllowUnmute={onAllowUnmute}
       onHostRequestUnmute={onHostRequestUnmute}
+      onAllowCamera={onAllowCamera}
+      onHostRequestCamera={onHostRequestCamera}
     />
   );
 }
