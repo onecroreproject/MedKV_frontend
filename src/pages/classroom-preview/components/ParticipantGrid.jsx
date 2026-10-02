@@ -42,6 +42,8 @@ function ParticipantGrid({
   onMuteParticipant,
   onAllowUnmute,
   onHostRequestUnmute,
+  onRemoveParticipant,
+  onDisableCamera,
 }) {
   // ── Sort: speaking → hand raised → host → rest ───────────────────────────
   // Only recalculate when the participant list or speaking/hand state changes
@@ -97,6 +99,8 @@ function ParticipantGrid({
             onMuteClick={onMuteParticipant}
             onAllowUnmuteClick={onAllowUnmute}
             onHostRequestUnmuteClick={onHostRequestUnmute}
+            onRemoveClick={onRemoveParticipant}
+            onDisableCameraClick={onDisableCamera}
           />
         </div>
       </div>
@@ -128,6 +132,8 @@ function ParticipantGrid({
               onMuteClick={onMuteParticipant}
               onAllowUnmuteClick={onAllowUnmute}
               onHostRequestUnmuteClick={onHostRequestUnmute}
+              onRemoveClick={onRemoveParticipant}
+              onDisableCameraClick={onDisableCamera}
             />
           );
         })}

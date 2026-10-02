@@ -10,7 +10,7 @@
  *  - isHovered state removed — CSS group-hover handles it entirely (removes useState + closure overhead)
  */
 import React, { memo, useCallback } from 'react';
-import { Mic, MicOff, Pin, PinOff, Hand, CameraOff } from 'lucide-react';
+import { Mic, MicOff, Pin, PinOff, Hand, CameraOff, UserMinus } from 'lucide-react';
 import { VideoTrack, TrackRefContext } from '@livekit/components-react';
 import { ConnectionQuality } from 'livekit-client';
 
@@ -99,6 +99,8 @@ function ParticipantTile({
   onMuteClick,
   onAllowUnmuteClick,
   onHostRequestUnmuteClick,
+  onRemoveClick,
+  onDisableCameraClick,
 }) {
   if (!participant) return null;
 
@@ -141,6 +143,18 @@ function ParticipantTile({
     }
   }, [onMuteClick, onAllowUnmuteClick, onHostRequestUnmuteClick, identity, isMuted, isModerationMuted]);
 
+  const handleRemoveClick = useCallback((e) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to remove ${name} from the class?`)) {
+      if (onRemoveClick) onRemoveClick(identity);
+    }
+  }, [onRemoveClick, identity, name]);
+
+  const handleCameraOffClick = useCallback((e) => {
+    e.stopPropagation();
+    if (onDisableCameraClick) onDisableCameraClick(identity);
+  }, [onDisableCameraClick, identity]);
+
   return (
     <div
       className={`relative overflow-hidden bg-slate-800 rounded-xl flex items-center justify-center group ${outerRing} ${isPiP ? 'w-full h-full shadow-2xl' : 'w-full h-full aspect-video'}`}
@@ -177,6 +191,26 @@ function ParticipantTile({
             title={isMuted || isModerationMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted || isModerationMuted ? <MicOff size={13} /> : <Mic size={13} />}
+          </button>
+        )}
+
+        {canModerate && cameraEnabled && !isModerationCameraDisabled && onDisableCameraClick && (
+          <button
+            onClick={handleCameraOffClick}
+            className="p-1.5 rounded-full backdrop-blur-sm border border-white/10 text-white transition-opacity duration-150 shadow bg-black/50 hover:bg-orange-500 opacity-0 group-hover:opacity-100"
+            title="Turn off participant camera"
+          >
+            <CameraOff size={13} />
+          </button>
+        )}
+
+        {canModerate && onRemoveClick && (
+          <button
+            onClick={handleRemoveClick}
+            className="p-1.5 rounded-full backdrop-blur-sm border border-white/10 text-white transition-opacity duration-150 shadow bg-black/50 hover:bg-red-600 opacity-0 group-hover:opacity-100"
+            title="Remove from class"
+          >
+            <UserMinus size={13} />
           </button>
         )}
 

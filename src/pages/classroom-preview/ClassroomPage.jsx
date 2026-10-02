@@ -153,6 +153,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   console.log('[CLASSROOM] roomId =', roomId);
 
   const room = useRoomContext();
+  const { localParticipant } = useLocalParticipant();
   const navigate = useNavigate();
   
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -300,7 +301,11 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   const handleLeave = () => {
     room?.disconnect();
     webrtcService.disconnect();
-    navigate(-1);
+    if (window.opener) {
+      window.close();
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleEndClass = async () => {
@@ -311,7 +316,11 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         });
         room?.disconnect();
         webrtcService.disconnect();
-        navigate(-1);
+        if (window.opener) {
+          window.close();
+        } else {
+          navigate(-1);
+        }
       } catch (err) {
         console.error('Failed to end class:', err);
         alert('Failed to end class');
@@ -358,13 +367,20 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   }, []);
 
   useEffect(() => {
-    const handleHostRequestUnmute = () => {
+    const handleHostRequestUnmute = async () => {
       setToastMessage('The host is requesting you to unmute your microphone.');
       setTimeout(() => setToastMessage(null), 8000);
+      try {
+        if (localParticipant) {
+          await localParticipant.setMicrophoneEnabled(true);
+        }
+      } catch (err) {
+        console.warn('Browser blocked auto-unmute', err);
+      }
     };
     window.addEventListener('host-requested-unmute', handleHostRequestUnmute);
     return () => window.removeEventListener('host-requested-unmute', handleHostRequestUnmute);
-  }, []);
+  }, [localParticipant]);
 
   const isHandRaised = raisedHands.includes(currentUserId);
   const handleToggleHand = () => toggleHand(!isHandRaised);
@@ -418,6 +434,8 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           onMuteParticipant={muteParticipant}
           onAllowUnmute={allowUnmute}
           onHostRequestUnmute={hostRequestUnmute}
+          onRemoveParticipant={removeParticipant}
+          onDisableCamera={disableCamera}
         />
         
         {isChatOpen && (
@@ -537,7 +555,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute }) {
+function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -579,6 +597,8 @@ function StageManager({ raisedHands = [], mutedParticipants = {}, cameraDisabled
       onMuteParticipant={onMuteParticipant}
       onAllowUnmute={onAllowUnmute}
       onHostRequestUnmute={onHostRequestUnmute}
+      onRemoveParticipant={onRemoveParticipant}
+      onDisableCamera={onDisableCamera}
     />
   );
 }

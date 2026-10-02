@@ -34,6 +34,8 @@ export default function VideoStage({
   onMuteParticipant,
   onAllowUnmute,
   onHostRequestUnmute,
+  onRemoveParticipant,
+  onDisableCamera,
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const stageRef = useRef(null);
@@ -101,6 +103,8 @@ export default function VideoStage({
           onMuteParticipant={onMuteParticipant}
           onAllowUnmute={onAllowUnmute}
           onHostRequestUnmute={onHostRequestUnmute}
+          onRemoveParticipant={onRemoveParticipant}
+          onDisableCamera={onDisableCamera}
         />
         {/* Maximize: always visible on mobile and desktop */}
         <button
@@ -155,6 +159,8 @@ export default function VideoStage({
           onMuteClick={onMuteParticipant}
           onAllowUnmuteClick={onAllowUnmute}
           onHostRequestUnmuteClick={onHostRequestUnmute}
+          onRemoveClick={onRemoveParticipant}
+          onDisableCameraClick={onDisableCamera}
         />
       </div>
     );
@@ -195,6 +201,8 @@ export default function VideoStage({
                   onMuteClick={onMuteParticipant}
                   onAllowUnmuteClick={onAllowUnmute}
                   onHostRequestUnmuteClick={onHostRequestUnmute}
+                  onRemoveClick={onRemoveParticipant}
+                  onDisableCameraClick={onDisableCamera}
                 />
               </div>
             );
