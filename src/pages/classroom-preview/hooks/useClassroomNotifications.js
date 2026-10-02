@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 // ── Sound synthesis via Web Audio API ────────────────────────────────────────
 let _audioCtx = null;
@@ -62,7 +62,7 @@ export const playNotificationSound = (type) => {
 
 const COOLDOWN_MS = 1500;
 
-export function useClassroomNotifications({ userRole, chatMessages, raisedHands, waitingStudents, isChatOpen }) {
+export function useClassroomNotifications({ userRole, chatMessages, raisedHands, waitingStudents, isChatOpen, participants }) {
   const [notifications, setNotifications] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try { return localStorage.getItem('classroom_sound') !== 'false'; } catch { return true; }
@@ -87,8 +87,11 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
 
   const addNotification = useCallback((type, title, message, extra) => {
     const id = `${type}-${Date.now()}-${Math.random()}`;
+    // Use an empty function for manual dismissals that don't auto-timeout, or a long timeout
+    // For hand raises, we use a 10s timeout, but other notifications can stay 5s
+    const timeout = type === 'hand' ? 10000 : 5000;
     setNotifications(prev => [...prev, { id, type, title, message, ts: Date.now(), ...(extra || {}) }].slice(-5));
-    setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 5000);
+    setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), timeout);
   }, []);
 
   const dismissNotification = useCallback((id) => {
@@ -126,9 +129,20 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
     const newlyRaised = raisedHands.filter(id => !prev.includes(id));
     prevRaisedHands.current = raisedHands;
     if (newlyRaised.length === 0) return;
-    addNotification('hand', '✋ Hand Raised', `${newlyRaised.length} student${newlyRaised.length > 1 ? 's' : ''} raised their hand`);
+    
+    // Find names
+    const names = newlyRaised.map(id => {
+      const p = participants?.find(p => p.identity === id || p.identity.startsWith(id + '|'));
+      return p ? (p.name || p.identity.split('|')[0]) : 'A student';
+    });
+    
+    const message = names.length === 1 
+      ? `${names[0]} raised their hand` 
+      : `${names.join(', ')} raised their hands`;
+      
+    addNotification('hand', '✋ Hand Raised', message);
     if (canPlaySound('hand')) playNotificationSound('hand');
-  }, [raisedHands, isHost, addNotification, canPlaySound]);
+  }, [raisedHands, isHost, addNotification, canPlaySound, participants]);
 
   // React to Waiting Students (suppress initial sync)
   useEffect(() => {

@@ -183,7 +183,7 @@ export default function ClassroomEntryPage() {
     return (
       <PreJoinScreen 
         user={user}
-        roomTitle={`Room: ${roomId}`}
+        roomTitle={liveClass?.title || 'Live Class'}
         onJoin={handleJoinPreJoin}
         onCancel={handleCancel}
       />

@@ -122,13 +122,24 @@ export default function PeoplePanel({
                   </div>
                 </div>
                 {userRole === 'teacher' && (
-                  <button
-                    onClick={() => onClearHand && onClearHand(p.id)}
-                    className="text-xs text-slate-400 hover:text-yellow-300 border border-slate-700 hover:border-yellow-500/50 px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100"
-                    title="Lower hand"
-                  >
-                    Lower
-                  </button>
+                  <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!!mutedParticipants[p.id] && (
+                      <button
+                        onClick={() => onAllowUnmute && onAllowUnmute(p.id)}
+                        className="text-xs text-blue-400 hover:text-blue-300 border border-slate-700 hover:border-blue-500/50 px-2 py-1 rounded transition-colors"
+                        title="Allow Unmute"
+                      >
+                        Allow Unmute
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onClearHand && onClearHand(p.id)}
+                      className="text-xs text-slate-400 hover:text-yellow-300 border border-slate-700 hover:border-yellow-500/50 px-2 py-1 rounded transition-colors"
+                      title="Lower hand"
+                    >
+                      Lower
+                    </button>
+                  </div>
                 )}
               </div>
             ))}

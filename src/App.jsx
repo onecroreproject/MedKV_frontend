@@ -8,8 +8,6 @@ import EnrollmentReview from './pages/payment/EnrollmentReview';
 import SecurePayment from './pages/payment/SecurePayment';
 import PaymentProcessing from './pages/payment/PaymentProcessing';
 import PaymentResult from './pages/payment/PaymentResult';
-import WebRTCRoom from './pages/classroom/WebRTCRoom';
-import StudentLiveClassMock from './pages/classroom/StudentLiveClassMock';
 import ClassroomPage from './pages/classroom-preview/ClassroomPage';
 import ClassroomEntryPage from './pages/classroom-entry/ClassroomEntryPage';
 
@@ -291,8 +289,6 @@ function App() {
           <Route path="/student/register" element={<StudentRegister />} />
           <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
           <Route path="/student/reset-password/:token" element={<StudentResetPassword />} />
-          <Route path="/webrtc/:roomId" element={<WebRTCRoom />} />
-          <Route path="/studlive" element={<StudentLiveClassMock />} />
           <Route path="/classroom-preview/:roomId" element={<ClassroomPage />} />
           <Route path="/classroom/:roomId" element={<ClassroomEntryPage />} />
           <Route path="/policy/:type" element={<PolicyPage />} />

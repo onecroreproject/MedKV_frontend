@@ -210,6 +210,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     raisedHands,
     waitingStudents,
     isChatOpen,
+    participants,
   });
 
   // Sync chat panel open state with the realtime hook (for unread counter)

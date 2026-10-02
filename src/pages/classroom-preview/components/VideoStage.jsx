@@ -57,7 +57,8 @@ export default function VideoStage({
   let stripTrackRefs = [];
 
   if (isScreenSharing) {
-    stripTrackRefs = cameraTrackRefs;
+    // Hide all cameras when screen sharing is active, as requested by user
+    stripTrackRefs = [];
     mainStageNode = (
       <div className="absolute inset-0 bg-black flex items-center justify-center transition-all duration-300 ease-in-out">
         {screenShareTrack ? (
@@ -95,9 +96,9 @@ export default function VideoStage({
   }
 
   return (
-    <div className={`flex-1 w-full h-full flex ${isScreenSharing ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}>
+    <div className={`flex-1 w-full h-full flex ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}>
       {/* Main Stage */}
-      <div className={`relative bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing ? 'flex-1 h-2/3 md:h-full' : 'flex-1'}`}>
+      <div className={`relative bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-1 h-2/3 md:h-full' : 'flex-1 h-full'}`}>
         {mainStageNode}
       </div>
 
