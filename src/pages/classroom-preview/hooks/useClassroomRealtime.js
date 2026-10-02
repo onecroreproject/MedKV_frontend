@@ -334,6 +334,11 @@ export function useClassroomRealtime(roomId, user) {
     socket.emit('class:request-unmute', { roomId });
   }, [socket, roomId]);
 
+  const requestCamera = useCallback(() => {
+    if (!socket) return;
+    socket.emit('class:request-camera', { roomId });
+  }, [socket, roomId]);
+
   const allowUnmute = useCallback((targetUserId) => {
     if (!socket) return;
     socket.emit('class:allow-unmute', { roomId, targetUserId });
