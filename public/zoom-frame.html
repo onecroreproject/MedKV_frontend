@@ -16,7 +16,6 @@
         #zoom-root {
             width: 100%;
             height: 100%;
-            min-height: 100vh;
             position: relative;
             overflow: hidden;
         }
@@ -69,10 +68,10 @@
                     language: 'en-US',
                     customize: {
                         video: {
-                            isResizable: false,
+                            isResizable: true,
                             viewSizes: {
-                                default: { width: containerW, height: containerH },
-                                ribbon: { width: 300, height: containerH }
+                                default: { width: Math.min(containerW, 1440), height: Math.min(containerH, 720) },
+                                ribbon: { width: 300, height: Math.min(containerH, 720) }
                             }
                         }
                     }
@@ -91,15 +90,7 @@
                     }).then(() => {
                         console.log('[Zoom Frame] join success');
                         window.parent.postMessage({ type: 'ZOOM_JOINED' }, '*');
-                        // Keep Zoom SDK responsive on window resize
-                        const resizeObserver = new ResizeObserver(() => {
-                            try {
-                                const newW = window.innerWidth;
-                                const newH = window.innerHeight;
-                                client.updateVideoView({ width: newW, height: newH });
-                            } catch(e) { console.error('Resize error', e); }
-                        });
-                        resizeObserver.observe(document.body);
+                        // Let Zoom SDK handle its own responsive layout
                     }).catch((e) => {
                         console.error('[Zoom Frame] join error', e);
                         window.parent.postMessage({ type: 'ZOOM_ERROR', error: e }, '*');
