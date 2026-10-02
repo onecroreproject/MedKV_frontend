@@ -32,6 +32,7 @@ export function useClassroomRealtime(roomId, user) {
   const [removedReason, setRemovedReason] = useState('');
   // Unmute requests received by faculty
   const [unmuteRequests, setUnmuteRequests] = useState([]);
+  const [cameraRequests, setCameraRequests] = useState([]);
 
   // ── Waiting Room state ──────────────────────────────────────────────────────
   const [waitingStudents, setWaitingStudents] = useState([]);
