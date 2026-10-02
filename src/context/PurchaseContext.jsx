@@ -54,6 +54,21 @@ export const PurchaseProvider = ({ children }) => {
 
   const purchaseCourse = async (courseId) => {
     return new Promise(async (resolve) => {
+      if (user && (user.role === 'Faculty' || user.role === 'Admin') && !purchasedCourses.includes(courseId)) {
+        try {
+          const res = await enrollInCourse(courseId);
+          if (res.success) {
+            setPurchasedCourses(prev => [...prev, courseId]);
+            alert('Successfully enrolled (Faculty/Admin Access)');
+            return resolve(true);
+          }
+        } catch (error) {
+          console.error("Free enrollment error for Faculty/Admin:", error);
+          alert('Error enrolling. Try again later.');
+          return resolve(false);
+        }
+      }
+
       if (!purchasedCourses.includes(courseId)) {
         try {
           const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
