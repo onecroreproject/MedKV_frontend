@@ -53,7 +53,7 @@
                     console.log('[Zoom Frame] join started');
                     client.join({
                         signature: signature,
-
+                        sdkKey: sdkKey || appKey, // Zoom SDK 3.8.0 strictly requires this parameter
                         meetingNumber: meetingNumber,
                         password: passcode,
                         userName: userName,
