@@ -21,7 +21,7 @@
         window.addEventListener('message', function(event) {
             if (!event.data || event.data.type !== 'INIT_ZOOM') return;
 
-            const { signature, sdkKey, meetingNumber, passcode, userName, userEmail, customerKey, zak } = event.data.payload;
+            const { signature, sdkKey, appKey, meetingNumber, passcode, userName, userEmail, customerKey, zak } = event.data.payload;
 
             try {
                 const client = window.ZoomMtgEmbedded.createClient();
@@ -42,7 +42,7 @@
                 }).then(() => {
                     client.join({
                         signature: signature,
-                        sdkKey: sdkKey,
+
                         meetingNumber: meetingNumber,
                         password: passcode,
                         userName: userName,
