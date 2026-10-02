@@ -112,11 +112,10 @@ export default function VideoStage({
 
   // ── Build main stage + strip ───────────────────────────────────────────────
   let mainStageNode = null;
-  let stripTrackRefs = [];
+  let stripParticipants = [];
 
   if (isScreenSharing) {
-    // Hide all cameras when screen sharing is active, as requested by user
-    stripTrackRefs = [];
+    stripParticipants = participants;
     mainStageNode = (
       <div className="absolute inset-0 bg-black flex items-center justify-center transition-all duration-300 ease-in-out">
         {screenShareTrack ? (
@@ -134,7 +133,7 @@ export default function VideoStage({
       </div>
     );
   } else if (pinnedTrackRef) {
-    stripTrackRefs = cameraTrackRefs.filter(t => t.participant.identity !== pinnedIdentity);
+    stripParticipants = participants.filter(p => p.identity !== pinnedIdentity);
     const pinnedIdentityStr = pinnedTrackRef.participant.identity;
     mainStageNode = (
       <div className="absolute inset-0 flex transition-all duration-300 ease-in-out bg-slate-900 rounded-xl overflow-hidden">
@@ -156,27 +155,28 @@ export default function VideoStage({
   return (
     <div
       ref={stageRef}
-      className={`flex-1 w-full h-full flex ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`flex-1 w-full h-full flex ${isScreenSharing && stripParticipants.length > 0 ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}
     >
       {/* Main Stage — group for hover-show maximize button */}
-      <div className={`relative group bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-1 h-2/3 md:h-full' : 'flex-1 h-full'}`}>
+      <div className={`relative group bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing && stripParticipants.length > 0 ? 'flex-1 h-2/3 md:h-full' : 'flex-1 h-full'}`}>
         {mainStageNode}
         <MaximizeButton />
       </div>
 
       {/* Participant Strip */}
-      {stripTrackRefs.length > 0 && (
+      {stripParticipants.length > 0 && (
         <div className={`shrink-0 flex custom-scrollbar transition-all duration-300 ease-in-out ${isScreenSharing ? 'h-1/3 md:h-full md:w-64 lg:w-72 flex-row md:flex-col space-x-3 md:space-x-0 md:space-y-3 overflow-x-auto md:overflow-y-auto' : 'h-28 sm:h-36 w-full overflow-x-auto flex-row space-x-3 pb-2'}`}>
-          {stripTrackRefs.map((trackRef) => {
-            const identity = trackRef.participant.identity;
+          {stripParticipants.map((participant) => {
+            const identity = participant.identity;
+            const trackRef = cameraTrackRefs.find(t => t.participant.identity === identity);
             return (
               <div
-                key={`${identity}-${trackRef.source}`}
+                key={identity}
                 className={`shrink-0 transition-transform duration-300 ${isScreenSharing ? 'h-full md:h-auto md:w-full md:aspect-video aspect-video' : 'h-full aspect-video'}`}
               >
                 <ParticipantTile
                   trackRef={trackRef}
-                  participant={trackRef.participant}
+                  participant={participant}
                   isHost={identity === teacherIdentity}
                   isPinned={false}
                   onTogglePin={() => handleTogglePin(identity)}
