@@ -158,50 +158,56 @@ const ZoomClassroom = ({ liveClassId, user }) => {
   }
 
   return (
-    <div ref={containerRef} className="w-full h-full min-h-[600px] relative bg-slate-950 flex flex-col select-none" style={{ WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>
+    <div ref={containerRef} className="academy-classroom-wrapper relative w-full h-full min-h-[600px] overflow-hidden bg-slate-950 flex flex-col select-none" style={{ WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', isolation: 'isolate' }}>
       
-      {/* Strict Prohibition Notice */}
-      <div className="w-full bg-red-600/90 text-white text-xs font-semibold px-4 py-1.5 flex items-center justify-center gap-2 z-50">
-        <AlertCircle className="w-4 h-4" />
-        <span>
-          <strong>STRICT WARNING:</strong> Unauthorized recording, downloading, or screen capture is strictly prohibited and actively monitored. Violations will result in immediate account termination.
-        </span>
-      </div>
-
-      {warningCount > 0 && (
-        <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-xl z-50 animate-pulse border border-red-400">
-          Suspicious activity detected ({warningCount}). Screen capture tools are prohibited.
-        </div>
-      )}
-
-      {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 z-10 text-white">
-          <svg className="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p>Connecting to Zoom Meeting...</p>
-        </div>
-      )}
-      
-      {/* Zoom SDK Container */}
-      <div id="zoom-meeting-root" className="w-full flex-grow relative z-0"></div>
-
-      {/* Dynamic Watermark Overlay */}
-      <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden mix-blend-difference flex flex-col justify-around">
-        {[...Array(5)].map((_, rowIndex) => (
-          <div key={rowIndex} className="w-full flex justify-around opacity-[0.15] text-white font-mono text-sm lg:text-base font-bold select-none rotate-[-15deg] whitespace-nowrap">
-            {[...Array(3)].map((_, colIndex) => (
-              <div key={colIndex} className="flex flex-col items-center">
-                <span>{user?.name || 'Student'}</span>
-                <span>{maskMobile(user?.mobile || user?.email || 'Unknown')}</span>
-                <span>ID: {liveClassId?.slice(-6)}</span>
-                <span>{currentTime.toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
-              </div>
-            ))}
+      {/* Zoom Meeting Container - Stacking Context Barrier */}
+      <div className="zoom-meeting-container relative w-full h-full flex-grow z-0 overflow-hidden" style={{ position: 'relative', zIndex: 0 }}>
+        {loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 z-10 text-white">
+            <svg className="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Connecting to Zoom Meeting...</p>
           </div>
-        ))}
+        )}
+        {/* Zoom SDK will inject here */}
+        <div id="zoom-meeting-root" className="w-full h-full"></div>
       </div>
+
+      {/* Academy Security Overlay - Positioned securely ABOVE the Zoom Container */}
+      <div className="academy-security-overlay absolute inset-0 flex flex-col pointer-events-none" style={{ zIndex: 999999 }}>
+        {/* Strict Prohibition Notice */}
+        <div className="w-full bg-red-600/90 text-white text-xs font-semibold px-4 py-1.5 flex items-center justify-center gap-2 pointer-events-auto">
+          <AlertCircle className="w-4 h-4" />
+          <span>
+            <strong>STRICT WARNING:</strong> Unauthorized recording, downloading, or screen capture is strictly prohibited and actively monitored.
+          </span>
+        </div>
+
+        {warningCount > 0 && (
+          <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-xl animate-pulse border border-red-400 pointer-events-none">
+            Suspicious activity detected ({warningCount}). Screen capture tools are prohibited.
+          </div>
+        )}
+
+        {/* Dynamic Watermark Overlay */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-difference flex flex-col justify-around">
+          {[...Array(5)].map((_, rowIndex) => (
+            <div key={rowIndex} className="w-full flex justify-around opacity-[0.20] text-white font-mono text-sm lg:text-base font-bold select-none rotate-[-15deg] whitespace-nowrap">
+              {[...Array(3)].map((_, colIndex) => (
+                <div key={colIndex} className="flex flex-col items-center drop-shadow-md">
+                  <span>{user?.name || 'Student'}</span>
+                  <span>{maskMobile(user?.mobile || user?.email || 'Unknown')}</span>
+                  <span>ID: {liveClassId?.slice(-6)}</span>
+                  <span>{currentTime.toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 };
