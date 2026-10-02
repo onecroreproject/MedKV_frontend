@@ -134,6 +134,12 @@ const ZoomClassroom = ({ liveClassId, user }) => {
     const handleIframeMessage = (event) => {
       if (event.data?.type === 'ZOOM_JOINED') {
         if (isMounted) setLoading(false);
+        const iframeNode = document.getElementById('zoom-iframe');
+        console.log('[React Parent] Dimensions:', {
+          classroomWrapperHeight: containerRef.current?.clientHeight,
+          iframeHeight: iframeNode?.clientHeight,
+          windowHeight: window.innerHeight
+        });
       } else if (event.data?.type === 'ZOOM_ERROR') {
         console.error('[Zoom SDK Iframe Error]', event.data.error);
         if (isMounted) {
@@ -162,7 +168,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
   }
 
   return (
-    <div ref={containerRef} className="academy-classroom-wrapper relative w-full h-full min-h-[600px] overflow-hidden bg-slate-950 flex flex-col select-none" style={{ WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', isolation: 'isolate' }}>
+    <div ref={containerRef} className="academy-classroom-wrapper relative w-full h-full overflow-hidden bg-slate-950 flex flex-col select-none" style={{ WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', isolation: 'isolate' }}>
 
       {/* Zoom Meeting Container - Stacking Context Barrier */}
       <div className="zoom-meeting-container relative w-full h-full flex-grow z-0 overflow-hidden" style={{ position: 'relative', zIndex: 0 }}>
@@ -181,7 +187,7 @@ const ZoomClassroom = ({ liveClassId, user }) => {
           src="/zoom-frame.html"
           allow="camera; microphone; display-capture; fullscreen"
           className="w-full h-full border-none flex-grow"
-          style={{ width: '100%', height: '100%', display: 'block' }}
+          style={{ width: '100%', height: '100%', minHeight: '100%', display: 'block' }}
           title="Zoom Classroom"
           onLoad={() => {
             if (window.zoomInitPayload && zoomClientRef.current !== 'initialized') {

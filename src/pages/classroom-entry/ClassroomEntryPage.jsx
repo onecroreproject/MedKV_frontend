@@ -134,7 +134,7 @@ export default function ClassroomEntryPage() {
   // as the Zoom SDK handles its own device checks and waiting rooms natively.
   if (liveClass && liveClass.meetingProvider === 'zoom') {
     return (
-      <div className="flex-grow w-full h-full flex flex-col" style={{ minHeight: 'calc(100vh - 64px)', overflow: 'hidden', background: '#000' }}>
+      <div className="w-full h-screen overflow-hidden bg-black flex flex-col">
         <ZoomClassroom liveClassId={roomId} user={user} />
       </div>
     );
