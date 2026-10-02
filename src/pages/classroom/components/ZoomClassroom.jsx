@@ -180,7 +180,8 @@ const ZoomClassroom = ({ liveClassId, user }) => {
           id="zoom-iframe"
           src="/zoom-frame.html"
           allow="camera; microphone; display-capture; fullscreen"
-          className="w-full h-full border-none"
+          className="w-full border-none"
+          style={{ width: '100%', height: '100%', display: 'block', minHeight: '100vh' }}
           title="Zoom Classroom"
           onLoad={() => {
             if (window.zoomInitPayload && zoomClientRef.current !== 'initialized') {
