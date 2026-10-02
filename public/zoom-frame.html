@@ -6,25 +6,14 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            background: #000;
+            background: #242424; /* Standard Zoom dark background */
         }
         #zoom-root {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-        /* Contain all Zoom SDK children inside the viewport */
-        #zoom-root > div {
-            width: 100% !important;
-            height: 100% !important;
-            overflow: hidden !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
+            width: 100%;
+            height: 100%;
         }
     </style>
     <!-- Use standard CDN for Zoom Meeting SDK 3.8.0 -->
@@ -55,9 +44,9 @@
                 const client = window.ZoomMtgEmbedded.createClient();
                 const meetingRoot = document.getElementById('zoom-root');
 
-                const containerW = document.documentElement.clientWidth;
-                const containerH = document.documentElement.clientHeight;
-                console.log('[Zoom Frame] container dimensions:', containerW, 'x', containerH);
+                const containerW = window.innerWidth;
+                const containerH = window.innerHeight;
+                console.log('[Zoom Frame] container dimensions:', document.documentElement.clientWidth, 'x', document.documentElement.clientHeight);
                 console.log('[Zoom Frame] window inner dimensions:', window.innerWidth, 'x', window.innerHeight);
                 console.log('[Zoom Frame] init started');
                 client.init({
@@ -65,9 +54,10 @@
                     language: 'en-US',
                     customize: {
                         video: {
-                            isResizable: false,
+                            isResizable: true,
                             viewSizes: {
-                                default: { width: containerW, height: containerH }
+                                default: { width: containerW, height: containerH },
+                                ribbon: { width: 300, height: containerH }
                             }
                         }
                     }
@@ -87,11 +77,16 @@
                         console.log('[Zoom Frame] join success');
                         window.parent.postMessage({ type: 'ZOOM_JOINED' }, '*');
                         // Keep Zoom SDK responsive on window resize
-                        window.addEventListener('resize', function() {
+                        const resizeObserver = new ResizeObserver(() => {
                             try {
-                                client.setVideoSize({ width: window.innerWidth, height: window.innerHeight });
-                            } catch(e) { /* ignore if not supported */ }
+                                const newW = window.innerWidth;
+                                const newH = window.innerHeight;
+                                document.getElementById('zoom-root').style.width = newW + 'px';
+                                document.getElementById('zoom-root').style.height = newH + 'px';
+                                client.updateVideoView({ width: newW, height: newH });
+                            } catch(e) { console.error('Resize error', e); }
                         });
+                        resizeObserver.observe(document.body);
                     }).catch((e) => {
                         console.error('[Zoom Frame] join error', e);
                         window.parent.postMessage({ type: 'ZOOM_ERROR', error: e }, '*');
