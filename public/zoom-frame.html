@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Zoom SDK Frame</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        #zoom-root { width: 100%; height: 100%; }
+    </style>
+    <!-- Use standard CDN for Zoom Meeting SDK 3.8.0 -->
+    <script src="https://source.zoom.us/3.8.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.8.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.8.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.8.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.8.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/zoom-meeting-embedded-3.8.0.min.js"></script>
+</head>
+<body>
+    <div id="zoom-root"></div>
+    <script>
+        window.addEventListener('message', function(event) {
+            if (!event.data || event.data.type !== 'INIT_ZOOM') return;
+
+            const { signature, sdkKey, meetingNumber, passcode, userName, userEmail, customerKey, zak } = event.data.payload;
+
+            try {
+                const client = window.ZoomMtgEmbedded.createClient();
+                const meetingRoot = document.getElementById('zoom-root');
+
+                client.init({
+                    zoomAppRoot: meetingRoot,
+                    language: 'en-US',
+                    customize: {
+                        video: {
+                            isResizable: true,
+                            viewSizes: {
+                                default: { width: window.innerWidth, height: window.innerHeight },
+                                ribbon: { width: 300, height: 700 }
+                            }
+                        }
+                    }
+                }).then(() => {
+                    client.join({
+                        signature: signature,
+                        sdkKey: sdkKey,
+                        meetingNumber: meetingNumber,
+                        password: passcode,
+                        userName: userName,
+                        userEmail: userEmail,
+                        customerKey: customerKey,
+                        zak: zak
+                    }).then(() => {
+                        window.parent.postMessage({ type: 'ZOOM_JOINED' }, '*');
+                    }).catch((e) => {
+                        console.error('[Zoom SDK Join Error Inside Iframe]', e);
+                        window.parent.postMessage({ type: 'ZOOM_ERROR', error: e }, '*');
+                    });
+                });
+            } catch (err) {
+                console.error('[Zoom SDK Init Error Inside Iframe]', err);
+                window.parent.postMessage({ type: 'ZOOM_ERROR', error: err.message }, '*');
+            }
+        });
+    </script>
+</body>
+</html>

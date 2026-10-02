@@ -96,54 +96,25 @@ const ZoomClassroom = ({ liveClassId, user }) => {
     
     const initZoom = async () => {
       try {
-        const { default: ZoomMtgEmbedded } = await import('@zoom/meetingsdk/embedded');
-        const client = ZoomMtgEmbedded.createClient();
-        zoomClientRef.current = client;
-        
         // Fetch credentials and signature dynamically from the backend
         const res = await axiosInstance.get(`/zoom/sdk-credentials/${liveClassId}`);
-        const { signature, meetingNumber, passcode, userName, userEmail, customerKey, zak, sdkKey } = res.data;
+        const payload = res.data;
 
         if (!isMounted) return;
 
-        const meetingRoot = document.getElementById('zoom-meeting-root');
-
-        client.init({
-          zoomAppRoot: meetingRoot,
-          language: 'en-US',
-          customize: {
-            video: {
-              isResizable: true,
-              viewSizes: {
-                default: { width: 1000, height: 600 },
-                ribbon: { width: 300, height: 700 }
-              }
-            }
-          }
-        });
-
-        // Join using the secure signature.
-        client.join({
-          signature: signature,
-          sdkKey: sdkKey,
-          meetingNumber: meetingNumber,
-          password: passcode,
-          userName: userName,
-          userEmail: userEmail,
-          customerKey: customerKey,
-          zak: zak
-        }).then(() => {
-          if (isMounted) setLoading(false);
-        }).catch((e) => {
-          console.error('[Zoom SDK Join Error]', e);
-          if (isMounted) {
-            setError("Zoom is temporarily unavailable. Please try again.");
-            setLoading(false);
-          }
-        });
+        const iframe = document.getElementById('zoom-iframe');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'INIT_ZOOM',
+            payload: payload
+          }, '*');
+        } else {
+          // Iframe not ready yet, we will retry in onLoad of the iframe
+          window.zoomInitPayload = payload;
+        }
 
       } catch (err) {
-        console.error("Zoom SDK Init Error:", err);
+        console.error("Zoom SDK Credential Error:", err);
         if (isMounted) {
           let errorMsg = "Zoom is temporarily unavailable. Please try again.";
           if (err.response) {
@@ -158,21 +129,24 @@ const ZoomClassroom = ({ liveClassId, user }) => {
       }
     };
 
+    const handleIframeMessage = (event) => {
+      if (event.data?.type === 'ZOOM_JOINED') {
+        if (isMounted) setLoading(false);
+      } else if (event.data?.type === 'ZOOM_ERROR') {
+        console.error('[Zoom SDK Iframe Error]', event.data.error);
+        if (isMounted) {
+          setError("Zoom is temporarily unavailable. Please try again.");
+          setLoading(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleIframeMessage);
     initZoom();
 
     return () => {
       isMounted = false;
-      // Cleanup Zoom SDK when unmounting component
-      if (zoomClientRef.current) {
-         try {
-           // We safely attempt to clear the meeting if the method exists on the client
-           if (typeof zoomClientRef.current.leaveMeeting === 'function') {
-             zoomClientRef.current.leaveMeeting();
-           }
-         } catch(e) {
-           console.error("Zoom cleanup error", e);
-         }
-      }
+      window.removeEventListener('message', handleIframeMessage);
     };
   }, [liveClassId]);
 
@@ -199,8 +173,23 @@ const ZoomClassroom = ({ liveClassId, user }) => {
             <p>Connecting to Zoom Meeting...</p>
           </div>
         )}
-        {/* Zoom SDK will inject here */}
-        <div id="zoom-meeting-root" className="w-full h-full"></div>
+        {/* Isolated Zoom Meeting SDK Iframe */}
+        <iframe 
+          id="zoom-iframe"
+          src="/zoom-frame.html"
+          allow="camera; microphone; display-capture; fullscreen"
+          className="w-full h-full border-none"
+          title="Zoom Classroom"
+          onLoad={() => {
+            if (window.zoomInitPayload && zoomClientRef.current !== 'initialized') {
+              zoomClientRef.current = 'initialized';
+              document.getElementById('zoom-iframe').contentWindow.postMessage({
+                type: 'INIT_ZOOM',
+                payload: window.zoomInitPayload
+              }, '*');
+            }
+          }}
+        ></iframe>
       </div>
 
       {/* Academy Security Overlay - Positioned securely ABOVE the Zoom Container */}

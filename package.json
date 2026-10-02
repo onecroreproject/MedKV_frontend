@@ -14,7 +14,6 @@
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "@tailwindcss/vite": "^4.3.0",
-    "@zoom/meetingsdk": "^6.5.0",
     "axios": "^1.17.0",
     "events": "^3.3.0",
     "livekit-client": "^2.22.2",
