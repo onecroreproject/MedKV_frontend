@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ParticipantGrid from './ParticipantGrid';
 import ParticipantTile from './ParticipantTile';
-import { MonitorUp } from 'lucide-react';
+import { MonitorUp, Maximize2, Minimize2 } from 'lucide-react';
 import { VideoTrack, TrackRefContext } from '@livekit/components-react';
 
 /**
@@ -29,6 +29,34 @@ export default function VideoStage({
   mutedParticipants = {},
   cameraDisabledParticipants = {},
 }) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const stageRef = useRef(null);
+
+  // Sync fullscreen state with browser Fullscreen API events
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!document.fullscreenElement) {
+      try {
+        await stageRef.current?.requestFullscreen();
+      } catch (err) {
+        console.warn('[Fullscreen] Error enabling fullscreen:', err);
+      }
+    } else {
+      try {
+        await document.exitFullscreen();
+      } catch (err) {
+        console.warn('[Fullscreen] Error exiting fullscreen:', err);
+      }
+    }
+  }, []);
+
   const handleTogglePin = (identity) => {
     setPinnedIdentity(prev => prev === identity ? null : identity);
   };
@@ -37,18 +65,40 @@ export default function VideoStage({
     ? cameraTrackRefs.find(t => t.participant.identity === pinnedIdentity)
     : null;
 
+  // Maximize button overlay (shown on hover over main stage)
+  const MaximizeButton = () => (
+    <button
+      onClick={toggleFullscreen}
+      className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
+      title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+      aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+    >
+      {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+    </button>
+  );
+
   // ── No screen share, no pinned → responsive grid ──────────────────────────
   if (!isScreenSharing && !pinnedTrackRef) {
     return (
-      <ParticipantGrid
-        cameraTrackRefs={cameraTrackRefs}
-        teacherIdentity={teacherIdentity}
-        raisedHands={raisedHands}
-        mutedParticipants={mutedParticipants}
-        cameraDisabledParticipants={cameraDisabledParticipants}
-        pinnedIdentity={pinnedIdentity}
-        onTogglePin={handleTogglePin}
-      />
+      <div ref={stageRef} className="flex-1 w-full h-full relative group">
+        <ParticipantGrid
+          cameraTrackRefs={cameraTrackRefs}
+          teacherIdentity={teacherIdentity}
+          raisedHands={raisedHands}
+          mutedParticipants={mutedParticipants}
+          cameraDisabledParticipants={cameraDisabledParticipants}
+          pinnedIdentity={pinnedIdentity}
+          onTogglePin={handleTogglePin}
+        />
+        {/* Maximize button — always accessible in grid mode */}
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-3 right-3 z-30 p-2 rounded-lg bg-black/50 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm border border-white/10 shadow-lg"
+          title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+        >
+          {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </button>
+      </div>
     );
   }
 
@@ -96,10 +146,14 @@ export default function VideoStage({
   }
 
   return (
-    <div className={`flex-1 w-full h-full flex ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}>
-      {/* Main Stage */}
-      <div className={`relative bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-1 h-2/3 md:h-full' : 'flex-1 h-full'}`}>
+    <div
+      ref={stageRef}
+      className={`flex-1 w-full h-full flex ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4' : 'flex-col space-y-4'} p-4 overflow-hidden transition-all duration-300 ease-in-out`}
+    >
+      {/* Main Stage — group for hover-show maximize button */}
+      <div className={`relative group bg-black rounded-xl overflow-hidden shadow-lg min-h-0 flex items-center justify-center ring-1 ring-slate-800 transition-all duration-300 ${isScreenSharing && stripTrackRefs.length > 0 ? 'flex-1 h-2/3 md:h-full' : 'flex-1 h-full'}`}>
         {mainStageNode}
+        <MaximizeButton />
       </div>
 
       {/* Participant Strip */}

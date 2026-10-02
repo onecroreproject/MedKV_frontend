@@ -36,6 +36,10 @@ export function useClassroomRealtime(roomId, user) {
   // ── Waiting Room state ──────────────────────────────────────────────────────
   const [waitingStudents, setWaitingStudents] = useState([]);
 
+  // ── Co-host state ───────────────────────────────────────────────────────────
+  // Set of userId strings who have been promoted to co-host by the host
+  const [coHosts, setCoHosts] = useState(new Set());
+
   const isChatOpenRef = useRef(false);
   const currentUserId = user?._id || user?.id;
 
@@ -233,6 +237,20 @@ export function useClassroomRealtime(roomId, user) {
       setSocketAuthError('Class has ended.');
     });
 
+    // ── Co-host events ────────────────────────────────────────────────────────
+    newSocket.on('class:cohost-updated', ({ targetUserId, assign }) => {
+      console.log(`[CoHost] Received cohost-updated targetUserId=${targetUserId} assign=${assign}`);
+      setCoHosts(prev => {
+        const next = new Set(prev);
+        if (assign) {
+          next.add(String(targetUserId));
+        } else {
+          next.delete(String(targetUserId));
+        }
+        return next;
+      });
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -316,6 +334,12 @@ export function useClassroomRealtime(roomId, user) {
     socket.emit('class:reject-student', { roomId, targetUserId });
   }, [socket, roomId]);
 
+  const assignCoHost = useCallback((targetUserId, assign) => {
+    if (!socket) return;
+    console.log(`[CoHost] Emitting assign-cohost targetUserId=${targetUserId} assign=${assign}`);
+    socket.emit('class:assign-cohost', { roomId, targetUserId: String(targetUserId), assign });
+  }, [socket, roomId]);
+
   return {
     // Existing
     raisedHands,
@@ -347,6 +371,9 @@ export function useClassroomRealtime(roomId, user) {
     waitingStudents,
     admitStudent,
     rejectStudent,
+    // Co-host
+    coHosts,
+    assignCoHost,
     // Recording
     recordingState,
     recordingStartedAt,

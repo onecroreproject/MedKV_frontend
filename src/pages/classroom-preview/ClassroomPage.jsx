@@ -160,32 +160,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   const [duration, setDuration] = useState('00:00:00');
   const [toastMessage, setToastMessage] = useState(null);
 
-  // ── Co-host management (host-only: admin can promote faculty to co-host) ────
-  // coHosts = Set of participant identities that have been promoted
-  const [coHosts, setCoHosts] = useState(new Set());
+  // ── Co-host management ───────────────────────────────────────────────────────────
   const isHost = userRole === 'teacher'; // True for the admin organizer
   const currentUserId = user?._id || user?.id;
-
-  // Is the CURRENT USER a co-host? Check if their identity is in coHosts.
-  // Identity format: "Name|userId"
-  const isCoHost = !isHost && [...coHosts].some(identity => identity.includes(currentUserId));
-
-  // Effective role for UI: 'teacher' = host, 'cohost' = co-host, 'student' = everyone else
-  const effectiveRole = isHost ? 'teacher' : isCoHost ? 'cohost' : 'student';
-
-  const handleAssignCoHost = (participantIdentity) => {
-    setCoHosts(prev => {
-      const next = new Set(prev);
-      if (next.has(participantIdentity)) {
-        next.delete(participantIdentity);
-        console.log(`[CoHost] Removed co-host: ${participantIdentity}`);
-      } else {
-        next.add(participantIdentity);
-        console.log(`[CoHost] Assigned co-host: ${participantIdentity}`);
-      }
-      return next;
-    });
-  };
 
   // Initialize Realtime Hook — single socket for all classroom events
   const { 
@@ -214,12 +191,26 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     waitingStudents,
     admitStudent,
     rejectStudent,
+    coHosts,
+    assignCoHost,
     recordingState,
     recordingStartedAt,
     recordingAccumulatedDuration,
     isSocketConnected,
     socketAuthError,
   } = useClassroomRealtime(roomId, user);
+
+  // Is the CURRENT USER a co-host? coHosts contains userId strings from socket
+  const isCoHost = !isHost && coHosts.has(String(currentUserId));
+
+  // Effective role for UI: 'teacher' = host, 'cohost' = co-host, 'student' = everyone else
+  const effectiveRole = isHost ? 'teacher' : isCoHost ? 'cohost' : 'student';
+
+  // handleAssignCoHost: emit socket event + toggle (server will broadcast back to all)
+  const handleAssignCoHost = (participantIdentity) => {
+    const isCurrentlyCoHost = coHosts.has(String(participantIdentity));
+    assignCoHost(participantIdentity, !isCurrentlyCoHost);
+  };
 
   const lkConnectionState = useConnectionState();
   const participants = useParticipants();
