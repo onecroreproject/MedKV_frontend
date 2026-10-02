@@ -179,7 +179,7 @@ export function useClassroomRealtime(roomId, user) {
       }
     });
 
-    newSocket.on('class:camera-disabled', ({ targetUserId }) => {
+    newSocket.on('class:participant-camera-disabled', ({ targetUserId }) => {
       setCameraDisabledParticipants(prev => ({ ...prev, [targetUserId]: true }));
       if (targetUserId === currentUserId) {
         setIsCameraDisabledByFaculty(true);
