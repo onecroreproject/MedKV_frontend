@@ -21,16 +21,6 @@ export default function ClassroomEntryPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Hydrate token from URL param (_t) when coming from Admin Panel cross-origin redirect
-        const params = new URLSearchParams(location.search);
-        const urlToken = params.get('_t');
-        if (urlToken) {
-          localStorage.setItem('token', urlToken);
-          // Clean up token from URL to avoid sharing/bookmarking issues
-          const cleanUrl = `${window.location.pathname}`;
-          window.history.replaceState({}, '', cleanUrl);
-        }
-
         const token = localStorage.getItem('token');
         if (!token) {
           navigate('/student/login');
@@ -133,7 +123,7 @@ export default function ClassroomEntryPage() {
   // Zoom meetings bypass the WebRTC pre-join screen and waiting room.
   // Instead, redirect the user directly to the native Zoom application.
   if (liveClass && liveClass.meetingProvider === 'zoom') {
-    const isAdmin = user?.role === 'Admin' || user?.role === 'Faculty';
+    const isAdmin = user?.role === 'Admin';
     
     const handleZoomRedirect = () => {
       const token = localStorage.getItem('token');
