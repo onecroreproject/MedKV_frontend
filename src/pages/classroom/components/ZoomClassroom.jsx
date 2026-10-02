@@ -135,9 +135,9 @@ const ZoomClassroom = ({ liveClassId, user }) => {
         }).then(() => {
           if (isMounted) setLoading(false);
         }).catch((e) => {
-          console.error("Zoom join error:", e);
+          console.error('[Zoom SDK Join Error]', e);
           if (isMounted) {
-            setError("Unable to connect to the Zoom classroom. Please try again.");
+            setError("Zoom is temporarily unavailable. Please try again.");
             setLoading(false);
           }
         });
