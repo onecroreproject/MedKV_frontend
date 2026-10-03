@@ -717,7 +717,14 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             </div>
-                            <span className="text-slate-600 text-xs font-medium leading-relaxed">{obj}</span>
+                            <span className="text-slate-600 text-xs font-medium leading-relaxed">
+                              {typeof obj === 'string' ? obj : (
+                                <>
+                                  {obj.title && <span className="block text-slate-700 font-bold">{obj.title}</span>}
+                                  {obj.desc && <span className="block text-slate-500 font-light mt-0.5">{obj.desc}</span>}
+                                </>
+                              )}
+                            </span>
                           </div>
                         ))
                       ) : (

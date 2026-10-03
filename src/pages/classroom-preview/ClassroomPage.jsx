@@ -514,20 +514,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           />
         )}
 
-        {/* Reaction Overlay */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-40">
-          {recentReactions.map(reaction => (
-            <div 
-              key={reaction.id}
-              className="absolute bottom-16 left-1/2 transform -translate-x-1/2 animate-float-up opacity-0 flex flex-col items-center justify-center"
-            >
-              <div className="text-4xl">{reaction.reaction}</div>
-              <div className="text-xs font-semibold text-white bg-black/50 px-2 py-0.5 rounded-full mt-1">
-                {reaction.name}
-              </div>
-            </div>
-          ))}
-        </div>
+
 
         {/* Banners for Moderation */}
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col space-y-2 z-50">

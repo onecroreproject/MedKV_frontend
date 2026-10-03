@@ -9,7 +9,7 @@ import React, { memo } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, 
   MonitorUp, Hand, MessageSquare, 
-  Users, MoreVertical, PhoneOff, Smile, Play, Square, Pause, Loader2
+  Users, MoreVertical, PhoneOff, Play, Square, Pause, Loader2
 } from 'lucide-react';
 
 const ALLOWED_REACTIONS = ['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
@@ -115,28 +115,7 @@ function ClassroomControls({
         
         <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
         
-        {/* Reactions */}
-        <div className="relative group/reaction flex items-center justify-center">
-          <button
-            className="p-2.5 sm:p-3 rounded-full flex items-center justify-center transition-all bg-slate-700 hover:bg-slate-600 text-slate-200"
-            aria-label="Reactions"
-            title="Reactions"
-          >
-            <Smile size={18} />
-          </button>
-          
-          <div className="absolute bottom-full mb-2 hidden group-hover/reaction:flex bg-slate-800 p-2 rounded-xl shadow-xl border border-slate-700 gap-1 sm:gap-2 z-50">
-            {ALLOWED_REACTIONS.map(reaction => (
-              <button
-                key={reaction}
-                onClick={() => onReaction(reaction)}
-                className="w-8 h-8 sm:w-10 sm:h-10 text-lg sm:text-xl flex items-center justify-center hover:bg-slate-700 rounded-lg transition-transform hover:scale-110"
-              >
-                {reaction}
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         <IconButton 
           active={isHandRaised} 
