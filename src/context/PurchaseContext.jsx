@@ -91,7 +91,7 @@ export const PurchaseProvider = ({ children }) => {
             key: keyId, 
             amount: amount.toString(),
             currency: currency,
-            name: 'MedicalKV',
+            name: 'Dr.SamReefathRadiologyAcademy',
             description: `Enroll in ${courseName}`,
             image: '/apple-touch-icon.png', // Optional logo
             order_id: orderId,
