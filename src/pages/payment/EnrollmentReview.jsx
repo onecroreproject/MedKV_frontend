@@ -152,10 +152,10 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
 
               <div className="divide-y divide-slate-100">
 
-                {/* Course Price */}
+                {/* Course Fee (MRP) */}
                 <div className="flex justify-between items-center px-5 py-3.5 bg-white">
                   <div>
-                    <span className="font-semibold text-primary">Course Price</span>
+                    <span className="font-semibold text-primary">Course Fee</span>
                     <span className="ml-2 text-[10px] text-slate-400 font-medium uppercase tracking-wider">(MRP)</span>
                   </div>
                   <span className="font-semibold text-primary">₹{(course?.price || 0).toFixed(2)}</span>
@@ -175,19 +175,15 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                 {/* Course Fee (After Discount) */}
                 <div className="flex justify-between items-center px-5 py-3.5 bg-slate-50">
                   <span className="font-semibold text-slate-700">
-                    Course Fee {course?.discount > 0 ? '(After Discount)' : ''}
+                    Course Fee {course?.discount > 0 ? 'After Discount' : ''}
                   </span>
                   <span className="font-bold text-slate-800">₹{basePrice.toFixed(2)}</span>
                 </div>
 
-                {/* GST 18% on Course Amount */}
+                {/* GST 18% */}
                 {basePrice > 0 && (
                   <div className="flex justify-between items-center px-5 py-3.5 bg-white">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 font-medium">GST</span>
-                      <span className="text-[10px] bg-amber-50 text-amber-700 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-200">18%</span>
-                      <span className="text-slate-400 text-xs font-medium">on Course Fee</span>
-                    </div>
+                    <span className="text-slate-600 font-medium">GST @ 18%</span>
                     <span className="font-semibold text-slate-700">₹{gstOnCourse.toFixed(2)}</span>
                   </div>
                 )}
@@ -195,7 +191,7 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                 {/* Subtotal Separator */}
                 {basePrice > 0 && (
                   <div className="flex justify-between items-center px-5 py-3 bg-slate-100">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">Subtotal (Course + GST)</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">SUBTOTAL (COURSE + GST)</span>
                     <span className="font-bold text-slate-700">₹{subTotal.toFixed(2)}</span>
                   </div>
                 )}
