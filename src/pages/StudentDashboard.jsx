@@ -22,6 +22,7 @@ import NotesTab from '../components/dashboard/NotesTab';
 import NotificationsTab from '../components/dashboard/NotificationsTab';
 import HelpdeskTab from '../components/dashboard/HelpdeskTab';
 import ProfileSettingsTab from '../components/dashboard/ProfileSettingsTab';
+import InvoicesTab from '../components/dashboard/InvoicesTab';
 import { usePurchase } from '../context/PurchaseContext';
 import { getMe, globalSearch, getNotifications, markAllNotificationsRead } from '../services/userService';
 import { getLiveClasses } from '../services/liveClassService';
@@ -74,6 +75,8 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
         modules: e.course.modules?.length || 0,
         remaining: e.course.modules ? e.course.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) - Math.floor((e.progress || 0) / 10) : 0,
         completedModules: Math.floor((e.progress || 0) / 10),
+        price: e.course.price || 0,
+        discount: (e.course.earlyBird?.enabled && (e.course.earlyBird.limit - (e.course.registrationCount || 0)) > 0 && e.course.earlyBird.price > 0) ? Math.max(0, (e.course.price || 0) - e.course.earlyBird.price) : 0,
       }));
   } else {
     // Fallback if not loaded
@@ -519,6 +522,12 @@ export function StudentDashboard({ userSession, onNavigate, onLogout, initialTab
               STUDENT_PROFILE={dynamicProfile}
               ENROLLED_COURSES={actualEnrolledCourses}
               onNavigate={onNavigate}
+            />
+          )}
+
+          {activeTab === 'invoices' && (
+            <InvoicesTab 
+              ENROLLED_COURSES={actualEnrolledCourses}
             />
           )}
 

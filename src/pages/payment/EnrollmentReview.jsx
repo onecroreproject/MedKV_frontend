@@ -43,18 +43,16 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
   }, [courseId]);
 
   const basePrice = course ? course.price - course.discount : 0;
-  
-  let totalPayable = basePrice;
-  let paymentProcessingFee = 0;
-  let gstOnProcessingFee = 0;
-  let totalProcessingFee = 0;
 
-  if (basePrice > 0) {
-    totalPayable = Math.round((basePrice / 0.9764) * 100) / 100;
-    totalProcessingFee = totalPayable - basePrice;
-    paymentProcessingFee = Math.round((totalPayable * 0.02) * 100) / 100;
-    gstOnProcessingFee = totalProcessingFee - paymentProcessingFee;
-  }
+  // ── Invoice Calculations ────────────────────────────────────────────────────
+  // GST 18% on full course amount (basePrice)
+  const gstAmount      = basePrice > 0 ? Math.round(basePrice * 0.18 * 100) / 100 : 0;
+  // Subtotal = course fee + GST
+  const subTotal       = basePrice + gstAmount;
+  // Processing Fee: 2% on (course + GST) subtotal
+  const processingFee  = basePrice > 0 ? Math.round(subTotal * 0.02 * 100) / 100 : 0;
+  // Grand Total
+  const totalPayable   = Math.round((subTotal + processingFee) * 100) / 100;
 
   const handleProceed = async () => {
     if (acceptedTerms) {
@@ -143,41 +141,106 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
             </div>
           </div>
 
-          {/* Payment Summary */}
+          {/* Payment Summary / Invoice */}
           <div>
-            <h2 className="text-xl font-bold text-primary mb-4 border-b border-slate-100 pb-2">Payment Summary</h2>
-            <div className="space-y-3 text-sm font-medium text-blue-gray">
-              <div className="flex justify-between">
-                <span>Course Price</span>
-                <span>₹{course.price.toFixed(2)}</span>
+            <h2 className="text-xl font-bold text-primary mb-4 border-b border-slate-100 pb-2">Payment Invoice</h2>
+
+            <div className="border border-slate-200 rounded-2xl overflow-hidden text-sm">
+
+              {/* Invoice Header */}
+              <div className="bg-gradient-to-r from-[#030919] to-[#0B1F4D] px-5 py-3.5 flex justify-between items-center">
+                <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Description</span>
+                <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Amount</span>
               </div>
-              {course.discount > 0 && (
-                <div className="flex justify-between text-emerald-600">
-                  <span>Early Bird Discount</span>
-                  <span>-₹{course.discount.toFixed(2)}</span>
+
+              <div className="divide-y divide-slate-100">
+
+                {/* Course Price */}
+                <div className="flex justify-between items-center px-5 py-3.5 bg-white">
+                  <div>
+                    <span className="font-semibold text-primary">Course Price</span>
+                    <span className="ml-2 text-[10px] text-slate-400 font-medium uppercase tracking-wider">(MRP)</span>
+                  </div>
+                  <span className="font-semibold text-primary">₹{(course?.price || 0).toFixed(2)}</span>
                 </div>
-              )}
-              {basePrice > 0 && (
-                <>
-                  <div className="flex justify-between pt-2 border-t border-slate-50">
-                    <span>Course Fee (After Discount)</span>
-                    <span>₹{basePrice.toFixed(2)}</span>
+
+                {/* Early Bird Discount — shown only if applicable */}
+                {course?.discount > 0 && (
+                  <div className="flex justify-between items-center px-5 py-3.5 bg-emerald-50">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-emerald-100 text-emerald-700 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-emerald-200">Early Bird</span>
+                      <span className="font-semibold text-emerald-700">Discount Applied</span>
+                    </div>
+                    <span className="font-bold text-emerald-600">- ₹{(course.discount).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
-                    <span>Payment Processing Fee (2%)</span>
-                    <span>₹{paymentProcessingFee.toFixed(2)}</span>
+                )}
+
+                {/* Course Fee (After Discount) */}
+                <div className="flex justify-between items-center px-5 py-3.5 bg-slate-50">
+                  <span className="font-semibold text-slate-700">
+                    Course Fee {course?.discount > 0 ? '(After Discount)' : ''}
+                  </span>
+                  <span className="font-bold text-slate-800">₹{basePrice.toFixed(2)}</span>
+                </div>
+
+                {/* GST 18% on Course Amount */}
+                {basePrice > 0 && (
+                  <div className="flex justify-between items-center px-5 py-3.5 bg-white">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-600 font-medium">GST</span>
+                      <span className="text-[10px] bg-amber-50 text-amber-700 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-200">18%</span>
+                      <span className="text-slate-400 text-xs font-medium">on Course Fee</span>
+                    </div>
+                    <span className="font-semibold text-slate-700">₹{gstAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
-                    <span>GST on Processing Fee (18%)</span>
-                    <span>₹{gstOnProcessingFee.toFixed(2)}</span>
+                )}
+
+                {/* Subtotal Separator */}
+                {basePrice > 0 && (
+                  <div className="flex justify-between items-center px-5 py-3 bg-slate-100">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">Subtotal (Course + GST)</span>
+                    <span className="font-bold text-slate-700">₹{subTotal.toFixed(2)}</span>
                   </div>
-                </>
-              )}
-              <div className="flex justify-between text-lg font-black text-primary pt-3 border-t border-slate-100">
-                <span>Final Amount Payable</span>
-                <span>₹{totalPayable.toFixed(2)}</span>
+                )}
+
+                {/* Processing Fee (2%) */}
+                {basePrice > 0 && (
+                  <div className="flex justify-between items-center px-5 py-3.5 bg-white">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-600 font-medium">Processing Fee</span>
+                      <span className="text-[10px] bg-slate-100 text-slate-600 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-slate-200">2%</span>
+                      <span className="text-slate-400 text-xs font-medium">on Subtotal</span>
+                    </div>
+                    <span className="font-semibold text-slate-700">₹{processingFee.toFixed(2)}</span>
+                  </div>
+                )}
+
               </div>
+
+              {/* Grand Total */}
+              <div className="bg-gradient-to-r from-[#030919] to-[#0B1F4D] px-5 py-4 flex justify-between items-center">
+                <div>
+                  <span className="text-white font-black text-base uppercase tracking-widest">Total Amount Payable</span>
+                  {basePrice > 0 && (
+                    <p className="text-slate-400 text-[10px] font-medium mt-0.5">Inclusive of GST & Processing Fee</p>
+                  )}
+                </div>
+                <span className="text-accent font-black text-xl">₹{totalPayable.toFixed(2)}</span>
+              </div>
+
             </div>
+
+            {/* Invoice breakdown note */}
+            {basePrice > 0 && (
+              <div className="mt-3 flex items-start gap-2 text-[11px] text-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5">
+                <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+                <span>
+                  GST @ 18% is levied on the course fee as per government regulations. A 2% processing fee is applied on the subtotal (course fee + GST) to cover payment gateway charges.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Terms & Actions */}

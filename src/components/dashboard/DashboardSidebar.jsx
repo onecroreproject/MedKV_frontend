@@ -113,7 +113,7 @@ export function DashboardSidebar({
             // { id: 'bookmarks', label: 'Bookmarks' },
             // { id: 'notes', label: 'Notes' },
             { id: 'notifications', label: 'Notifications' },
-            // { id: 'certificates', label: 'Certificates' },
+            { id: 'invoices', label: 'My Invoices' },
             { id: 'profile-settings', label: 'Profile Settings' }
           ].map((tab) => {
             const isActive = activeTab === tab.id;
