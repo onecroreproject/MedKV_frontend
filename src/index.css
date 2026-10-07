@@ -48,6 +48,7 @@
   animation: floatWatermark 30s infinite linear;
 }
 
+.quill-content { overflow-wrap: break-word; word-break: break-word; overflow: hidden; }
 .quill-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; } 
 .quill-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; } 
 .quill-content p { margin-bottom: 0.75rem; }

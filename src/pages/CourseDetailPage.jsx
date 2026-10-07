@@ -397,7 +397,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
             {/* 3. COURSE OVERVIEW SECTION */}
             {course.description && (
-              <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-4 shadow-sm">
+              <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-4 shadow-sm overflow-hidden">
                 <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
                   About This Course
                 </h3>
