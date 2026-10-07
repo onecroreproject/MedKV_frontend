@@ -110,6 +110,7 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
             tagline: data.description ? stripHtml(data.description).substring(0, 50) + '...' : '',
             description: data.description,
             faculty: data.instructor?.name || 'Unknown Faculty',
+            facultySlug: data.instructor?.slug || (data.instructor?.name ? data.instructor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null),
             rating: 5.0,
             students: `${data.registrationCount || 0}+`,
             duration: 'Self-Paced',
@@ -669,6 +670,24 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                       </span>
                     ))}
                   </div>
+
+                  {/* View Detail Button */}
+                  {course.facultySlug && (
+                    <div className="flex justify-center sm:justify-start pt-1">
+                      <button
+                        onClick={() => navigate(`/faculty/${course.facultySlug}`)}
+                        className="group inline-flex items-center gap-2 bg-[#050E24] hover:bg-[#0B1F4D] text-white border border-accent/30 hover:border-accent text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 active:scale-95 cursor-pointer"
+                      >
+                        <svg className="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                        <span>View Full Profile</span>
+                        <svg className="w-3 h-3 text-accent/60 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
