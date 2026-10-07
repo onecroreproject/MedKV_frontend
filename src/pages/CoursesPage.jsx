@@ -533,14 +533,17 @@ export function CoursesPage({ onNavigate, initialCategory, onLoginSuccess, userS
                                 </span>
                               </>
                             )}
-                            {course.startDate && (
+                            {course.liveSessions && course.liveSessions.filter(s => s.sessionType === 'Live' && s.date).length > 0 && (
                               <>
                                 <span>•</span>
                                 <span className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/10 rounded text-accent whitespace-nowrap font-extrabold tracking-widest">
                                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
-                                  {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                                  {(() => {
+                                    const nextLive = course.liveSessions.filter(s => s.sessionType === 'Live' && s.date)[0];
+                                    return `Live: ${new Date(nextLive.date).toLocaleDateString('en-GB')} ${nextLive.time ? 'at ' + formatTime12Hour(nextLive.time) : ''}`;
+                                  })()}
                                 </span>
                               </>
                             )}

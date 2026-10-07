@@ -867,51 +867,39 @@ export function CourseLearningTab({ courseId, setActiveTab, enrolledCourseInfo }
               {/* LIVE SESSIONS */}
               {learningTab === 'live' && (
                 <div className="space-y-4">
-                  {courseLiveClasses.length > 0 ? courseLiveClasses.map(sess => (
-                    <div key={sess._id} className={`border rounded-2xl p-5 transition-all duration-300 ${sess.status === 'Scheduled' || sess.status === 'Ongoing' ? 'bg-slate-50 border-slate-200 hover:border-accent/30' : 'bg-rose-50 border-rose-200'}`}>
+                  {courseLiveClasses.length > 0 ? courseLiveClasses.map((sess, idx) => {
+                    const isLive = sess.sessionType === 'Live';
+                    return (
+                    <div key={sess._id || idx} className={`border rounded-2xl p-5 transition-all duration-300 ${isLive ? 'bg-slate-50 border-slate-200 hover:border-accent/30' : 'bg-rose-50 border-rose-200'}`}>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                         <div className="flex-grow space-y-2">
                           <div className="flex items-center space-x-2">
-                            {sess.status === 'Scheduled' || sess.status === 'Ongoing' ? (
-                              <span className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{sess.status}</span>
+                            {isLive ? (
+                              <span className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Upcoming Live Class</span>
                             ) : (
-                              <span className="bg-rose-50 border border-rose-200 text-rose-500 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{sess.status || 'Completed'}</span>
+                              <span className="bg-rose-50 border border-rose-200 text-rose-500 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Recording</span>
                             )}
                           </div>
-                          <h4 className="text-[#0B1F4D] font-black text-sm uppercase tracking-wide">{sess.topic}</h4>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-500 text-[10px] font-medium">
-                            <span>🧑‍⚕️ {sess.faculty?.name || 'Unassigned'}</span>
-                            <span>📅 {new Date(sess.scheduleDate).toLocaleDateString()}</span>
-                            <span>⏱️ {sess.startTime} - {sess.endTime}</span>
+                          
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-500 text-[10px] font-medium mt-2">
+                            {course.faculty && <span>🧑‍⚕️ {course.faculty}</span>}
+                            {sess.date && <span>📅 {new Date(sess.date).toLocaleDateString('en-GB')}</span>}
+                            {sess.time && <span>⏱️ {sess.time}</span>}
                           </div>
                         </div>
-                        {sess.status === 'Scheduled' || sess.status === 'Ongoing' ? (
+                        {isLive ? (
                           <button 
-                            onClick={() => {
-                              if (sess.meetingProvider === 'webrtc') {
-                                navigate(`/classroom/${sess._id || sess.roomId}`);
-                              } else {
-                                window.open(sess.zoomLink, '_blank');
-                              }
-                            }}
                             className="shrink-0 bg-accent hover:bg-[#A07C2E] text-[#050E24] font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
                             Join Class
                           </button>
                         ) : (
-                          <button onClick={() => {
-                            if (sess.videoUrl) {
-                              setActiveLesson(sess);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            } else {
-                              setActiveTab('recorded');
-                            }
-                          }} className="shrink-0 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
+                          <button className="shrink-0 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 cursor-pointer">
                             Watch Recording
                           </button>
                         )}
                       </div>
                     </div>
-                  )) : (
+                  )}) : (
                     <div className="text-center py-10 text-slate-400 font-medium">No live sessions scheduled for this course.</div>
                   )}
                 </div>

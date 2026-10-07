@@ -335,14 +335,17 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-slate-400 text-[10.5px] uppercase tracking-wider font-semibold">
                   <span>Duration: {course.duration}</span>
-                  {course.startDate && (
+                  {course.liveSessions && course.liveSessions.filter(s => s.sessionType === 'Live' && s.date).length > 0 && (
                     <>
                       <span>•</span>
                       <span className="flex items-center gap-1.5 text-accent">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Batch Starts: {new Date(course.startDate).toLocaleDateString('en-GB')} {course.startTime && course.endTime ? `(${formatTime12Hour(course.startTime)} - ${formatTime12Hour(course.endTime)})` : course.startTime ? `(${formatTime12Hour(course.startTime)})` : ''}
+                        {(() => {
+                          const nextLive = course.liveSessions.filter(s => s.sessionType === 'Live' && s.date)[0];
+                          return `Next Live Class: ${new Date(nextLive.date).toLocaleDateString('en-GB')} ${nextLive.time ? 'at ' + formatTime12Hour(nextLive.time) : ''}`;
+                        })()}
                       </span>
                     </>
                   )}
@@ -402,6 +405,29 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                   className="text-blue-gray text-xs sm:text-sm leading-relaxed font-light space-y-4 quill-content"
                   dangerouslySetInnerHTML={{ __html: course.description }}
                 />
+              </section>
+            )}
+            {/* COURSE FEATURES SECTION */}
+            {course.features && course.features.length > 0 && (
+              <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 text-left space-y-6 shadow-sm">
+                <h3 className="text-primary font-black text-xl tracking-wide uppercase pb-2.5 border-b border-slate-100">
+                  Course Features
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {course.features.map((featId, idx) => {
+                    const feature = FEATURE_MAP[featId] || { text: featId, icon: '✨' };
+                    return (
+                      <div
+                        key={idx}
+                        className="p-4 border border-slate-200 rounded-xl bg-soft-gray/30 flex items-center space-x-3 text-sm hover:border-accent/40 hover:bg-white transition-all cursor-default"
+                      >
+                        <div className="text-2xl shrink-0">{feature.icon}</div>
+                        <h4 className="font-bold text-primary text-xs uppercase tracking-wide leading-snug">{feature.text}</h4>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
             )}
 
@@ -486,25 +512,19 @@ export function CourseDetailPage({ onNavigate, courseId, onLoginSuccess, userSes
                           <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isLive ? 'text-accent' : 'text-blue-gray'}`}>
                             {isLive ? 'Webinar Module' : 'Archived Replay'}
                           </span>
-                          <h4 className="text-primary font-black text-sm uppercase tracking-wide leading-snug">{session.title}</h4>
+                          <div className="text-primary font-black text-sm uppercase tracking-wide leading-snug mb-2">
+                            {isLive && session.date && session.time ? (
+                              <span>Starts: {new Date(session.date).toLocaleDateString('en-GB')} at {formatTime12Hour(session.time)}</span>
+                            ) : (
+                              <span>{isLive ? 'Upcoming Live Session' : 'Recorded Session'}</span>
+                            )}
+                          </div>
                           
                           <div className="space-y-1.5 font-medium text-blue-gray">
-                            {session.date && (
+                            {course.faculty && (
                               <div className="flex items-center space-x-2">
-                                <span>{isLive ? '📅' : '📹'}</span>
-                                <span>{isLive ? `Date: ${session.date}` : `Cloud Archive: ${session.duration}`}</span>
-                              </div>
-                            )}
-                            {(session.time || session.accessibility) && (
-                              <div className="flex items-center space-x-2">
-                                <span>{isLive ? '⏱️' : '🔑'}</span>
-                                <span>{isLive ? `Time: ${session.time}` : `Accessibility: ${session.accessibility}`}</span>
-                              </div>
-                            )}
-                            {(course.faculty || session.accessTerms) && (
-                              <div className="flex items-center space-x-2">
-                                <span>{isLive ? '🩺' : '⏱️'}</span>
-                                <span>{isLive ? `Mentor: ${course.faculty}` : `Access terms: ${session.accessTerms}`}</span>
+                                <span>🩺</span>
+                                <span>Mentor: {course.faculty}</span>
                               </div>
                             )}
                           </div>
