@@ -21,8 +21,7 @@ export default function InvoicesTab({ ENROLLED_COURSES = [] }) {
     const gstOnCourse = basePrice > 0 ? Math.round((courseFee * 0.18) * 100) / 100 : 0;
     const subTotal = courseFee + gstOnCourse;
     const processingFee = basePrice > 0 ? Math.round((subTotal * 0.02) * 100) / 100 : 0;
-    const gstOnFee = basePrice > 0 ? Math.round((processingFee * 0.18) * 100) / 100 : 0;
-    const totalPayable = Math.round((subTotal + processingFee + gstOnFee) * 100) / 100;
+    const totalPayable = Math.round((subTotal + processingFee) * 100) / 100;
 
     return {
       id: `INV-${course.id.substring(0, 6).toUpperCase()}-${Math.floor(Math.random() * 1000)}`,
@@ -35,7 +34,6 @@ export default function InvoicesTab({ ENROLLED_COURSES = [] }) {
       basePrice,
       gstOnCourse,
       subTotal,
-      gstOnFee,
       processingFee,
       totalPayable
     };
@@ -130,14 +128,6 @@ export default function InvoicesTab({ ENROLLED_COURSES = [] }) {
                 <div className="flex justify-between items-center px-5 py-3.5 bg-white">
                   <span className="text-slate-600 font-medium">Payment Processing Fee (2%)</span>
                   <span className="font-semibold text-slate-700">₹{selectedInvoice.processingFee.toFixed(2)}</span>
-                </div>
-              )}
-
-              {/* GST on Processing Fee (18%) */}
-              {selectedInvoice.basePrice > 0 && (
-                <div className="flex justify-between items-center px-5 py-3.5 bg-white">
-                  <span className="text-slate-600 font-medium">GST on Processing Fee (18%)</span>
-                  <span className="font-semibold text-slate-700">₹{selectedInvoice.gstOnFee.toFixed(2)}</span>
                 </div>
               )}
             </div>

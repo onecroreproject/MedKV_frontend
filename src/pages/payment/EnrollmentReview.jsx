@@ -49,8 +49,7 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
   const gstOnCourse    = basePrice > 0 ? Math.round((courseFee * 0.18) * 100) / 100 : 0;
   const subTotal       = courseFee + gstOnCourse;
   const processingFee  = basePrice > 0 ? Math.round((subTotal * 0.02) * 100) / 100 : 0;
-  const gstOnFee       = basePrice > 0 ? Math.round((processingFee * 0.18) * 100) / 100 : 0;
-  const totalPayable   = Math.round((subTotal + processingFee + gstOnFee) * 100) / 100;
+  const totalPayable   = Math.round((subTotal + processingFee) * 100) / 100;
 
   const handleProceed = async () => {
     if (acceptedTerms) {
@@ -209,14 +208,6 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                   </div>
                 )}
 
-                {/* GST on Processing Fee (18%) */}
-                {basePrice > 0 && (
-                  <div className="flex justify-between items-center px-5 py-3.5 bg-white">
-                    <span className="text-slate-600 font-medium">GST on Processing Fee (18%)</span>
-                    <span className="font-semibold text-slate-700">₹{gstOnFee.toFixed(2)}</span>
-                  </div>
-                )}
-
               </div>
 
               {/* Grand Total */}
@@ -239,7 +230,7 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                 </svg>
                 <span>
-                  A 2% payment gateway processing fee and an 18% GST on the processing fee are applied to the total amount.
+                  A 2% payment gateway processing fee is applied to the total amount.
                 </span>
               </div>
             )}
