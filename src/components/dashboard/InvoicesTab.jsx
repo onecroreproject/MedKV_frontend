@@ -18,9 +18,11 @@ export default function InvoicesTab({ ENROLLED_COURSES = [] }) {
     const basePrice = coursePrice - discount;
 
     const courseFee = basePrice;
-    const totalPayable = basePrice > 0 ? Math.round((courseFee / 0.9764) * 100) / 100 : 0;
-    const processingFee = basePrice > 0 ? Math.round((totalPayable * 0.02) * 100) / 100 : 0;
+    const gstOnCourse = basePrice > 0 ? Math.round((courseFee * 0.18) * 100) / 100 : 0;
+    const subTotal = courseFee + gstOnCourse;
+    const processingFee = basePrice > 0 ? Math.round((subTotal * 0.02) * 100) / 100 : 0;
     const gstOnFee = basePrice > 0 ? Math.round((processingFee * 0.18) * 100) / 100 : 0;
+    const totalPayable = Math.round((subTotal + processingFee + gstOnFee) * 100) / 100;
 
     return {
       id: `INV-${course.id.substring(0, 6).toUpperCase()}-${Math.floor(Math.random() * 1000)}`,
@@ -31,6 +33,8 @@ export default function InvoicesTab({ ENROLLED_COURSES = [] }) {
       coursePrice,
       discount,
       basePrice,
+      gstOnCourse,
+      subTotal,
       gstOnFee,
       processingFee,
       totalPayable
@@ -100,6 +104,26 @@ export default function InvoicesTab({ ENROLLED_COURSES = [] }) {
                 </span>
                 <span className="font-bold text-slate-800">₹{selectedInvoice.basePrice.toFixed(2)}</span>
               </div>
+
+              {/* GST 18% on Course Amount */}
+              {selectedInvoice.basePrice > 0 && (
+                <div className="flex justify-between items-center px-5 py-3.5 bg-white">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-600 font-medium">GST</span>
+                    <span className="text-[10px] bg-amber-50 text-amber-700 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-200">18%</span>
+                    <span className="text-slate-400 text-xs font-medium">on Course Fee</span>
+                  </div>
+                  <span className="font-semibold text-slate-700">₹{selectedInvoice.gstOnCourse.toFixed(2)}</span>
+                </div>
+              )}
+
+              {/* Subtotal Separator */}
+              {selectedInvoice.basePrice > 0 && (
+                <div className="flex justify-between items-center px-5 py-3 bg-slate-100">
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-500">Subtotal (Course + GST)</span>
+                  <span className="font-bold text-slate-700">₹{selectedInvoice.subTotal.toFixed(2)}</span>
+                </div>
+              )}
 
               {/* Processing Fee (2%) */}
               {selectedInvoice.basePrice > 0 && (
