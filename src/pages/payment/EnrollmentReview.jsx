@@ -45,14 +45,10 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
   const basePrice = course ? course.price - course.discount : 0;
 
   // ── Invoice Calculations ────────────────────────────────────────────────────
-  // GST 18% on full course amount (basePrice)
-  const gstAmount      = basePrice > 0 ? Math.round(basePrice * 0.18 * 100) / 100 : 0;
-  // Subtotal = course fee + GST
-  const subTotal       = basePrice + gstAmount;
-  // Processing Fee: 2% on (course + GST) subtotal
-  const processingFee  = basePrice > 0 ? Math.round(subTotal * 0.02 * 100) / 100 : 0;
-  // Grand Total
-  const totalPayable   = Math.round((subTotal + processingFee) * 100) / 100;
+  const courseFee      = basePrice;
+  const totalPayable   = basePrice > 0 ? Math.round((courseFee / 0.9764) * 100) / 100 : 0;
+  const processingFee  = basePrice > 0 ? Math.round((totalPayable * 0.02) * 100) / 100 : 0;
+  const gstOnFee       = basePrice > 0 ? Math.round((processingFee * 0.18) * 100) / 100 : 0;
 
   const handleProceed = async () => {
     if (acceptedTerms) {
@@ -183,35 +179,19 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                   <span className="font-bold text-slate-800">₹{basePrice.toFixed(2)}</span>
                 </div>
 
-                {/* GST 18% on Course Amount */}
-                {basePrice > 0 && (
-                  <div className="flex justify-between items-center px-5 py-3.5 bg-white">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 font-medium">GST</span>
-                      <span className="text-[10px] bg-amber-50 text-amber-700 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-200">18%</span>
-                      <span className="text-slate-400 text-xs font-medium">on Course Fee</span>
-                    </div>
-                    <span className="font-semibold text-slate-700">₹{gstAmount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                {/* Subtotal Separator */}
-                {basePrice > 0 && (
-                  <div className="flex justify-between items-center px-5 py-3 bg-slate-100">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">Subtotal (Course + GST)</span>
-                    <span className="font-bold text-slate-700">₹{subTotal.toFixed(2)}</span>
-                  </div>
-                )}
-
                 {/* Processing Fee (2%) */}
                 {basePrice > 0 && (
                   <div className="flex justify-between items-center px-5 py-3.5 bg-white">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 font-medium">Processing Fee</span>
-                      <span className="text-[10px] bg-slate-100 text-slate-600 font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-slate-200">2%</span>
-                      <span className="text-slate-400 text-xs font-medium">on Subtotal</span>
-                    </div>
+                    <span className="text-slate-600 font-medium">Payment Processing Fee (2%)</span>
                     <span className="font-semibold text-slate-700">₹{processingFee.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {/* GST on Processing Fee (18%) */}
+                {basePrice > 0 && (
+                  <div className="flex justify-between items-center px-5 py-3.5 bg-white">
+                    <span className="text-slate-600 font-medium">GST on Processing Fee (18%)</span>
+                    <span className="font-semibold text-slate-700">₹{gstOnFee.toFixed(2)}</span>
                   </div>
                 )}
 
@@ -237,7 +217,7 @@ export default function EnrollmentReview({ userSession, courseId, onNavigate }) 
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                 </svg>
                 <span>
-                  GST @ 18% is levied on the course fee as per government regulations. A 2% processing fee is applied on the subtotal (course fee + GST) to cover payment gateway charges.
+                  A 2% payment gateway processing fee and an 18% GST on the processing fee are applied to the total amount.
                 </span>
               </div>
             )}
