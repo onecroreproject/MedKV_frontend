@@ -236,8 +236,14 @@ export default function CoursesSection({ onViewChange }) {
                 </div>
                 
                 {isEarlyBirdActive && (
-                  <div className="absolute top-3 left-3 bg-red-600/90 backdrop-blur-sm text-white text-[9.5px] font-black px-2.5 py-1 rounded shadow-md tracking-wider uppercase border border-red-500/50 flex items-center gap-1 animate-pulse">
+                  <div className="absolute top-3 left-3 bg-red-600/90 backdrop-blur-sm text-white text-[9.5px] font-black px-2.5 py-1 rounded shadow-md tracking-wider uppercase border border-red-500/50 flex items-center gap-1 animate-pulse z-30">
                     <span className="text-[12px]">🔥</span> Early Bird: Only {spotsLeft} Spots Left!
+                  </div>
+                )}
+                
+                {course.isImportant && !isEarlyBirdActive && (
+                  <div className="absolute top-3 left-3 bg-amber-500/90 backdrop-blur-sm text-white text-[9.5px] font-black px-2.5 py-1 rounded shadow-md tracking-wider uppercase border border-amber-400/50 flex items-center gap-1 z-30">
+                    <span className="text-[12px]">⭐</span> Featured Course
                   </div>
                 )}
               </div>
