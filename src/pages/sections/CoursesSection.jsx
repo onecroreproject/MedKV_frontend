@@ -57,21 +57,23 @@ export default function CoursesSection({ onViewChange }) {
     fetchCourses();
   }, []);
 
-  // Filter courses based on user query
-  const filteredCourses = courses.filter(course =>
+  // Filter and separate courses
+  const importantCourses = courses.filter(course => course.isImportant && (
     course.title?.toLowerCase().includes(courseFilter.toLowerCase()) ||
     course.description?.toLowerCase().includes(courseFilter.toLowerCase())
-  ).sort((a, b) => {
-    if (a.isImportant && !b.isImportant) return -1;
-    if (!a.isImportant && b.isImportant) return 1;
-    return 0;
-  });
+  ));
+  
+  const regularCourses = courses.filter(course => !course.isImportant && (
+    course.title?.toLowerCase().includes(courseFilter.toLowerCase()) ||
+    course.description?.toLowerCase().includes(courseFilter.toLowerCase())
+  ));
+
+  const slotsForRegular = Math.max(0, 3 - importantCourses.length);
 
   // Manual Slider Controls
   const nextSlide = () => {
     setCurrentIndex((prev) => {
-      // If we can slide forward by 1, do so; otherwise, loop back to start
-      if (prev + 3 >= filteredCourses.length) {
+      if (slotsForRegular === 0 || prev + slotsForRegular >= regularCourses.length) {
         return 0;
       }
       return prev + 1;
@@ -80,16 +82,17 @@ export default function CoursesSection({ onViewChange }) {
 
   const prevSlide = () => {
     setCurrentIndex((prev) => {
-      // If we are at 0, wrap to the last possible window of 3 cards
+      if (slotsForRegular === 0) return 0;
       if (prev === 0) {
-        return Math.max(0, filteredCourses.length - 3);
+        return Math.max(0, regularCourses.length - slotsForRegular);
       }
       return prev - 1;
     });
   };
 
   // Get active courses slice for the slider window
-  const visibleCourses = filteredCourses.slice(currentIndex, currentIndex + 3);
+  const slidingCourses = regularCourses.slice(currentIndex, currentIndex + slotsForRegular);
+  const visibleCourses = [...importantCourses.slice(0, 3), ...slidingCourses].slice(0, 3);
 
   return (
     <section id="courses" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-10 bg-white">
@@ -125,7 +128,7 @@ export default function CoursesSection({ onViewChange }) {
           </div>
 
           {/* Slider Arrow Controllers + View All Header Button */}
-          {filteredCourses.length > 3 && (
+          {regularCourses.length > slotsForRegular && (
             <div className="flex items-center space-x-2 bg-soft-gray p-1 rounded-xl border border-slate-200">
               <button
                 onClick={prevSlide}
@@ -159,7 +162,7 @@ export default function CoursesSection({ onViewChange }) {
       </div>
 
       {/* Slide cards view */}
-      {filteredCourses.length === 0 ? (
+      {importantCourses.length === 0 && regularCourses.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-slate-200 rounded-2xl text-blue-gray bg-soft-gray">
           No specialty courses match your current search query. Try typing another term.
         </div>
