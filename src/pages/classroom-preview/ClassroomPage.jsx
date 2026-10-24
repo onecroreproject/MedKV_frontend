@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
 import { LiveKitRoom, RoomAudioRenderer, useRoomContext, useLocalParticipant, useTracks, useParticipants, useConnectionState } from '@livekit/components-react';
-import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets, createLocalAudioTrack } from 'livekit-client';
+import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets, createLocalAudioTrack, RoomEvent } from 'livekit-client';
 
 import ClassroomHeader from './components/ClassroomHeader';
 import VideoStage from './components/VideoStage';
@@ -15,7 +15,10 @@ import { useClassroomNotifications, playNotificationSound } from './hooks/useCla
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 
 const LOW_LATENCY_OPTIONS = {
-  adaptiveStream: true,
+  adaptiveStream: {
+    pixelDensity: 'screen',
+    pauseVideoInBackground: true, // Pauses downlink video when student switches tabs to save bandwidth
+  },
   dynacast: true,
   stopLocalTrackOnUnpublish: false, // Keep tracks warm in memory to eliminate device teardown latency
   videoCaptureDefaults: {
@@ -25,25 +28,26 @@ const LOW_LATENCY_OPTIONS = {
     echoCancellation: true,
     noiseSuppression: true,
     autoGainControl: true,
+    channelCount: 1, // Mono speech — prevents stereo bloat and phase cancellation
   },
   audioOutput: {
     deviceId: 'default',
   },
   publishDefaults: {
-    audioPreset: AudioPresets.speech,
+    audioPreset: AudioPresets.speech, // 24 kbps Opus
     videoCodec: 'vp8',
-    simulcast: true,
+    simulcast: true, // Multi-layer (180p, 360p, 720p) so weak network clients auto-receive lower tiers
     stopMicTrackOnMute: false, // Instant mic toggle without device acquisition delay
     videoEncoding: {
-      maxBitrate: 1_500_000,
-      maxFramerate: 30,
+      maxBitrate: 650_000, // 650 kbps max (crisp 720p / 24fps without network queue buffer bloat)
+      maxFramerate: 24,    // Cinematic smooth rate, saves 20% CPU and bandwidth
     },
     screenShareEncoding: {
-      maxBitrate: 2_500_000,
-      maxFramerate: 15,
+      maxBitrate: 1_200_000, // 1.2 Mbps max (sharp medical slides & text without saturating uplink)
+      maxFramerate: 15,      // 15fps is optimal for presentations/slides
     },
-    dtx: true,
-    red: true,
+    dtx: false, // Steady continuous low-bitrate packet flow — prevents jitter buffer re-sync lag
+    red: true,  // RFC 2198 Redundant Audio Data for instant packet loss recovery without delay
   },
 };
 
@@ -222,6 +226,43 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   const lkConnectionState = useConnectionState();
   const participants = useParticipants();
   const prevParticipantIds = useRef([]);
+
+  // ── Ultra-Low-Latency Playout Optimization (Google Meet / Zoom mode) ─────────────
+  // Force playout delay hint to 0s for all incoming remote audio and video tracks.
+  // This instructs Chrome's WebRTC NetEQ and video decoders to maintain zero artificial
+  // jitter buffering, eliminating conversational lag between teacher and students.
+  useEffect(() => {
+    if (!room) return;
+
+    const applyZeroDelay = (track) => {
+      if (track && typeof track.setPlayoutDelay === 'function') {
+        try {
+          track.setPlayoutDelay(0);
+        } catch (e) {
+          console.warn('[Classroom] Failed to set playoutDelay:', e);
+        }
+      }
+    };
+
+    const handleTrackSubscribed = (track) => {
+      applyZeroDelay(track);
+    };
+
+    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+
+    // Apply to any tracks that already connected before this effect mounted
+    room.remoteParticipants.forEach((p) => {
+      p.trackPublications.forEach((pub) => {
+        if (pub.track) {
+          applyZeroDelay(pub.track);
+        }
+      });
+    });
+
+    return () => {
+      room.off(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+    };
+  }, [room]);
 
   // ── Notifications (Host only) ─────────────────────────────────────────────
   const {
