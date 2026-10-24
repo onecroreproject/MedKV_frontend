@@ -46,8 +46,8 @@ export async function openTeacherPipWindow(title = 'Live Lecture') {
   // 1. Modern Chromium Document Picture-in-Picture API
   if ('documentPictureInPicture' in window) {
     const pipWin = await window.documentPictureInPicture.requestWindow({
-      width: 380,
-      height: 320,
+      width: 400,
+      height: 340,
     });
 
     pipWin.document.title = `${title} — Faculty PiP`;
@@ -85,7 +85,7 @@ export default function TeacherPipPortal({
   pipWindow,
   onClose,
   user,
-  title = 'Live Class',
+  title = 'Live Lecture',
   isMuted,
   onToggleMic,
   isVideoOff,
@@ -99,8 +99,10 @@ export default function TeacherPipPortal({
   onEndClass,
   onLeave,
   participantCount = 0,
-  raisedHandsCount = 0,
-  screenShareTrack,
+  participants = [],
+  raisedHands = [],
+  onClearHand,
+  chatMessages = [],
   localCameraTrack,
 }) {
   // Clean up if pipWindow closes or component unmounts
@@ -138,7 +140,10 @@ export default function TeacherPipPortal({
       onEndClass={onEndClass}
       onLeave={onLeave}
       participantCount={participantCount}
-      raisedHandsCount={raisedHandsCount}
+      participants={participants}
+      raisedHands={raisedHands}
+      onClearHand={onClearHand}
+      chatMessages={chatMessages}
       onFocusMainTab={() => {
         window.focus();
       }}
@@ -148,7 +153,6 @@ export default function TeacherPipPortal({
         }
         onClose();
       }}
-      screenShareTrack={screenShareTrack}
       localCameraTrack={localCameraTrack}
     />,
     pipWindow.document.body

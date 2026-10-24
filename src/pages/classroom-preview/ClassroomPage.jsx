@@ -669,6 +669,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         recordingState={recordingState}
         waitingStudentsCount={waitingStudents.length}
         raisedHandsCount={raisedHands.length}
+        raisedHands={raisedHands}
+        chatMessages={chatMessages}
+        onClearHand={clearHand}
         setToastMessage={setToastMessage}
       />
       <RoomAudioRenderer />
@@ -815,7 +818,8 @@ function ControlsManager({
   userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, 
   isHandRaised, setIsHandRaised, onLeave, onEndClass, onReaction, unreadCount = 0,
   isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState,
-  waitingStudentsCount, raisedHandsCount, setToastMessage
+  waitingStudentsCount, raisedHandsCount, setToastMessage,
+  raisedHands = [], chatMessages = [], onClearHand
 }) {
   const { localParticipant } = useLocalParticipant();
   const prewarmPromiseRef = useRef(null);
@@ -1142,8 +1146,10 @@ function ControlsManager({
           onEndClass={onEndClass}
           onLeave={onLeave}
           participantCount={participants.length}
-          raisedHandsCount={raisedHandsCount}
-          screenShareTrack={activeScreenShareTrack}
+          participants={participants}
+          raisedHands={raisedHands}
+          onClearHand={onClearHand}
+          chatMessages={chatMessages}
           localCameraTrack={localCameraTrack}
         />
       )}
