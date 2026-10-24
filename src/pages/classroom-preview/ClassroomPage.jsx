@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
 import { LiveKitRoom, RoomAudioRenderer, useRoomContext, useLocalParticipant, useTracks, useParticipants, useConnectionState } from '@livekit/components-react';
-import { Track, VideoPresets, AudioPresets, ConnectionState } from 'livekit-client';
+import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets } from 'livekit-client';
 
 import ClassroomHeader from './components/ClassroomHeader';
 import VideoStage from './components/VideoStage';
@@ -17,7 +17,7 @@ import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 const LOW_LATENCY_OPTIONS = {
   adaptiveStream: true,
   dynacast: true,
-  stopLocalTrackOnUnpublish: true,
+  stopLocalTrackOnUnpublish: false, // Keep tracks warm in memory to eliminate device teardown latency
   videoCaptureDefaults: {
     resolution: VideoPresets.h720.resolution,
   },
@@ -33,6 +33,7 @@ const LOW_LATENCY_OPTIONS = {
     audioPreset: AudioPresets.speech,
     videoCodec: 'vp8',
     simulcast: true,
+    stopMicTrackOnMute: false, // Instant mic toggle without device acquisition delay
     videoEncoding: {
       maxBitrate: 1_500_000,
       maxFramerate: 30,
@@ -41,8 +42,8 @@ const LOW_LATENCY_OPTIONS = {
       maxBitrate: 2_500_000,
       maxFramerate: 15,
     },
-    dtx: false,
-    red: false,
+    dtx: true,
+    red: true,
   },
 };
 
@@ -754,7 +755,20 @@ function ControlsManager({
       if (isScreenSharing) {
         await localParticipant.setScreenShareEnabled(false);
       } else {
-        await localParticipant.setScreenShareEnabled(true);
+        try {
+          await localParticipant.setScreenShareEnabled(
+            true,
+            {
+              audio: true,
+              resolution: ScreenSharePresets.h1080fps15.resolution,
+            },
+            {
+              simulcast: false, // Single high-quality stream, prevents 3-layer encoder setup stall
+            }
+          );
+        } catch (err) {
+          console.error('[ScreenShare] Failed to start screen share', err);
+        }
       }
     }
   };
