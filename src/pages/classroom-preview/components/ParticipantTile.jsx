@@ -110,8 +110,10 @@ function ParticipantTile({
   const name = rawName || '?';
   const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
   const isMuted = !participant.isMicrophoneEnabled;
-  const isSpeaking = participant.isSpeaking;
-  const cameraEnabled = participant.isCameraEnabled && !isModerationCameraDisabled;
+  const isFacultyOrCoHost = isHost || isCoHost;
+  // In academy lecture mode, only teacher/co-host displays camera video.
+  // Other participants (students) only display their name/avatar tile with speaking indicators and audio.
+  const cameraEnabled = isFacultyOrCoHost && participant.isCameraEnabled && !isModerationCameraDisabled;
   const quality = participant.connectionQuality;
 
   // Pre-build class strings once

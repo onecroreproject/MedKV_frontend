@@ -151,6 +151,7 @@ export default function VideoStage({
           trackRef={pinnedTrackRef}
           participant={pinnedTrackRef.participant}
           isHost={pinnedIdentityStr === teacherIdentity}
+          isCoHost={coHosts ? coHosts.has(String(pinnedIdentityStr)) : false}
           isPinned={true}
           onTogglePin={() => handleTogglePin(pinnedIdentityStr)}
           isPiP={true}
@@ -199,6 +200,7 @@ export default function VideoStage({
                   trackRef={trackRef}
                   participant={participant}
                   isHost={identity === teacherIdentity}
+                  isCoHost={coHosts ? coHosts.has(String(identity)) : false}
                   isPinned={false}
                   onTogglePin={() => handleTogglePin(identity)}
                   isHandRaised={raisedHands.includes(identity)}
