@@ -9,7 +9,7 @@ import React, { memo } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, 
   MonitorUp, Hand, MessageSquare, 
-  Users, MoreVertical, PhoneOff, Play, Square, Pause, Loader2
+  Users, MoreVertical, PhoneOff, Play, Square, Pause, Loader2, PictureInPicture2
 } from 'lucide-react';
 
 const ALLOWED_REACTIONS = ['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
@@ -63,7 +63,9 @@ function ClassroomControls({
   onStopRecording,
   onEndClass,
   waitingStudentsCount = 0,
-  raisedHandsCount = 0
+  raisedHandsCount = 0,
+  isPipActive = false,
+  onTogglePip,
 }) {
   const isTeacherOrCoHost = effectiveRole === 'teacher' || effectiveRole === 'cohost' || userRole === 'teacher';
 
@@ -93,6 +95,16 @@ function ClassroomControls({
             icon={MonitorUp} 
             label={isScreenSharing ? "Stop presenting" : "Present now"} 
             onClick={() => setIsScreenSharing(!isScreenSharing)} 
+          />
+        )}
+
+        {isTeacherOrCoHost && onTogglePip && (
+          <IconButton 
+            active={isPipActive} 
+            icon={PictureInPicture2} 
+            label={isPipActive ? "Close Picture-in-Picture" : "Picture in Picture (Floating Meeting Window)"} 
+            onClick={onTogglePip}
+            pulse={isScreenSharing && !isPipActive}
           />
         )}
 

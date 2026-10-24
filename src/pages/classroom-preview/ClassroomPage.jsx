@@ -14,6 +14,7 @@ import PeoplePanel from './components/PeoplePanel';
 import { useClassroomNotifications, playNotificationSound } from './hooks/useClassroomNotifications';
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 import { useClassroomSecurity } from './hooks/useClassroomSecurity';
+import TeacherPipPortal from './components/TeacherPipPortal';
 
 // ── Teacher/Faculty Room Options: Studio voice, pristine HD camera, and ultra-sharp 1080p slides ────
 const TEACHER_ROOM_OPTIONS = {
@@ -1035,38 +1036,74 @@ function ControlsManager({
     }
   };
 
+  const [isPipOpen, setIsPipOpen] = useState(false);
+  const screenShareTracks = useTracks([Track.Source.ScreenShare]);
+  const activeScreenShareTrack = screenShareTracks.find(t => t.participant.isLocal) || screenShareTracks[0];
+  const localCameraTrack = localParticipant?.getTrackPublication(Track.Source.Camera);
+  const participants = useParticipants();
+
   return (
-    <ClassroomControls 
-      isMuted={isMuted}
-      setIsMuted={toggleMic}
-      isVideoOff={isVideoOff}
-      setIsVideoOff={toggleCamera}
-      isScreenSharing={isScreenSharing}
-      setIsScreenSharing={toggleScreenShare}
-      isChatOpen={isChatOpen}
-      setIsChatOpen={setIsChatOpen}
-      isPeopleOpen={isPeopleOpen}
-      setIsPeopleOpen={setIsPeopleOpen}
-      isHandRaised={isHandRaised}
-      setIsHandRaised={setIsHandRaised}
-      isTeacher={userRole === 'teacher'}
-      userRole={userRole}
-      onLeave={onLeave}
-      onEndClass={onEndClass}
-      onReaction={onReaction}
-      unreadCount={unreadCount}
-      recordingState={recordingState}
-      onToggleRecording={() => {
-        if (recordingState === 'recording') handleRecordingAction('pause');
-        else if (recordingState === 'paused') handleRecordingAction('resume');
-        else handleRecordingAction('start');
-      }}
-      onStartRecording={() => handleRecordingAction('start')}
-      onPauseRecording={() => handleRecordingAction('pause')}
-      onResumeRecording={() => handleRecordingAction('resume')}
-      onStopRecording={() => handleRecordingAction('stop')}
-      waitingStudentsCount={waitingStudentsCount}
-      raisedHandsCount={raisedHandsCount}
-    />
+    <>
+      <ClassroomControls 
+        isMuted={isMuted}
+        setIsMuted={toggleMic}
+        isVideoOff={isVideoOff}
+        setIsVideoOff={toggleCamera}
+        isScreenSharing={isScreenSharing}
+        setIsScreenSharing={toggleScreenShare}
+        isChatOpen={isChatOpen}
+        setIsChatOpen={setIsChatOpen}
+        isPeopleOpen={isPeopleOpen}
+        setIsPeopleOpen={setIsPeopleOpen}
+        isHandRaised={isHandRaised}
+        setIsHandRaised={setIsHandRaised}
+        isTeacher={userRole === 'teacher'}
+        userRole={userRole}
+        onLeave={onLeave}
+        onEndClass={onEndClass}
+        onReaction={onReaction}
+        unreadCount={unreadCount}
+        recordingState={recordingState}
+        onToggleRecording={() => {
+          if (recordingState === 'recording') handleRecordingAction('pause');
+          else if (recordingState === 'paused') handleRecordingAction('resume');
+          else handleRecordingAction('start');
+        }}
+        onStartRecording={() => handleRecordingAction('start')}
+        onPauseRecording={() => handleRecordingAction('pause')}
+        onResumeRecording={() => handleRecordingAction('resume')}
+        onStopRecording={() => handleRecordingAction('stop')}
+        waitingStudentsCount={waitingStudentsCount}
+        raisedHandsCount={raisedHandsCount}
+        isPipActive={isPipOpen}
+        onTogglePip={() => setIsPipOpen(!isPipOpen)}
+      />
+
+      {/* Floating Google Meet style Document Picture-in-Picture window for Teacher / Host */}
+      {(userRole === 'teacher' || userRole === 'cohost') && (
+        <TeacherPipPortal
+          isOpen={isPipOpen}
+          onClose={() => setIsPipOpen(false)}
+          user={user}
+          title="Live Lecture"
+          isMuted={isMuted}
+          onToggleMic={toggleMic}
+          isVideoOff={isVideoOff}
+          onToggleCamera={toggleCamera}
+          isScreenSharing={isScreenSharing}
+          onToggleScreenShare={toggleScreenShare}
+          recordingState={recordingState}
+          onPauseRecording={() => handleRecordingAction('pause')}
+          onResumeRecording={() => handleRecordingAction('resume')}
+          onStopRecording={() => handleRecordingAction('stop')}
+          onEndClass={onEndClass}
+          onLeave={onLeave}
+          participantCount={participants.length}
+          raisedHandsCount={raisedHandsCount}
+          screenShareTrack={activeScreenShareTrack}
+          localCameraTrack={localCameraTrack}
+        />
+      )}
+    </>
   );
 }
