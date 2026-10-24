@@ -13,6 +13,7 @@ import ChatPanel from './components/ChatPanel';
 import PeoplePanel from './components/PeoplePanel';
 import { useClassroomNotifications, playNotificationSound } from './hooks/useClassroomNotifications';
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
+import { useClassroomSecurity } from './hooks/useClassroomSecurity';
 
 // ── Teacher/Faculty Room Options: Studio voice, pristine HD camera, and ultra-sharp 1080p slides ────
 const TEACHER_ROOM_OPTIONS = {
@@ -255,9 +256,12 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   // Is the CURRENT USER a co-host? coHosts contains userId strings from socket
   const isCoHost = !isHost && coHosts.has(String(currentUserId));
 
-  // Effective role for UI: 'teacher' = host, 'cohost' = co-host, 'student' = everyone else
   const effectiveRole = isHost ? 'teacher' : isCoHost ? 'cohost' : 'student';
   const canModerate = effectiveRole === 'teacher' || effectiveRole === 'cohost';
+  const isStudent = !canModerate;
+
+  // Anti-Recording & Focus Security for Students
+  const { isBlurred, setIsBlurred } = useClassroomSecurity(isStudent);
 
   // handleAssignCoHost: emit socket event + toggle (server will broadcast back to all)
   const handleAssignCoHost = (participantIdentity) => {
@@ -552,6 +556,9 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
 
       <div className="flex-1 flex overflow-hidden relative">
         <StageManager
+          user={user}
+          isBlurred={isBlurred}
+          setIsBlurred={setIsBlurred}
           currentUserId={currentUserId}
           viewerIsTeacher={canModerate}
           raisedHands={raisedHands}
@@ -683,7 +690,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ currentUserId, viewerIsTeacher = false, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
+function StageManager({ user, isBlurred, setIsBlurred, currentUserId, viewerIsTeacher = false, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -710,6 +717,9 @@ function StageManager({ currentUserId, viewerIsTeacher = false, raisedHands = []
 
   return (
     <VideoStage
+      user={user}
+      isBlurred={isBlurred}
+      setIsBlurred={setIsBlurred}
       currentUserId={currentUserId}
       viewerIsTeacher={viewerIsTeacher}
       isScreenSharing={isScreenSharing}

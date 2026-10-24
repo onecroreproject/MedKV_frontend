@@ -3,11 +3,16 @@ import ParticipantGrid from './ParticipantGrid';
 import ParticipantTile from './ParticipantTile';
 import { MonitorUp, Maximize2, Minimize2, Users } from 'lucide-react';
 import { VideoTrack, TrackRefContext } from '@livekit/components-react';
+import ClassroomSecurityWatermark from './ClassroomSecurityWatermark';
+import ClassroomFocusOverlay from './ClassroomFocusOverlay';
 
 /**
  * VideoStage
  *
  * Props:
+ *   user                      — object (current logged in user data)
+ *   isBlurred                 — boolean (tab blur/unfocused state)
+ *   setIsBlurred              — fn
  *   isScreenSharing           — boolean
  *   screenShareTrack          — TrackReference | undefined
  *   cameraTrackRefs           — TrackReference[] (all camera tracks from useTracks)
@@ -19,6 +24,9 @@ import { VideoTrack, TrackRefContext } from '@livekit/components-react';
  *   cameraDisabledParticipants — { [identity]: true }
  */
 export default function VideoStage({
+  user,
+  isBlurred = false,
+  setIsBlurred,
   currentUserId,
   viewerIsTeacher = false,
   isScreenSharing,
@@ -221,6 +229,19 @@ export default function VideoStage({
               </div>
             </div>
           )}
+
+          {/* Security Forensic Watermark Layer (Name, Email, Mobile, Live Clock) */}
+          <ClassroomSecurityWatermark user={user} isStudent={!viewerIsTeacher} />
+
+          {/* Privacy Focus Blur Overlay (Tab switch / blur detection) */}
+          <ClassroomFocusOverlay 
+            isBlurred={isBlurred} 
+            onResume={() => {
+              window.focus();
+              setIsBlurred?.(false);
+            }} 
+            user={user} 
+          />
 
           <MaximizeButton />
         </div>
