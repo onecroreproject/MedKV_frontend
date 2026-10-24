@@ -546,6 +546,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       </div>
 
       <ControlsManager 
+        user={user}
         userRole={effectiveRole}
         isChatOpen={isChatOpen}
         setIsChatOpen={handleSetChatOpen}
@@ -701,6 +702,7 @@ function PeoplePanelManager({
 }
 
 function ControlsManager({ 
+  user,
   userRole, isChatOpen, setIsChatOpen, isPeopleOpen, setIsPeopleOpen, 
   isHandRaised, setIsHandRaised, onLeave, onEndClass, onReaction, unreadCount = 0,
   isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState,
