@@ -14,7 +14,7 @@ import PeoplePanel from './components/PeoplePanel';
 import { useClassroomNotifications, playNotificationSound } from './hooks/useClassroomNotifications';
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 import { useClassroomSecurity } from './hooks/useClassroomSecurity';
-import TeacherPipPortal from './components/TeacherPipPortal';
+import TeacherPipPortal, { openTeacherPipWindow } from './components/TeacherPipPortal';
 
 // ── Teacher/Faculty Room Options: Studio voice, pristine HD camera, and ultra-sharp 1080p slides ────
 const TEACHER_ROOM_OPTIONS = {
@@ -1036,7 +1036,45 @@ function ControlsManager({
     }
   };
 
-  const [isPipOpen, setIsPipOpen] = useState(false);
+  const [pipWindow, setPipWindow] = useState(null);
+
+  // Close PiP window when unmounting
+  useEffect(() => {
+    return () => {
+      if (pipWindow && !pipWindow.closed) {
+        try { pipWindow.close(); } catch (e) {}
+      }
+    };
+  }, [pipWindow]);
+
+  const handleTogglePip = async () => {
+    // If PiP is already open, clicking toggles it closed
+    if (pipWindow && !pipWindow.closed) {
+      try {
+        pipWindow.close();
+      } catch (e) {}
+      setPipWindow(null);
+      return;
+    }
+
+    try {
+      const win = await openTeacherPipWindow('Live Lecture');
+      if (win) {
+        win.addEventListener('pagehide', () => {
+          setPipWindow(null);
+        });
+        setPipWindow(win);
+      }
+    } catch (err) {
+      console.error('[PiP] Error opening PiP window:', err);
+      if (err?.message === 'DOCUMENT_PIP_UNSUPPORTED') {
+        alert('Document Picture-in-Picture is supported on Google Chrome, Microsoft Edge, and modern Chromium browsers (v116+).');
+      } else {
+        alert('Could not open Picture-in-Picture window: ' + (err?.message || 'Unknown error'));
+      }
+    }
+  };
+
   const screenShareTracks = useTracks([Track.Source.ScreenShare]);
   const activeScreenShareTrack = screenShareTracks.find(t => t.participant.isLocal) || screenShareTracks[0];
   const localCameraTrack = localParticipant?.getTrackPublication(Track.Source.Camera);
@@ -1075,15 +1113,20 @@ function ControlsManager({
         onStopRecording={() => handleRecordingAction('stop')}
         waitingStudentsCount={waitingStudentsCount}
         raisedHandsCount={raisedHandsCount}
-        isPipActive={isPipOpen}
-        onTogglePip={() => setIsPipOpen(!isPipOpen)}
+        isPipActive={Boolean(pipWindow && !pipWindow.closed)}
+        onTogglePip={handleTogglePip}
       />
 
       {/* Floating Google Meet style Document Picture-in-Picture window for Teacher / Host */}
-      {(userRole === 'teacher' || userRole === 'cohost') && (
+      {(userRole === 'teacher' || userRole === 'cohost') && pipWindow && !pipWindow.closed && (
         <TeacherPipPortal
-          isOpen={isPipOpen}
-          onClose={() => setIsPipOpen(false)}
+          pipWindow={pipWindow}
+          onClose={() => {
+            if (pipWindow && !pipWindow.closed) {
+              try { pipWindow.close(); } catch (e) {}
+            }
+            setPipWindow(null);
+          }}
           user={user}
           title="Live Lecture"
           isMuted={isMuted}
