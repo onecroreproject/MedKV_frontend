@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ParticipantGrid from './ParticipantGrid';
 import ParticipantTile from './ParticipantTile';
-import { MonitorUp, Maximize2, Minimize2 } from 'lucide-react';
+import { MonitorUp, Maximize2, Minimize2, Users } from 'lucide-react';
 import { VideoTrack, TrackRefContext } from '@livekit/components-react';
 
 /**
@@ -20,6 +20,7 @@ import { VideoTrack, TrackRefContext } from '@livekit/components-react';
  */
 export default function VideoStage({
   currentUserId,
+  viewerIsTeacher = false,
   isScreenSharing,
   screenShareTrack,
   cameraTrackRefs = [],
@@ -86,7 +87,104 @@ export default function VideoStage({
     </button>
   );
 
-  // ── No screen share, no pinned → responsive grid ──────────────────────────
+  const teacherParticipant = participants.find(p => p.identity === teacherIdentity) || participants.find(p => {
+    try {
+      const meta = p.metadata ? JSON.parse(p.metadata) : {};
+      return meta.role === 'teacher' || meta.isTeacher;
+    } catch { return false; }
+  }) || participants[0];
+
+  const teacherTrackRef = cameraTrackRefs.find(t => t.participant.identity === teacherParticipant?.identity);
+
+  const localParticipant = participants.find(p => p.isLocal || (currentUserId && p.identity.startsWith(currentUserId)));
+  const localTrackRef = cameraTrackRefs.find(t => t.participant.isLocal || (currentUserId && t.participant.identity.startsWith(currentUserId)));
+  const isLocalCameraActive = localParticipant?.isCameraEnabled && !cameraDisabledParticipants[localParticipant?.identity];
+
+  // ── Student Screen (Participant View): Teacher stream only, self-view PiP, no 100-student grid ──────
+  if (!viewerIsTeacher) {
+    return (
+      <div ref={stageRef} className="flex-1 w-full h-full relative p-4 flex flex-col overflow-hidden bg-black">
+        {/* Joined count badge */}
+        <div className="absolute top-6 left-6 z-30 flex items-center space-x-2 bg-slate-900/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700/60 shadow-lg text-xs font-medium text-slate-300">
+          <Users size={14} className="text-blue-400" />
+          <span>{participants.length} Joined</span>
+        </div>
+
+        {/* Main Stage: Screen Share or Teacher */}
+        <div className="relative group bg-slate-950 rounded-xl overflow-hidden shadow-2xl flex-1 w-full h-full flex items-center justify-center ring-1 ring-slate-800">
+          {isScreenSharing ? (
+            <div className="absolute inset-0 bg-black flex items-center justify-center">
+              {screenShareTrack ? (
+                <TrackRefContext.Provider value={screenShareTrack}>
+                  <VideoTrack className="w-full h-full object-contain" />
+                </TrackRefContext.Provider>
+              ) : (
+                <div className="flex flex-col items-center justify-center">
+                  <MonitorUp size={64} className="text-slate-500 mb-4 opacity-50 animate-pulse" />
+                  <p className="text-slate-400 font-medium text-lg">Presentation is active</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+              {teacherParticipant ? (
+                <ParticipantTile
+                  trackRef={teacherTrackRef}
+                  participant={teacherParticipant}
+                  isHost={true}
+                  viewerIsTeacher={false}
+                  isPiP={true}
+                  isHandRaised={raisedHands.includes(teacherParticipant.identity)}
+                  isModerationMuted={!!mutedParticipants[teacherParticipant.identity]}
+                  isModerationCameraDisabled={false}
+                  canModerate={false}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center">
+                  <p className="text-slate-400 font-medium">Waiting for faculty to join...</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Floating Teacher PiP (when screen sharing and teacher camera is ON) */}
+          {isScreenSharing && teacherParticipant?.isCameraEnabled && teacherTrackRef && (
+            <div className="absolute top-4 right-4 z-20 w-44 sm:w-56 aspect-video rounded-xl overflow-hidden shadow-2xl border border-slate-700/80 bg-slate-900">
+              <ParticipantTile
+                trackRef={teacherTrackRef}
+                participant={teacherParticipant}
+                isHost={true}
+                viewerIsTeacher={false}
+                isPiP={true}
+                canModerate={false}
+              />
+            </div>
+          )}
+
+          {/* Floating Self-View PiP (when student turns on their own camera) */}
+          {isLocalCameraActive && localParticipant && localTrackRef && (
+            <div className="absolute bottom-4 left-4 z-20 w-36 sm:w-48 aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-blue-500/80 bg-slate-900 group">
+              <ParticipantTile
+                trackRef={localTrackRef}
+                participant={localParticipant}
+                isHost={false}
+                viewerIsTeacher={false}
+                isPiP={true}
+                canModerate={false}
+              />
+              <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-[10px] text-blue-200 px-1.5 py-0.5 rounded text-center truncate pointer-events-none">
+                Visible to teacher only
+              </div>
+            </div>
+          )}
+
+          <MaximizeButton />
+        </div>
+      </div>
+    );
+  }
+
+  // ── No screen share, no pinned → responsive grid (Teacher View) ──────────────────────────
   if (!isScreenSharing && !pinnedTrackRef) {
     return (
       <div ref={stageRef} className="flex-1 w-full h-full relative group">
@@ -101,6 +199,7 @@ export default function VideoStage({
           pinnedIdentity={pinnedIdentity}
           onTogglePin={handleTogglePin}
           canModerate={canModerate}
+          viewerIsTeacher={true}
           onMuteParticipant={onMuteParticipant}
           onAllowUnmute={onAllowUnmute}
           onHostRequestUnmute={onHostRequestUnmute}
@@ -152,6 +251,7 @@ export default function VideoStage({
           participant={pinnedTrackRef.participant}
           isHost={pinnedIdentityStr === teacherIdentity}
           isCoHost={coHosts ? coHosts.has(String(pinnedIdentityStr)) : false}
+          viewerIsTeacher={true}
           isPinned={true}
           onTogglePin={() => handleTogglePin(pinnedIdentityStr)}
           isPiP={true}
@@ -201,6 +301,7 @@ export default function VideoStage({
                   participant={participant}
                   isHost={identity === teacherIdentity}
                   isCoHost={coHosts ? coHosts.has(String(identity)) : false}
+                  viewerIsTeacher={true}
                   isPinned={false}
                   onTogglePin={() => handleTogglePin(identity)}
                   isHandRaised={raisedHands.includes(identity)}

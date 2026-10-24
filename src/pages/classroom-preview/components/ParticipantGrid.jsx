@@ -39,6 +39,7 @@ function ParticipantGrid({
   pinnedIdentity,
   onTogglePin,
   canModerate = false,
+  viewerIsTeacher = false,
   onMuteParticipant,
   onAllowUnmute,
   onHostRequestUnmute,
@@ -89,6 +90,7 @@ function ParticipantGrid({
             participant={participant}
             isHost={isHost}
             isCoHost={isCoHost}
+            viewerIsTeacher={viewerIsTeacher || canModerate}
             isPinned={false}
             onTogglePin={onTogglePin ? makeTogglePin(identity) : undefined}
             isHandRaised={raisedHands.includes(identity)}
@@ -123,6 +125,7 @@ function ParticipantGrid({
               participant={participant}
               isHost={isHost}
               isCoHost={isCoHost}
+              viewerIsTeacher={viewerIsTeacher || canModerate}
               isPinned={pinnedIdentity === identity}
               onTogglePin={makeTogglePin(identity)}
               isHandRaised={raisedHands.includes(identity)}

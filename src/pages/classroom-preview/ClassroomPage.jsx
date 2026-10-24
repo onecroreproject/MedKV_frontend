@@ -499,6 +499,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       <div className="flex-1 flex overflow-hidden relative">
         <StageManager
           currentUserId={currentUserId}
+          viewerIsTeacher={canModerate}
           raisedHands={raisedHands}
           mutedParticipants={mutedParticipants}
           cameraDisabledParticipants={cameraDisabledParticipants}
@@ -628,7 +629,7 @@ function HeaderManager({ duration, recordingState, recordingStartedAt, recording
   );
 }
 
-function StageManager({ currentUserId, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
+function StageManager({ currentUserId, viewerIsTeacher = false, raisedHands = [], mutedParticipants = {}, cameraDisabledParticipants = {}, coHosts, canModerate = false, onMuteParticipant, onAllowUnmute, onHostRequestUnmute, onRemoveParticipant, onDisableCamera }) {
   const [pinnedIdentity, setPinnedIdentity] = useState(null);
 
   // Get all camera tracks (includes local + remote) — these are proper TrackReferences
@@ -656,6 +657,7 @@ function StageManager({ currentUserId, raisedHands = [], mutedParticipants = {},
   return (
     <VideoStage
       currentUserId={currentUserId}
+      viewerIsTeacher={viewerIsTeacher}
       isScreenSharing={isScreenSharing}
       screenShareTrack={screenShareTracks[0]}
       cameraTrackRefs={cameraTrackRefs}

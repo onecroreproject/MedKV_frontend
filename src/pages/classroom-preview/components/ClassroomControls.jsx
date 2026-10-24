@@ -73,15 +73,13 @@ function ClassroomControls({
           onClick={() => setIsMuted(!isMuted)} 
         />
         
-        {isTeacherOrCoHost && (
-          <IconButton 
-            active={isVideoOff} 
-            danger={isVideoOff}
-            icon={isVideoOff ? VideoOff : Video} 
-            label={isVideoOff ? "Turn on camera" : "Turn off camera"} 
-            onClick={() => setIsVideoOff(!isVideoOff)} 
-          />
-        )}
+        <IconButton 
+          active={isVideoOff} 
+          danger={isVideoOff}
+          icon={isVideoOff ? VideoOff : Video} 
+          label={isVideoOff ? "Turn on camera" : "Turn off camera"} 
+          onClick={() => setIsVideoOff(!isVideoOff)} 
+        />
         
         {isTeacherOrCoHost && (
           <IconButton 
