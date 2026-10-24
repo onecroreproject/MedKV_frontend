@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
 import { LiveKitRoom, RoomAudioRenderer, useRoomContext, useLocalParticipant, useTracks, useParticipants, useConnectionState } from '@livekit/components-react';
-import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets, createLocalAudioTrack, RoomEvent } from 'livekit-client';
+import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets, createLocalAudioTrack, RoomEvent, VideoQuality } from 'livekit-client';
 
 import ClassroomHeader from './components/ClassroomHeader';
 import VideoStage from './components/VideoStage';
@@ -14,10 +14,11 @@ import PeoplePanel from './components/PeoplePanel';
 import { useClassroomNotifications, playNotificationSound } from './hooks/useClassroomNotifications';
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 
-const LOW_LATENCY_OPTIONS = {
+// ── Teacher/Faculty Room Options: Studio voice, pristine HD camera, and ultra-sharp 1080p slides ────
+const TEACHER_ROOM_OPTIONS = {
   adaptiveStream: {
     pixelDensity: 'screen',
-    pauseVideoInBackground: true, // Pauses downlink video when student switches tabs to save bandwidth
+    pauseVideoInBackground: false, // Teacher stream must never pause when faculty switches windows/notes
   },
   dynacast: true,
   stopLocalTrackOnUnpublish: false, // Keep tracks warm in memory to eliminate device teardown latency
@@ -34,20 +35,59 @@ const LOW_LATENCY_OPTIONS = {
     deviceId: 'default',
   },
   publishDefaults: {
-    audioPreset: AudioPresets.speech, // 24 kbps Opus
+    audioPreset: AudioPresets.music, // 48 kbps Opus full-band studio quality for faculty lectures
     videoCodec: 'vp8',
-    simulcast: true, // Multi-layer (180p, 360p, 720p) so weak network clients auto-receive lower tiers
+    simulcast: true, // Multi-layer (720p, 360p, 180p) so recording & strong clients get pristine HD, weak clients get 360p/180p
     stopMicTrackOnMute: false, // Instant mic toggle without device acquisition delay
     videoEncoding: {
-      maxBitrate: 650_000, // 650 kbps max (crisp 720p / 24fps without network queue buffer bloat)
-      maxFramerate: 24,    // Cinematic smooth rate, saves 20% CPU and bandwidth
+      maxBitrate: 1_200_000, // 1.2 Mbps max for crystal-clear 720p HD faculty camera (for 100+ students & recording)
+      maxFramerate: 24,      // Cinematic smooth rate
     },
     screenShareEncoding: {
-      maxBitrate: 1_200_000, // 1.2 Mbps max (sharp medical slides & text without saturating uplink)
-      maxFramerate: 15,      // 15fps is optimal for presentations/slides
+      maxBitrate: 2_000_000, // 2.0 Mbps 1080p for razor-sharp CT scans, radiology diagrams, and medical slides
+      maxFramerate: 15,      // 15fps optimal for presentation slides
     },
     dtx: false, // Steady continuous low-bitrate packet flow — prevents jitter buffer re-sync lag
     red: true,  // RFC 2198 Redundant Audio Data for instant packet loss recovery without delay
+    degradationPreference: 'maintain-resolution', // Prioritize medical slide text and image sharpness
+  },
+};
+
+// ── Student Room Options: Lightweight bandwidth & resource consumption ──────────────────────────────
+const STUDENT_ROOM_OPTIONS = {
+  adaptiveStream: {
+    pixelDensity: 'screen',
+    pauseVideoInBackground: true, // Pauses downlink video when student switches tabs to save bandwidth
+  },
+  dynacast: true,
+  stopLocalTrackOnUnpublish: false, // Keep tracks warm in memory to eliminate device teardown latency
+  videoCaptureDefaults: {
+    resolution: VideoPresets.h720.resolution,
+  },
+  audioCaptureDefaults: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    channelCount: 1,
+  },
+  audioOutput: {
+    deviceId: 'default',
+  },
+  publishDefaults: {
+    audioPreset: AudioPresets.speech, // 24 kbps Opus for student Q&A
+    videoCodec: 'vp8',
+    simulcast: false, // Student video only viewed by teacher & self — lightweight single layer
+    stopMicTrackOnMute: false,
+    videoEncoding: {
+      maxBitrate: 450_000, // 450 kbps lightweight student preview
+      maxFramerate: 20,
+    },
+    screenShareEncoding: {
+      maxBitrate: 1_200_000,
+      maxFramerate: 15,
+    },
+    dtx: false,
+    red: true,
   },
 };
 
@@ -136,12 +176,14 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
     );
   }
 
+  const roomOptions = isTeacher ? TEACHER_ROOM_OPTIONS : STUDENT_ROOM_OPTIONS;
+
   return (
     <LiveKitRoom
       serverUrl={import.meta.env.VITE_LIVEKIT_URL || 'wss://livekit.drsamreefathradiologyacademy.com'}
       token={token}
       connect={true}
-      options={LOW_LATENCY_OPTIONS}
+      options={roomOptions}
       className="h-[100dvh] w-full bg-[#0a0a0a] flex flex-col overflow-hidden font-sans text-slate-200"
     >
       <ClassroomInner user={user} userRole={isTeacher ? 'teacher' : 'student'} roomId={roomId} admissionService={admissionService} />
@@ -244,8 +286,15 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       }
     };
 
-    const handleTrackSubscribed = (track) => {
+    const handleTrackSubscribed = (track, publication) => {
       applyZeroDelay(track);
+      if (publication && typeof publication.setVideoQuality === 'function') {
+        try {
+          publication.setVideoQuality(VideoQuality.HIGH);
+        } catch (e) {
+          console.warn('[Classroom] Failed to set videoQuality HIGH:', e);
+        }
+      }
     };
 
     room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
@@ -255,6 +304,11 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
       p.trackPublications.forEach((pub) => {
         if (pub.track) {
           applyZeroDelay(pub.track);
+          if (typeof pub.setVideoQuality === 'function') {
+            try {
+              pub.setVideoQuality(VideoQuality.HIGH);
+            } catch (e) {}
+          }
         }
       });
     });
@@ -782,7 +836,11 @@ function ControlsManager({
             audioTrack.stop();
             return;
           }
-          await localParticipant.publishTrack(audioTrack);
+          await localParticipant.publishTrack(audioTrack, {
+            audioPreset: userRole === 'teacher' ? AudioPresets.music : AudioPresets.speech,
+            dtx: false,
+            red: true,
+          });
           console.log('[Classroom] Local microphone pre-warmed and published in muted state (instant unmute ready).');
         }
       } catch (err) {
@@ -794,7 +852,7 @@ function ControlsManager({
     return () => {
       cancelled = true;
     };
-  }, [localParticipant]);
+  }, [localParticipant, userRole]);
 
   const isMuted = isMutedByFaculty || !localParticipant?.isMicrophoneEnabled;
   const isVideoOff = isCameraDisabledByFaculty || !localParticipant?.isCameraEnabled;
@@ -858,7 +916,7 @@ function ControlsManager({
       if (isScreenSharing) {
         await localParticipant.setScreenShareEnabled(false);
       } else {
-        await localParticipant.setScreenShareEnabled(
+        const pub = await localParticipant.setScreenShareEnabled(
           true,
           {
             audio: true,
@@ -866,8 +924,20 @@ function ControlsManager({
           },
           {
             simulcast: false, // Single high-quality stream, prevents 3-layer encoder setup stall
+            videoEncoding: {
+              maxBitrate: 2_000_000, // 2.0 Mbps 1080p for razor-sharp medical slides, text, and CT scans
+              maxFramerate: 15,
+            },
           }
         );
+        // Medical / radiology slides optimization: force WebRTC contentHint to 'detail'
+        if (pub?.track?.mediaStreamTrack) {
+          try {
+            pub.track.mediaStreamTrack.contentHint = 'detail';
+          } catch (e) {
+            console.warn('[ScreenShare] Could not set contentHint detail', e);
+          }
+        }
       }
     } catch (err) {
       console.error('[ScreenShare] Failed to start screen share', err);
