@@ -15,7 +15,7 @@ import {
 const ALLOWED_REACTIONS = ['❤️', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
 
 // Memoized Icon Button to prevent re-rendering on every parent render
-const IconButton = memo(function IconButton({ active, icon: Icon, label, danger, onClick, disabled, pulse }) {
+const IconButton = memo(function IconButton({ active, icon: Icon, label, danger, onClick, disabled, pulse, variant }) {
   return (
     <button
       onClick={onClick}
@@ -24,6 +24,8 @@ const IconButton = memo(function IconButton({ active, icon: Icon, label, danger,
         relative group p-2.5 sm:p-3 rounded-full flex items-center justify-center transition-all
         ${disabled ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500' : 
           danger ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20' :
+          variant === 'warning' ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/30' :
+          variant === 'success' ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' :
           active ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 
           'bg-slate-700 hover:bg-slate-600 text-slate-200'
         }
@@ -55,6 +57,10 @@ function ClassroomControls({
   unreadCount = 0,
   recordingState,
   onToggleRecording,
+  onStartRecording,
+  onPauseRecording,
+  onResumeRecording,
+  onStopRecording,
   onEndClass,
   waitingStudentsCount = 0,
   raisedHandsCount = 0
@@ -93,23 +99,62 @@ function ClassroomControls({
         {isTeacherOrCoHost && (
           <>
             <div className="w-px h-8 bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
-            <IconButton 
-              active={recordingState === 'recording'} 
-              danger={recordingState === 'recording' || recordingState === 'paused' || recordingState === 'stopping'}
-              icon={
-                recordingState === 'stopping' ? Loader2 :
-                recordingState === 'recording' ? Square : 
-                recordingState === 'paused' ? Play : Play
-              } 
-              label={
-                recordingState === 'stopping' ? "Stopping recording..." :
-                recordingState === 'recording' ? "Stop recording" : 
-                recordingState === 'paused' ? "Resume recording" : "Start recording"
-              } 
-              onClick={onToggleRecording}
-              disabled={recordingState === 'stopping'}
-              pulse={recordingState === 'stopping'}
-            />
+
+            {/* Stopping state */}
+            {recordingState === 'stopping' && (
+              <IconButton 
+                disabled={true}
+                pulse={true}
+                icon={Loader2} 
+                label="Stopping recording..."
+              />
+            )}
+
+            {/* Active recording state: show PAUSE and STOP */}
+            {recordingState === 'recording' && (
+              <div className="flex items-center gap-1 sm:gap-2">
+                <IconButton 
+                  icon={Pause}
+                  label="Pause recording"
+                  variant="warning"
+                  onClick={onPauseRecording || onToggleRecording}
+                />
+                <IconButton 
+                  danger={true}
+                  icon={Square}
+                  label="Stop recording"
+                  onClick={onStopRecording || onToggleRecording}
+                />
+              </div>
+            )}
+
+            {/* Paused state: show RESUME and STOP */}
+            {recordingState === 'paused' && (
+              <div className="flex items-center gap-1 sm:gap-2">
+                <IconButton 
+                  icon={Play}
+                  label="Resume recording"
+                  variant="success"
+                  pulse={true}
+                  onClick={onResumeRecording || onToggleRecording}
+                />
+                <IconButton 
+                  danger={true}
+                  icon={Square}
+                  label="Stop recording"
+                  onClick={onStopRecording || onToggleRecording}
+                />
+              </div>
+            )}
+
+            {/* Idle / Completed / Failed / Initial: show START */}
+            {recordingState !== 'recording' && recordingState !== 'paused' && recordingState !== 'stopping' && (
+              <IconButton 
+                icon={Play}
+                label="Start recording"
+                onClick={onStartRecording || onToggleRecording}
+              />
+            )}
           </>
         )}
         

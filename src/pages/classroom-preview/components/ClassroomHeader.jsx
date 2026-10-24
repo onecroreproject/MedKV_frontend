@@ -55,10 +55,14 @@ export default function ClassroomHeader({ title, duration, participantCount, rec
 
         {/* Recording badge */}
         {(recordingState === 'recording' || recordingState === 'stopping' || recordingState === 'paused') && (
-          <div className="flex items-center space-x-1 bg-red-600 px-2 py-1 rounded-full shadow-lg shadow-red-500/30 text-white animate-in fade-in">
+          <div className={`flex items-center space-x-1 px-2 py-1 rounded-full shadow-lg text-white animate-in fade-in ${
+            recordingState === 'paused' ? 'bg-amber-600 shadow-amber-500/30' :
+            recordingState === 'stopping' ? 'bg-slate-700 shadow-slate-600/30' :
+            'bg-red-600 shadow-red-500/30'
+          }`}>
             <div className={`w-1.5 h-1.5 rounded-full bg-white ${recordingState === 'recording' ? 'animate-pulse' : ''}`} />
             <span className="font-bold text-[10px] sm:text-xs tracking-wider">
-              {recordingState === 'stopping' ? 'STOP' : 'REC'} {recDuration}
+              {recordingState === 'stopping' ? 'STOPPING...' : recordingState === 'paused' ? `PAUSED ${recDuration}` : `REC ${recDuration}`}
             </span>
           </div>
         )}

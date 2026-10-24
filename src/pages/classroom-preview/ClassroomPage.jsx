@@ -946,9 +946,9 @@ function ControlsManager({
     }
   };
 
-  const handleToggleRecording = async () => {
+  const handleRecordingAction = async (action) => {
     console.log('[Recording][UI] ================================');
-    console.log('[Recording][UI] RECORD BUTTON CLICKED');
+    console.log('[Recording][UI] RECORDING ACTION TRIGGERED:', action);
     console.log('[Recording][UI] Room ID:', roomId);
     console.log('[Recording][UI] User ID:', user?._id || user?.id);
     console.log('[Recording][UI] User Role:', userRole);
@@ -962,10 +962,15 @@ function ControlsManager({
     });
 
     if (!isAuthorized) {
-      console.warn('[Recording][UI] START BLOCKED');
+      console.warn('[Recording][UI] ACTION BLOCKED');
       console.warn('[Recording][UI] Reason: userRole is not authorized');
       console.warn('[Recording][UI] userRole:', userRole);
       return;
+    }
+
+    if (action === 'stop') {
+      const confirmed = window.confirm('Are you sure you want to stop and finish the recording?');
+      if (!confirmed) return;
     }
 
     const token = localStorage.getItem('token');
@@ -975,49 +980,48 @@ function ControlsManager({
     };
 
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-    
+    const url = `${apiUrl}/class-recordings/${action}`;
+
     try {
-      let res;
-      if (recordingState === 'recording' || recordingState === 'paused') {
-        const url = `${apiUrl}/class-recordings/stop`;
-        console.log('[Recording][API] STOP URL:', url);
-        console.log('[Recording][API] Sending STOP request');
-        res = await fetch(url, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ roomName: roomId })
+      console.log(`[Recording][API] ${action.toUpperCase()} URL:`, url);
+      console.log(`[Recording][API] Sending ${action.toUpperCase()} request`);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ roomName: roomId })
+      });
+
+      console.log(`[Recording][API] ${action.toUpperCase()} response:`, { status: res.status });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`[Recording][API] ${action.toUpperCase()} FAILED:`, {
+          status: res.status,
+          data: errorText
         });
-        
-        console.log('[Recording][API] STOP response:', { status: res.status });
-      } else if (recordingState === 'idle' || recordingState === 'completed' || recordingState === 'failed') {
-        const url = `${apiUrl}/class-recordings/start`;
-        console.log('[Recording][API] START URL:', url);
-        console.log('[Recording][API] Sending START request');
-        res = await fetch(url, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ roomName: roomId })
-        });
-        
-        console.log('[Recording][API] START response:', { status: res.status });
-      }
-      
-      if (res) {
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('[Recording][API] FAILED:', {
-            status: res.status,
-            data: errorText
-          });
-        } else {
-          const data = await res.json();
-          console.log('[Recording][API] SUCCESS:', data);
+        if (setToastMessage) {
+          try {
+            const errJson = JSON.parse(errorText);
+            setToastMessage(`Recording ${action} failed: ${errJson.message || res.statusText}`);
+          } catch (e) {
+            setToastMessage(`Recording ${action} failed: ${res.statusText}`);
+          }
+        }
+      } else {
+        const data = await res.json();
+        console.log(`[Recording][API] ${action.toUpperCase()} SUCCESS:`, data);
+        if (setToastMessage) {
+          if (action === 'start') setToastMessage('Recording started');
+          else if (action === 'pause') setToastMessage('Recording paused');
+          else if (action === 'resume') setToastMessage('Recording resumed');
+          else if (action === 'stop') setToastMessage('Recording stopped. Processing final video...');
         }
       }
     } catch (err) {
-      console.error('[Recording][API] START FAILED:', {
+      console.error(`[Recording][API] ${action.toUpperCase()} ERROR:`, {
         message: err.message
       });
+      if (setToastMessage) setToastMessage(`Recording error: ${err.message}`);
     }
   };
 
@@ -1042,7 +1046,15 @@ function ControlsManager({
       onReaction={onReaction}
       unreadCount={unreadCount}
       recordingState={recordingState}
-      onToggleRecording={handleToggleRecording}
+      onToggleRecording={() => {
+        if (recordingState === 'recording') handleRecordingAction('pause');
+        else if (recordingState === 'paused') handleRecordingAction('resume');
+        else handleRecordingAction('start');
+      }}
+      onStartRecording={() => handleRecordingAction('start')}
+      onPauseRecording={() => handleRecordingAction('pause')}
+      onResumeRecording={() => handleRecordingAction('resume')}
+      onStopRecording={() => handleRecordingAction('stop')}
       waitingStudentsCount={waitingStudentsCount}
       raisedHandsCount={raisedHandsCount}
     />

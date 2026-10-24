@@ -107,6 +107,24 @@ export function useClassroomRealtime(roomId, user) {
       console.log('[Recording][Socket] Recording ID:', payload.recordingId);
       setRecordingState(payload.status || 'recording');
       setRecordingStartedAt(payload.startedAt || new Date());
+      setRecordingAccumulatedDuration(0);
+    });
+
+    newSocket.on('class:recording-paused', (payload) => {
+      console.log('[Recording][Socket] Received recording-paused');
+      setRecordingState('paused');
+      if (payload.accumulatedDuration !== undefined) {
+        setRecordingAccumulatedDuration(payload.accumulatedDuration);
+      }
+    });
+
+    newSocket.on('class:recording-resumed', (payload) => {
+      console.log('[Recording][Socket] Received recording-resumed');
+      setRecordingState('recording');
+      setRecordingStartedAt(payload.startedAt || new Date());
+      if (payload.accumulatedDuration !== undefined) {
+        setRecordingAccumulatedDuration(payload.accumulatedDuration);
+      }
     });
 
     newSocket.on('class:recording-stopping', (payload) => {
