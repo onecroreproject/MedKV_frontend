@@ -8,24 +8,69 @@ import {
 import darkLogo from '../../../assets/dark_logo_transparent.png';
 
 /**
- * Helper to extract clean name from participant or ID
+ * Checks if a string is a 24-character hexadecimal MongoDB ObjectId
  */
-function getParticipantName(userIdOrIdentity, participants = []) {
-  if (!userIdOrIdentity) return 'Student';
-  const match = participants.find(p => {
-    if (p.identity === userIdOrIdentity || p.identity?.includes(userIdOrIdentity)) return true;
-    if (p.name && (p.name === userIdOrIdentity || userIdOrIdentity.includes(p.name))) return true;
-    try {
-      const meta = p.metadata ? JSON.parse(p.metadata) : {};
-      if (meta.userId === userIdOrIdentity || meta._id === userIdOrIdentity) return true;
-    } catch {}
-    return false;
-  });
+function isMongoObjectId(str) {
+  return typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str.trim());
+}
 
-  if (match) {
-    return match.name || match.identity.split('|')[0];
+/**
+ * Resolves a human-readable participant name from LiveKit participants,
+ * chat messages, or waiting room students.
+ * NEVER displays raw hex database IDs like '6adce58e5f3cc5f583382afb'.
+ */
+function resolveParticipantName(userIdOrIdentity, participants = [], chatMessages = [], waitingStudents = []) {
+  if (!userIdOrIdentity) return 'Student';
+  const rawId = String(userIdOrIdentity).trim();
+
+  // 1. Search in LiveKit participants
+  if (Array.isArray(participants)) {
+    const pMatch = participants.find(p => {
+      if (!p) return false;
+      if (p.identity === rawId || p.identity?.startsWith(rawId + '|') || p.identity?.endsWith('|' + rawId)) return true;
+      if (p.name && p.name === rawId) return true;
+      try {
+        const meta = p.metadata ? JSON.parse(p.metadata) : {};
+        if (meta.userId === rawId || meta._id === rawId || meta.id === rawId) return true;
+      } catch {}
+      return false;
+    });
+
+    if (pMatch && pMatch.name && !isMongoObjectId(pMatch.name)) {
+      return pMatch.name;
+    }
   }
-  return userIdOrIdentity.split('|')[0] || 'Student';
+
+  // 2. Search in chat messages history
+  if (Array.isArray(chatMessages)) {
+    const chatMatch = [...chatMessages].reverse().find(m => m && (m.userId === rawId || m.id === rawId));
+    if (chatMatch && chatMatch.name && !isMongoObjectId(chatMatch.name)) {
+      return chatMatch.name;
+    }
+  }
+
+  // 3. Search in waitingStudents list
+  if (Array.isArray(waitingStudents)) {
+    const waitMatch = waitingStudents.find(s => s && (s.userId === rawId || s._id === rawId || s.id === rawId));
+    if (waitMatch && waitMatch.name && !isMongoObjectId(waitMatch.name)) {
+      return waitMatch.name;
+    }
+  }
+
+  // 4. If formatted as "userId|Name" or "Name|userId"
+  if (rawId.includes('|')) {
+    const parts = rawId.split('|');
+    const humanName = parts.find(part => part && !isMongoObjectId(part));
+    if (humanName) return humanName;
+  }
+
+  // 5. If rawId itself is NOT an ObjectId, it's already a clean name
+  if (!isMongoObjectId(rawId)) {
+    return rawId;
+  }
+
+  // 6. Safe human fallback — never show raw database hex to faculty
+  return 'Student';
 }
 
 /**
@@ -34,9 +79,9 @@ function getParticipantName(userIdOrIdentity, participants = []) {
  * Floating Google Meet style Document Picture-in-Picture window:
  * - Active speaker grid: If a student/participant speaks, shows their live video or speaking avatar tile
  * - Standby: Clean Academy Logo grid with Dr. Sam Reefath Radiology Academy branding (no infinite mirror)
- * - Who raised hand alert: Shows student name who raised hand with quick lower button
+ * - Who raised hand alert: Clean banner in normal flow below header showing student's real name
  * - Who sent message: Instant pop-up notification when someone posts a chat message
- * - Google Meet menu: Mic, Cam, Screen Share, Recording, End Class, and Return to Tab
+ * - Google Meet bottom menu: Fixed at the very bottom with comfortable round buttons and gaps
  */
 export default function TeacherPipContent({
   user,
@@ -55,6 +100,7 @@ export default function TeacherPipContent({
   onLeave,
   participantCount = 0,
   participants = [],
+  waitingStudents = [],
   raisedHands = [],
   onClearHand,
   chatMessages = [],
@@ -66,7 +112,6 @@ export default function TeacherPipContent({
   const teacherMiniCamRef = useRef(null);
 
   // ── 1. ACTIVE REMOTE SPEAKER DETECTION ─────────────────────────────────────
-  // Find any remote participant who is currently speaking
   const activeSpeaker = useMemo(() => {
     if (!participants || participants.length === 0) return null;
     return participants.find(p => !p.isLocal && p.isSpeaking) || null;
@@ -110,11 +155,11 @@ export default function TeacherPipContent({
     }
   }, [localCameraTrack, isVideoOff]);
 
-  // ── 2. WHO RAISED HAND ─────────────────────────────────────────────────────
+  // ── 2. WHO RAISED HAND (RESOLVED NAMES) ────────────────────────────────────
   const raisedStudentNames = useMemo(() => {
     if (!raisedHands || raisedHands.length === 0) return [];
-    return raisedHands.map(id => getParticipantName(id, participants));
-  }, [raisedHands, participants]);
+    return raisedHands.map(id => resolveParticipantName(id, participants, chatMessages, waitingStudents));
+  }, [raisedHands, participants, chatMessages, waitingStudents]);
 
   // ── 3. WHO SENT MESSAGE (Chat Toast Popup) ──────────────────────────────────
   const [latestChatPopup, setLatestChatPopup] = useState(null);
@@ -124,7 +169,6 @@ export default function TeacherPipContent({
     const currentCount = chatMessages?.length || 0;
     if (currentCount > prevChatCount.current) {
       const latest = chatMessages[currentCount - 1];
-      // Only pop up if it's from another participant (not self)
       const currentUserId = user?._id || user?.id;
       if (latest && latest.userId !== currentUserId) {
         setLatestChatPopup({
@@ -149,31 +193,94 @@ export default function TeacherPipContent({
 
   const teacherName = user?.name || 'Faculty';
 
+  // Standard round control button style
+  const getBtnStyle = (bg, hoverBg) => ({
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: bg,
+    color: '#ffffff',
+    border: 'none',
+    cursor: 'pointer',
+    outline: 'none',
+    transition: 'all 0.15s ease',
+    flexShrink: 0,
+    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+  });
+
   return (
-    <div className="w-full h-full flex flex-col bg-[#0b0f19] text-slate-100 select-none overflow-hidden font-sans relative">
+    <div 
+      style={{
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#0b0f19',
+        color: '#f8fafc',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        overflow: 'hidden',
+        userSelect: 'none',
+        position: 'relative'
+      }}
+    >
       
-      {/* ── TOP HEADER (Google Meet Style) ────────────────────────────── */}
-      <div className="h-10 px-3 bg-[#131b2e]/95 border-b border-slate-800 flex items-center justify-between shrink-0 text-xs z-20">
-        
-        {/* Left: Faculty Status & Main Tab Switcher */}
+      {/* ── 1. TOP HEADER (Google Meet Style) ────────────────────────── */}
+      <div 
+        style={{
+          height: '40px',
+          padding: '0 12px',
+          backgroundColor: '#111827',
+          borderBottom: '1px solid #1f2937',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+          fontSize: '12px',
+          zIndex: 20
+        }}
+      >
+        {/* Left: Status & Main Tab Switcher */}
         <div 
           onClick={onFocusMainTab} 
-          className="flex items-center space-x-2 cursor-pointer hover:text-blue-300 transition-colors truncate max-w-[190px]"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            maxWidth: '200px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
           title="Click to bring full class tab to front"
         >
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-          <span className="font-semibold text-slate-200 truncate">
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }}></span>
+          <span style={{ fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {isScreenSharing ? `${teacherName} (Presenting)` : teacherName}
           </span>
         </div>
 
         {/* Right: Badges & Window Actions */}
-        <div className="flex items-center space-x-1.5 shrink-0">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           
-          {/* Raised hands count pill */}
+          {/* Raised hands count badge */}
           {raisedHands.length > 0 && (
             <div 
-              className="flex items-center space-x-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded-full text-[10px] font-bold animate-pulse"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                color: '#fbbf24',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                padding: '2px 6px',
+                borderRadius: '9999px',
+                fontSize: '10px',
+                fontWeight: 700
+              }}
               title={`${raisedStudentNames.join(', ')} raised hand`}
             >
               <Hand size={11} />
@@ -182,15 +289,36 @@ export default function TeacherPipContent({
           )}
 
           {/* Participant count */}
-          <div className="flex items-center space-x-1 bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-medium border border-slate-700">
-            <Users size={11} className="text-blue-400" />
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              backgroundColor: '#1f2937',
+              color: '#cbd5e1',
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              fontSize: '10px',
+              fontWeight: 500,
+              border: '1px solid #374151'
+            }}
+          >
+            <Users size={11} style={{ color: '#60a5fa' }} />
             <span>{participantCount}</span>
           </div>
 
           {/* Focus Tab Button */}
           <button
             onClick={onFocusMainTab}
-            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            style={{
+              padding: '4px',
+              borderRadius: '4px',
+              backgroundColor: 'transparent',
+              color: '#94a3b8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
             title="Bring live class to front"
             aria-label="Bring live class to front"
           >
@@ -200,7 +328,15 @@ export default function TeacherPipContent({
           {/* Close PiP */}
           <button
             onClick={onClosePip}
-            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            style={{
+              padding: '4px',
+              borderRadius: '4px',
+              backgroundColor: 'transparent',
+              color: '#94a3b8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
             title="Close Picture-in-Picture"
             aria-label="Close"
           >
@@ -209,12 +345,26 @@ export default function TeacherPipContent({
         </div>
       </div>
 
-      {/* ── WHO RAISED HAND ALERT BANNER ──────────────────────────────── */}
+      {/* ── 2. WHO RAISED HAND ALERT BANNER (IN-FLOW: NEVER COVERS LOGO) ── */}
       {raisedHands.length > 0 && (
-        <div className="absolute top-11 left-2 right-2 z-30 bg-amber-500/95 text-slate-950 px-2.5 py-1.5 rounded-lg shadow-lg border border-amber-400/50 flex items-center justify-between animate-bounce-subtle">
-          <div className="flex items-center space-x-1.5 min-w-0 pr-1">
-            <span className="text-sm shrink-0">✋</span>
-            <div className="text-[11px] font-bold truncate">
+        <div 
+          style={{
+            flexShrink: 0,
+            margin: '6px 8px 0 8px',
+            padding: '6px 10px',
+            backgroundColor: '#f59e0b',
+            color: '#0f172a',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            animation: 'bounce-subtle 1.8s ease-in-out infinite'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
+            <span style={{ fontSize: '13px', flexShrink: 0 }}>✋</span>
+            <div style={{ fontSize: '11px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {raisedStudentNames.length === 1
                 ? `${raisedStudentNames[0]} raised hand`
                 : `${raisedStudentNames[0]} +${raisedStudentNames.length - 1} others raised hand`}
@@ -223,7 +373,16 @@ export default function TeacherPipContent({
           {onClearHand && (
             <button 
               onClick={() => onClearHand(raisedHands[0])}
-              className="text-[10px] bg-slate-950/20 hover:bg-slate-950/30 px-2 py-0.5 rounded font-bold text-slate-950 shrink-0 transition-colors"
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                backgroundColor: 'rgba(15, 23, 42, 0.25)',
+                color: '#0f172a',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                flexShrink: 0,
+                marginLeft: '6px'
+              }}
               title="Lower hand"
             >
               Lower
@@ -232,36 +391,62 @@ export default function TeacherPipContent({
         </div>
       )}
 
-      {/* ── INCOMING CHAT MESSAGE POPUP ───────────────────────────────── */}
+      {/* ── 3. INCOMING CHAT MESSAGE POPUP ───────────────────────────── */}
       {latestChatPopup && (
-        <div className="absolute bottom-16 left-2 right-2 z-30 bg-slate-900/95 border border-blue-500/60 text-white p-2.5 rounded-lg shadow-2xl backdrop-blur-md transition-all animate-in slide-in-from-bottom-2">
-          <div className="flex items-center justify-between mb-1 pb-1 border-b border-slate-800">
-            <div className="flex items-center space-x-1.5 min-w-0">
-              <MessageSquare size={12} className="text-blue-400 shrink-0" />
-              <span className="text-[11px] font-bold text-blue-300 truncate">
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: '68px',
+            left: '8px',
+            right: '8px',
+            zIndex: 30,
+            backgroundColor: 'rgba(17, 24, 39, 0.97)',
+            border: '1px solid #3b82f6',
+            color: '#ffffff',
+            padding: '8px 10px',
+            borderRadius: '8px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(8px)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid #374151' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+              <MessageSquare size={12} style={{ color: '#60a5fa', flexShrink: 0 }} />
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#93c5fd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {latestChatPopup.name}
               </span>
-              <span className="text-[9px] text-slate-400">new question</span>
+              <span style={{ fontSize: '9px', color: '#9ca3af' }}>question</span>
             </div>
             <button 
               onClick={() => setLatestChatPopup(null)}
-              className="text-slate-400 hover:text-white p-0.5 rounded"
+              style={{ color: '#9ca3af', backgroundColor: 'transparent', padding: '2px' }}
             >
               <X size={12} />
             </button>
           </div>
-          <div className="text-[11px] text-slate-200 line-clamp-2 break-words leading-snug">
+          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.3', maxHeight: '40px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {latestChatPopup.message}
           </div>
         </div>
       )}
 
-      {/* ── MAIN STAGE: ACTIVE SPEAKER OR EMPTY LOGO GRID ─────────────── */}
-      <div className="flex-1 relative bg-[#070b14] flex items-center justify-center overflow-hidden min-h-0">
+      {/* ── 4. MAIN STAGE: ACTIVE SPEAKER OR EMPTY LOGO GRID (FLEX: 1) ─ */}
+      <div 
+        style={{
+          flex: 1,
+          minHeight: 0,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          backgroundColor: '#070b14'
+        }}
+      >
         
         {/* CASE A: Active Remote Speaker is Talking */}
         {activeSpeaker ? (
-          <div className="w-full h-full relative flex items-center justify-center bg-black">
+          <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' }}>
             {activeSpeakerVideoTrack ? (
               /* Speaker Camera Video */
               <video 
@@ -269,65 +454,133 @@ export default function TeacherPipContent({
                 autoPlay 
                 playsInline 
                 muted 
-                className="w-full h-full object-cover"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (
               /* Speaker Avatar + Speaking Ring */
-              <div className="flex flex-col items-center justify-center p-4">
-                <div className="relative mb-2">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-emerald-500 animate-pulse">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                <div style={{ position: 'relative', marginBottom: '8px' }}>
+                  <div 
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '20px',
+                      boxShadow: '0 0 0 4px #10b981',
+                      animation: 'pulse 2s infinite'
+                    }}
+                  >
                     {(activeSpeaker.name || activeSpeaker.identity || '?').slice(0, 2).toUpperCase()}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md">
-                    <Mic size={12} />
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      bottom: '-2px',
+                      right: '-2px',
+                      backgroundColor: '#10b981',
+                      color: '#ffffff',
+                      padding: '4px',
+                      borderRadius: '50%',
+                      display: 'flex'
+                    }}
+                  >
+                    <Mic size={11} />
                   </div>
                 </div>
-                <div className="text-xs font-bold text-slate-100 max-w-[200px] truncate">
-                  {activeSpeaker.name || activeSpeaker.identity.split('|')[0]}
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#f8fafc', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {resolveParticipantName(activeSpeaker.identity, participants, chatMessages, waitingStudents)}
                 </div>
-                <div className="text-[10px] text-emerald-400 font-semibold flex items-center space-x-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <div style={{ fontSize: '10px', color: '#34d399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }}></span>
                   <span>Speaking...</span>
                 </div>
               </div>
             )}
 
             {/* Speaking Name Tag in bottom-left */}
-            <div className="absolute bottom-2 left-2 z-10 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-semibold text-white flex items-center space-x-1.5 border border-emerald-500/40">
-              <Volume2 size={11} className="text-emerald-400 animate-pulse" />
-              <span className="truncate max-w-[140px]">
-                {activeSpeaker.name || activeSpeaker.identity.split('|')[0]}
+            <div 
+              style={{
+                position: 'absolute',
+                bottom: '8px',
+                left: '8px',
+                zIndex: 10,
+                backgroundColor: 'rgba(0,0,0,0.75)',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                fontSize: '10px',
+                fontWeight: 600,
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid rgba(16, 185, 129, 0.4)'
+              }}
+            >
+              <Volume2 size={11} style={{ color: '#34d399' }} />
+              <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {resolveParticipantName(activeSpeaker.identity, participants, chatMessages, waitingStudents)}
               </span>
             </div>
           </div>
         ) : (
           /* CASE B: Empty Logo Grid (Standby / Faculty Presenting) */
-          <div className="flex flex-col items-center justify-center text-center p-4 select-none">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '16px' }}>
             
-            {/* Academy Logo with subtle glowing aura */}
-            <div className="relative mb-3">
-              <div className="w-16 h-16 rounded-2xl bg-slate-900/90 border border-slate-700/60 p-2 flex items-center justify-center shadow-2xl backdrop-blur-md">
+            {/* Academy Logo */}
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <div 
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                  border: '1px solid rgba(55, 65, 81, 0.8)',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+                }}
+              >
                 <img 
                   src={darkLogo} 
                   alt="Academy Logo" 
-                  className="w-full h-full object-contain filter drop-shadow" 
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
                 />
               </div>
-              <div className="absolute inset-0 rounded-2xl ring-1 ring-blue-500/30 animate-pulse pointer-events-none"></div>
             </div>
 
-            <div className="text-xs font-bold text-slate-100 tracking-wide max-w-[260px] truncate">
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9', letterSpacing: '0.01em', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               Dr. Sam Reefath Radiology Academy
             </div>
             
-            <div className="text-[10px] text-blue-400 font-medium mt-1 flex items-center space-x-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div style={{ fontSize: '11px', color: '#60a5fa', fontWeight: 500, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
               <span>Live Class Active</span>
             </div>
 
             {isScreenSharing && (
-              <div className="mt-2 text-[10px] text-slate-300 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1 rounded-full flex items-center space-x-1.5 shadow-sm">
-                <MonitorUp size={11} className="text-blue-400" />
+              <div 
+                style={{
+                  marginTop: '10px',
+                  fontSize: '10px',
+                  color: '#cbd5e1',
+                  backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                  border: '1px solid #374151',
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <MonitorUp size={11} style={{ color: '#60a5fa' }} />
                 <span>You are presenting your screen</span>
               </div>
             )}
@@ -336,15 +589,29 @@ export default function TeacherPipContent({
 
         {/* Mini Faculty Camera in corner when camera is enabled */}
         {!isVideoOff && (
-          <div className="absolute bottom-2 right-2 w-20 aspect-video rounded-lg overflow-hidden border border-slate-700 shadow-2xl bg-slate-900 z-10">
+          <div 
+            style={{
+              position: 'absolute',
+              bottom: '8px',
+              right: '8px',
+              width: '80px',
+              aspectRatio: '16/9',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              border: '1px solid #374151',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              backgroundColor: '#0f172a',
+              zIndex: 10
+            }}
+          >
             <video 
               ref={teacherMiniCamRef} 
               autoPlay 
               playsInline 
               muted 
-              className="w-full h-full object-cover"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
-            <div className="absolute bottom-0.5 left-1 text-[8px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">
+            <div style={{ position: 'absolute', bottom: '2px', left: '4px', fontSize: '8px', fontWeight: 700, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,1)' }}>
               You
             </div>
           </div>
@@ -352,101 +619,117 @@ export default function TeacherPipContent({
 
         {/* Recording active badge */}
         {(recordingState === 'recording' || recordingState === 'paused') && (
-          <div className={`absolute top-2 left-2 z-20 px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center space-x-1 shadow-md ${
-            recordingState === 'recording' ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-600 text-white'
-          }`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+          <div 
+            style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              zIndex: 20,
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              fontSize: '9px',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+              backgroundColor: recordingState === 'recording' ? '#dc2626' : '#d97706',
+              color: '#ffffff'
+            }}
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#ffffff' }}></span>
             <span>{recordingState === 'recording' ? 'REC' : 'PAUSED'}</span>
           </div>
         )}
       </div>
 
-      {/* ── BOTTOM CONTROL MENU (Google Meet Style Buttons) ────────────── */}
-      <div className="h-14 px-3 bg-[#0d1322] border-t border-slate-800 flex items-center justify-center space-x-2.5 shrink-0 z-20">
+      {/* ── 5. BOTTOM CONTROL MENU (PINNED AT VERY BOTTOM WITH 10px GAP) ── */}
+      <div 
+        style={{
+          height: '58px',
+          padding: '0 12px',
+          backgroundColor: '#0b0f19',
+          borderTop: '1px solid #1f2937',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          flexShrink: 0,
+          zIndex: 20
+        }}
+      >
         
         {/* Microphone Toggle */}
         <button
           onClick={onToggleMic}
-          className={`p-2.5 rounded-full flex items-center justify-center transition-all ${
-            isMuted 
-              ? 'bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20' 
-              : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
-          }`}
+          style={getBtnStyle(isMuted ? '#ef4444' : '#334155')}
           title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
           aria-label={isMuted ? "Unmute" : "Mute"}
         >
-          {isMuted ? <MicOff size={15} /> : <Mic size={15} />}
+          {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
         </button>
 
         {/* Camera Toggle */}
         <button
           onClick={onToggleCamera}
-          className={`p-2.5 rounded-full flex items-center justify-center transition-all ${
-            isVideoOff 
-              ? 'bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20' 
-              : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
-          }`}
+          style={getBtnStyle(isVideoOff ? '#ef4444' : '#334155')}
           title={isVideoOff ? "Turn On Camera" : "Turn Off Camera"}
           aria-label={isVideoOff ? "Turn On Camera" : "Turn Off Camera"}
         >
-          {isVideoOff ? <VideoOff size={15} /> : <Video size={15} />}
+          {isVideoOff ? <VideoOff size={16} /> : <Video size={16} />}
         </button>
 
         {/* Screen Share Toggle */}
         <button
           onClick={onToggleScreenShare}
-          className={`p-2.5 rounded-full flex items-center justify-center transition-all ${
-            isScreenSharing 
-              ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/30' 
-              : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
-          }`}
+          style={getBtnStyle(isScreenSharing ? '#2563eb' : '#334155')}
           title={isScreenSharing ? "Stop Presenting Screen" : "Present Screen"}
           aria-label={isScreenSharing ? "Stop Presenting" : "Present Screen"}
         >
-          <MonitorUp size={15} />
+          <MonitorUp size={16} />
         </button>
 
         {/* Recording Pause / Resume Button (when recording) */}
         {recordingState === 'recording' && (
           <button
             onClick={onPauseRecording}
-            className="p-2.5 rounded-full flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-md shadow-amber-500/20"
+            style={getBtnStyle('#f59e0b')}
             title="Pause Recording"
             aria-label="Pause Recording"
           >
-            <Pause size={15} />
+            <Pause size={16} />
           </button>
         )}
 
         {recordingState === 'paused' && (
           <button
             onClick={onResumeRecording}
-            className="p-2.5 rounded-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-500/20 animate-pulse"
+            style={getBtnStyle('#10b981')}
             title="Resume Recording"
             aria-label="Resume Recording"
           >
-            <Play size={15} />
+            <Play size={16} />
           </button>
         )}
 
         {/* Focus Main Tab Button */}
         <button
           onClick={onFocusMainTab}
-          className="p-2.5 rounded-full flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-slate-100 transition-all"
-          title="Open Live Class Tab"
-          aria-label="Open Live Class Tab"
+          style={getBtnStyle('#334155')}
+          title="Open Full Class Tab"
+          aria-label="Open Full Class Tab"
         >
-          <ExternalLink size={15} />
+          <ExternalLink size={16} />
         </button>
 
         {/* End / Leave Class Button */}
         <button
           onClick={onEndClass || onLeave}
-          className="p-2.5 rounded-full flex items-center justify-center bg-red-600 hover:bg-red-700 text-white transition-all shadow-md shadow-red-600/30"
+          style={getBtnStyle('#dc2626')}
           title="End Call / Leave"
           aria-label="End Call"
         >
-          <PhoneOff size={15} />
+          <PhoneOff size={16} />
         </button>
       </div>
     </div>

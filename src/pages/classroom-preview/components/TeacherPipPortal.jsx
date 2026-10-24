@@ -26,13 +26,26 @@ export function copyStylesToPip(targetDoc) {
     } catch (e) {}
   });
 
-  // 3. Fallback CSS so buttons, colors, and layout always look perfect even before links load
+  // 3. Complete standalone fallback CSS ensuring beautiful layout regardless of stylesheet loading
   try {
     const fallback = targetDoc.createElement('style');
     fallback.textContent = `
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
-      button { cursor: pointer; border: none; outline: none; }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { 
+        height: 100vh !important; 
+        width: 100vw !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        overflow: hidden !important; 
+        background-color: #0b0f19 !important; 
+        color: #f8fafc !important; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      }
+      button { cursor: pointer; border: none; outline: none; font-family: inherit; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+      .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+      .animate-bounce-subtle { animation: bounce-subtle 1.8s ease-in-out infinite; }
     `;
     targetDoc.head.appendChild(fallback);
   } catch (e) {}
@@ -53,11 +66,19 @@ export async function openTeacherPipWindow(title = 'Live Lecture') {
     pipWin.document.title = `${title} — Faculty PiP`;
     copyStylesToPip(pipWin.document);
 
+    pipWin.document.documentElement.style.height = '100vh';
+    pipWin.document.documentElement.style.width = '100vw';
+    pipWin.document.documentElement.style.margin = '0';
+    pipWin.document.documentElement.style.padding = '0';
+    pipWin.document.documentElement.style.overflow = 'hidden';
+
+    pipWin.document.body.style.height = '100vh';
+    pipWin.document.body.style.width = '100vw';
     pipWin.document.body.style.margin = '0';
     pipWin.document.body.style.padding = '0';
     pipWin.document.body.style.overflow = 'hidden';
     pipWin.document.body.style.backgroundColor = '#0b0f19';
-    pipWin.document.body.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+    pipWin.document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
     return pipWin;
   }
@@ -100,6 +121,7 @@ export default function TeacherPipPortal({
   onLeave,
   participantCount = 0,
   participants = [],
+  waitingStudents = [],
   raisedHands = [],
   onClearHand,
   chatMessages = [],
@@ -141,6 +163,7 @@ export default function TeacherPipPortal({
       onLeave={onLeave}
       participantCount={participantCount}
       participants={participants}
+      waitingStudents={waitingStudents}
       raisedHands={raisedHands}
       onClearHand={onClearHand}
       chatMessages={chatMessages}

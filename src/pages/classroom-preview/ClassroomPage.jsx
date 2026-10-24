@@ -668,6 +668,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         roomId={roomId}
         recordingState={recordingState}
         waitingStudentsCount={waitingStudents.length}
+        waitingStudents={waitingStudents}
         raisedHandsCount={raisedHands.length}
         raisedHands={raisedHands}
         chatMessages={chatMessages}
@@ -819,7 +820,7 @@ function ControlsManager({
   isHandRaised, setIsHandRaised, onLeave, onEndClass, onReaction, unreadCount = 0,
   isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState,
   waitingStudentsCount, raisedHandsCount, setToastMessage,
-  raisedHands = [], chatMessages = [], onClearHand
+  raisedHands = [], chatMessages = [], onClearHand, waitingStudents = []
 }) {
   const { localParticipant } = useLocalParticipant();
   const prewarmPromiseRef = useRef(null);
@@ -1147,6 +1148,7 @@ function ControlsManager({
           onLeave={onLeave}
           participantCount={participants.length}
           participants={participants}
+          waitingStudents={waitingStudents}
           raisedHands={raisedHands}
           onClearHand={onClearHand}
           chatMessages={chatMessages}
