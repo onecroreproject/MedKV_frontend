@@ -125,6 +125,7 @@ export default function TeacherPipPortal({
   raisedHands = [],
   onClearHand,
   chatMessages = [],
+  userNames = {},
   localCameraTrack,
 }) {
   // Clean up if pipWindow closes or component unmounts
@@ -167,6 +168,7 @@ export default function TeacherPipPortal({
       raisedHands={raisedHands}
       onClearHand={onClearHand}
       chatMessages={chatMessages}
+      userNames={userNames}
       onFocusMainTab={() => {
         window.focus();
       }}

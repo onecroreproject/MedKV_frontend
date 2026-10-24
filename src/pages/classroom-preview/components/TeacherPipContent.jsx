@@ -15,15 +15,29 @@ function isMongoObjectId(str) {
 }
 
 /**
- * Resolves a human-readable participant name from LiveKit participants,
- * chat messages, or waiting room students.
+ * Resolves a human-readable participant name from:
+ * 1. userNames socket cache (real-time name emitted on hand-updated, chat-message, etc.)
+ * 2. asyncResolvedNames (fetched from /api/v1/students/:id)
+ * 3. LiveKit participant list
+ * 4. In-memory chat message history
+ * 5. Waiting room students
  * NEVER displays raw hex database IDs like '6adce58e5f3cc5f583382afb'.
  */
-function resolveParticipantName(userIdOrIdentity, participants = [], chatMessages = [], waitingStudents = []) {
+function resolveParticipantName(userIdOrIdentity, participants = [], chatMessages = [], waitingStudents = [], userNames = {}, asyncResolvedNames = {}) {
   if (!userIdOrIdentity) return 'Student';
   const rawId = String(userIdOrIdentity).trim();
 
-  // 1. Search in LiveKit participants
+  // 1. Check real-time userNames map (from socket events)
+  if (userNames && userNames[rawId] && !isMongoObjectId(userNames[rawId])) {
+    return userNames[rawId];
+  }
+
+  // 2. Check async resolved names (from API fetch)
+  if (asyncResolvedNames && asyncResolvedNames[rawId] && !isMongoObjectId(asyncResolvedNames[rawId])) {
+    return asyncResolvedNames[rawId];
+  }
+
+  // 3. Search in LiveKit participants
   if (Array.isArray(participants)) {
     const pMatch = participants.find(p => {
       if (!p) return false;
@@ -32,16 +46,22 @@ function resolveParticipantName(userIdOrIdentity, participants = [], chatMessage
       try {
         const meta = p.metadata ? JSON.parse(p.metadata) : {};
         if (meta.userId === rawId || meta._id === rawId || meta.id === rawId) return true;
+        if (meta.name && !isMongoObjectId(meta.name)) return true;
       } catch {}
       return false;
     });
 
-    if (pMatch && pMatch.name && !isMongoObjectId(pMatch.name)) {
-      return pMatch.name;
+    if (pMatch) {
+      if (pMatch.name && !isMongoObjectId(pMatch.name)) return pMatch.name;
+      try {
+        const meta = pMatch.metadata ? JSON.parse(pMatch.metadata) : {};
+        if (meta.name && !isMongoObjectId(meta.name)) return meta.name;
+        if (meta.fullName && !isMongoObjectId(meta.fullName)) return meta.fullName;
+      } catch {}
     }
   }
 
-  // 2. Search in chat messages history
+  // 4. Search in chat messages history
   if (Array.isArray(chatMessages)) {
     const chatMatch = [...chatMessages].reverse().find(m => m && (m.userId === rawId || m.id === rawId));
     if (chatMatch && chatMatch.name && !isMongoObjectId(chatMatch.name)) {
@@ -49,7 +69,7 @@ function resolveParticipantName(userIdOrIdentity, participants = [], chatMessage
     }
   }
 
-  // 3. Search in waitingStudents list
+  // 5. Search in waitingStudents list
   if (Array.isArray(waitingStudents)) {
     const waitMatch = waitingStudents.find(s => s && (s.userId === rawId || s._id === rawId || s.id === rawId));
     if (waitMatch && waitMatch.name && !isMongoObjectId(waitMatch.name)) {
@@ -57,19 +77,19 @@ function resolveParticipantName(userIdOrIdentity, participants = [], chatMessage
     }
   }
 
-  // 4. If formatted as "userId|Name" or "Name|userId"
+  // 6. If formatted as "userId|Name" or "Name|userId"
   if (rawId.includes('|')) {
     const parts = rawId.split('|');
     const humanName = parts.find(part => part && !isMongoObjectId(part));
     if (humanName) return humanName;
   }
 
-  // 5. If rawId itself is NOT an ObjectId, it's already a clean name
+  // 7. If rawId itself is NOT an ObjectId, it's already a clean name
   if (!isMongoObjectId(rawId)) {
     return rawId;
   }
 
-  // 6. Safe human fallback — never show raw database hex to faculty
+  // 8. Safe human fallback — never show raw database hex to faculty
   return 'Student';
 }
 
@@ -104,12 +124,41 @@ export default function TeacherPipContent({
   raisedHands = [],
   onClearHand,
   chatMessages = [],
+  userNames = {},
   onFocusMainTab,
   onClosePip,
   localCameraTrack,
 }) {
   const speakerVideoRef = useRef(null);
   const teacherMiniCamRef = useRef(null);
+  const [asyncResolvedNames, setAsyncResolvedNames] = useState({});
+
+  // Asynchronously fetch student names for any raised hands with hex ObjectIds
+  useEffect(() => {
+    if (!raisedHands || raisedHands.length === 0) return;
+
+    raisedHands.forEach(async (id) => {
+      if (!id) return;
+      const rawId = String(id).trim();
+      if (!isMongoObjectId(rawId)) return;
+      if (userNames[rawId] || asyncResolvedNames[rawId]) return;
+
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${apiUrl}/students/${rawId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const studentName = json?.data?.name || json?.name;
+          if (studentName && !isMongoObjectId(studentName)) {
+            setAsyncResolvedNames(prev => ({ ...prev, [rawId]: studentName }));
+          }
+        }
+      } catch (e) {}
+    });
+  }, [raisedHands, userNames, asyncResolvedNames]);
 
   // ── 1. ACTIVE REMOTE SPEAKER DETECTION ─────────────────────────────────────
   const activeSpeaker = useMemo(() => {
@@ -158,8 +207,8 @@ export default function TeacherPipContent({
   // ── 2. WHO RAISED HAND (RESOLVED NAMES) ────────────────────────────────────
   const raisedStudentNames = useMemo(() => {
     if (!raisedHands || raisedHands.length === 0) return [];
-    return raisedHands.map(id => resolveParticipantName(id, participants, chatMessages, waitingStudents));
-  }, [raisedHands, participants, chatMessages, waitingStudents]);
+    return raisedHands.map(id => resolveParticipantName(id, participants, chatMessages, waitingStudents, userNames, asyncResolvedNames));
+  }, [raisedHands, participants, chatMessages, waitingStudents, userNames, asyncResolvedNames]);
 
   // ── 3. WHO SENT MESSAGE (Chat Toast Popup) ──────────────────────────────────
   const [latestChatPopup, setLatestChatPopup] = useState(null);
@@ -171,23 +220,26 @@ export default function TeacherPipContent({
       const latest = chatMessages[currentCount - 1];
       const currentUserId = user?._id || user?.id;
       if (latest && latest.userId !== currentUserId) {
+        const resolvedSenderName = (latest.name && !isMongoObjectId(latest.name) ? latest.name : null)
+          || resolveParticipantName(latest.userId, participants, chatMessages, waitingStudents, userNames, asyncResolvedNames);
+
         setLatestChatPopup({
           id: latest.id || Date.now(),
-          name: latest.name || 'Student',
+          name: resolvedSenderName || 'Student',
           message: latest.message || latest.text || '',
           timestamp: Date.now()
         });
       }
     }
     prevChatCount.current = currentCount;
-  }, [chatMessages, user]);
+  }, [chatMessages, user, participants, waitingStudents, userNames, asyncResolvedNames]);
 
-  // Auto-dismiss chat popup after 8 seconds
+  // Auto-dismiss chat popup after 12 seconds
   useEffect(() => {
     if (!latestChatPopup) return;
     const timer = setTimeout(() => {
       setLatestChatPopup(null);
-    }, 8000);
+    }, 12000);
     return () => clearTimeout(timer);
   }, [latestChatPopup]);
 

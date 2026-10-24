@@ -219,6 +219,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     recentReactions, 
     chatMessages,
     unreadCount,
+    userNames,
     setChatPanelOpen,
     toggleHand, 
     clearHand, 
@@ -672,6 +673,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
         raisedHandsCount={raisedHands.length}
         raisedHands={raisedHands}
         chatMessages={chatMessages}
+        userNames={userNames}
         onClearHand={clearHand}
         setToastMessage={setToastMessage}
       />
@@ -820,7 +822,7 @@ function ControlsManager({
   isHandRaised, setIsHandRaised, onLeave, onEndClass, onReaction, unreadCount = 0,
   isMutedByFaculty, isCameraDisabledByFaculty, roomId, recordingState,
   waitingStudentsCount, raisedHandsCount, setToastMessage,
-  raisedHands = [], chatMessages = [], onClearHand, waitingStudents = []
+  raisedHands = [], chatMessages = [], onClearHand, waitingStudents = [], userNames = {}
 }) {
   const { localParticipant } = useLocalParticipant();
   const prewarmPromiseRef = useRef(null);
@@ -1152,6 +1154,7 @@ function ControlsManager({
           raisedHands={raisedHands}
           onClearHand={onClearHand}
           chatMessages={chatMessages}
+          userNames={userNames}
           localCameraTrack={localCameraTrack}
         />
       )}

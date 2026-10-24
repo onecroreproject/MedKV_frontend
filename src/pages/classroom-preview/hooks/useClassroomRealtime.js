@@ -11,6 +11,7 @@ export function useClassroomRealtime(roomId, user) {
   const [recentReactions, setRecentReactions] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userNames, setUserNames] = useState({});
 
   // ── Connection state ───────────────────────────────────────────────────────
   const [isSocketConnected, setIsSocketConnected] = useState(false);
@@ -143,7 +144,10 @@ export function useClassroomRealtime(roomId, user) {
     });
 
     // ── Raise Hand ───────────────────────────────────────────────────────────
-    newSocket.on('class:hand-updated', ({ userId, action }) => {
+    newSocket.on('class:hand-updated', ({ userId, name, action }) => {
+      if (userId && name) {
+        setUserNames(prev => ({ ...prev, [userId]: name }));
+      }
       setRaisedHands(prev => {
         if (action === 'raised') {
           if (!prev.includes(userId)) return [...prev, userId];
@@ -172,6 +176,9 @@ export function useClassroomRealtime(roomId, user) {
 
     // ── Chat ──────────────────────────────────────────────────────────────────
     newSocket.on('class:chat-message', (msg) => {
+      if (msg?.userId && msg?.name) {
+        setUserNames(prev => ({ ...prev, [msg.userId]: msg.name }));
+      }
       setChatMessages(prev => [...prev, msg]);
       if (!isChatOpenRef.current) {
         setUnreadCount(prev => prev + 1);
@@ -415,6 +422,7 @@ export function useClassroomRealtime(roomId, user) {
     recentReactions,
     chatMessages,
     unreadCount,
+    userNames,
     setChatPanelOpen,
     toggleHand,
     clearHand,
