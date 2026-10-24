@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getMe } from '../../services/userService';
 import { LiveKitRoom, RoomAudioRenderer, useRoomContext, useLocalParticipant, useTracks, useParticipants, useConnectionState } from '@livekit/components-react';
-import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets } from 'livekit-client';
+import { Track, VideoPresets, AudioPresets, ConnectionState, ScreenSharePresets, createLocalAudioTrack } from 'livekit-client';
 
 import ClassroomHeader from './components/ClassroomHeader';
 import VideoStage from './components/VideoStage';
@@ -710,66 +710,126 @@ function ControlsManager({
   waitingStudentsCount, raisedHandsCount, setToastMessage
 }) {
   const { localParticipant } = useLocalParticipant();
+  const prewarmPromiseRef = useRef(null);
+  const [isTogglingMic, setIsTogglingMic] = useState(false);
+  const [isTogglingCamera, setIsTogglingCamera] = useState(false);
+  const [isTogglingScreenShare, setIsTogglingScreenShare] = useState(false);
+
+  // Pre-warm local microphone in muted state so the first unmute is instant (0ms delay)
+  useEffect(() => {
+    if (!localParticipant) return;
+    let cancelled = false;
+
+    const prewarm = async () => {
+      try {
+        const existingAudio = localParticipant.getTrackPublication(Track.Source.Microphone);
+        if (!existingAudio) {
+          const audioTrack = await createLocalAudioTrack({
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          });
+          if (cancelled) {
+            audioTrack.stop();
+            return;
+          }
+          // Immediately mute before publishing so teacher/participant enters 100% silent
+          await audioTrack.mute();
+          if (cancelled) {
+            audioTrack.stop();
+            return;
+          }
+          await localParticipant.publishTrack(audioTrack);
+          console.log('[Classroom] Local microphone pre-warmed and published in muted state (instant unmute ready).');
+        }
+      } catch (err) {
+        console.warn('[Classroom] Pre-warming mic skipped (permission or device not ready):', err);
+      }
+    };
+
+    prewarmPromiseRef.current = prewarm();
+    return () => {
+      cancelled = true;
+    };
+  }, [localParticipant]);
 
   const isMuted = isMutedByFaculty || !localParticipant?.isMicrophoneEnabled;
   const isVideoOff = isCameraDisabledByFaculty || !localParticipant?.isCameraEnabled;
   const isScreenSharing = localParticipant?.isScreenShareEnabled;
 
   const toggleMic = async () => {
-    if (localParticipant) {
-      if (isMutedByFaculty && !localParticipant.isMicrophoneEnabled) {
-        if (setToastMessage) {
-          setToastMessage('You are muted by faculty. Please use the "Request Unmute" button.');
-          setTimeout(() => setToastMessage(null), 3000);
-        }
-        return;
+    if (!localParticipant || isTogglingMic) return;
+    if (isMutedByFaculty && !localParticipant.isMicrophoneEnabled) {
+      if (setToastMessage) {
+        setToastMessage('You are muted by faculty. Please use the "Request Unmute" button.');
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+      return;
+    }
+
+    setIsTogglingMic(true);
+    try {
+      if (prewarmPromiseRef.current) {
+        await prewarmPromiseRef.current;
       }
       await localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled);
+    } catch (err) {
+      console.error('[Microphone] toggleMic failed', err);
+      if (setToastMessage) {
+        setToastMessage('Microphone access blocked. Please allow microphone permission in your browser.');
+        setTimeout(() => setToastMessage(null), 4000);
+      }
+    } finally {
+      setIsTogglingMic(false);
     }
   };
 
   const toggleCamera = async () => {
-    if (localParticipant) {
-      if (isCameraDisabledByFaculty && !localParticipant.isCameraEnabled) {
-        if (setToastMessage) {
-          setToastMessage('Your camera has been disabled by the faculty.');
-          setTimeout(() => setToastMessage(null), 3000);
-        }
-        return;
+    if (!localParticipant || isTogglingCamera) return;
+    if (isCameraDisabledByFaculty && !localParticipant.isCameraEnabled) {
+      if (setToastMessage) {
+        setToastMessage('Your camera has been disabled by the faculty.');
+        setTimeout(() => setToastMessage(null), 3000);
       }
-      const next = !localParticipant.isCameraEnabled;
-      try {
-        await localParticipant.setCameraEnabled(next);
-      } catch (error) {
-        console.error('[Camera] setCameraEnabled failed', error);
-        if (setToastMessage) {
-          setToastMessage('Camera access was blocked. Please allow camera permission in your browser.');
-          setTimeout(() => setToastMessage(null), 5000);
-        }
+      return;
+    }
+    const next = !localParticipant.isCameraEnabled;
+    setIsTogglingCamera(true);
+    try {
+      await localParticipant.setCameraEnabled(next);
+    } catch (error) {
+      console.error('[Camera] setCameraEnabled failed', error);
+      if (setToastMessage) {
+        setToastMessage('Camera access was blocked. Please allow camera permission in your browser.');
+        setTimeout(() => setToastMessage(null), 5000);
       }
+    } finally {
+      setIsTogglingCamera(false);
     }
   };
 
   const toggleScreenShare = async () => {
-    if (localParticipant) {
+    if (!localParticipant || isTogglingScreenShare) return;
+    setIsTogglingScreenShare(true);
+    try {
       if (isScreenSharing) {
         await localParticipant.setScreenShareEnabled(false);
       } else {
-        try {
-          await localParticipant.setScreenShareEnabled(
-            true,
-            {
-              audio: true,
-              resolution: ScreenSharePresets.h1080fps15.resolution,
-            },
-            {
-              simulcast: false, // Single high-quality stream, prevents 3-layer encoder setup stall
-            }
-          );
-        } catch (err) {
-          console.error('[ScreenShare] Failed to start screen share', err);
-        }
+        await localParticipant.setScreenShareEnabled(
+          true,
+          {
+            audio: true,
+            resolution: ScreenSharePresets.h1080fps15.resolution,
+          },
+          {
+            simulcast: false, // Single high-quality stream, prevents 3-layer encoder setup stall
+          }
+        );
       }
+    } catch (err) {
+      console.error('[ScreenShare] Failed to start screen share', err);
+    } finally {
+      setIsTogglingScreenShare(false);
     }
   };
 
