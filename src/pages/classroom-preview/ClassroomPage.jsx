@@ -11,7 +11,6 @@ import ClassroomControls from './components/ClassroomControls';
 import ClassroomNotifications from './components/ClassroomNotifications';
 import ChatPanel from './components/ChatPanel';
 import PeoplePanel from './components/PeoplePanel';
-import { webrtcService } from '../../services/webrtcService';
 import { useClassroomNotifications, playNotificationSound } from './hooks/useClassroomNotifications';
 import { useClassroomRealtime } from './hooks/useClassroomRealtime';
 
@@ -134,7 +133,7 @@ export default function ClassroomPage({ user: passedUser, admissionService }) {
 
   return (
     <LiveKitRoom
-      serverUrl={import.meta.env.VITE_LIVEKIT_URL}
+      serverUrl={import.meta.env.VITE_LIVEKIT_URL || 'wss://livekit.drsamreefathradiologyacademy.com'}
       token={token}
       connect={true}
       options={LOW_LATENCY_OPTIONS}
@@ -300,13 +299,12 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   // Sync disconnect with backend on unmount
   useEffect(() => {
     return () => {
-      webrtcService.disconnect();
+      // Cleanup on unmount handled by LiveKitRoom
     };
   }, []);
 
   const handleLeave = () => {
     room?.disconnect();
-    webrtcService.disconnect();
     if (window.opener) {
       window.close();
     } else {
@@ -321,7 +319,6 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         room?.disconnect();
-        webrtcService.disconnect();
         if (window.opener) {
           window.close();
         } else {
@@ -337,7 +334,6 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   // If removed from class by faculty
   if (removedFromClass) {
     room?.disconnect();
-    webrtcService.disconnect();
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-red-400">
         <h2 className="text-xl font-semibold mb-2">Removed</h2>
@@ -352,7 +348,6 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
   // If socket auth error (e.g. JWT expired, LiveClass ended, etc)
   if (socketAuthError) {
     room?.disconnect();
-    webrtcService.disconnect();
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-red-400 p-4 text-center">
         <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
