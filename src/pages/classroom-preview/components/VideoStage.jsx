@@ -100,17 +100,17 @@ export default function VideoStage({
   const localTrackRef = cameraTrackRefs.find(t => t.participant.isLocal || (currentUserId && t.participant.identity.startsWith(currentUserId)));
   const isLocalCameraActive = localParticipant?.isCameraEnabled && !cameraDisabledParticipants[localParticipant?.identity];
 
-  // ── Student Screen (Participant View): Teacher stream only, self-view PiP, no 100-student grid ──────
+  // ── Student Screen (Participant View): Teacher stream only, self-view, no 100-student grid ──────
   if (!viewerIsTeacher) {
     return (
-      <div ref={stageRef} className="flex-1 w-full h-full relative p-4 flex flex-col overflow-hidden bg-black">
+      <div ref={stageRef} className="flex-1 w-full h-full relative p-3 sm:p-4 flex flex-col overflow-hidden bg-black">
         {/* Joined count badge */}
-        <div className="absolute top-6 left-6 z-30 flex items-center space-x-2 bg-slate-900/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700/60 shadow-lg text-xs font-medium text-slate-300">
+        <div className="absolute top-5 left-5 z-30 flex items-center space-x-2 bg-slate-900/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700/60 shadow-lg text-xs font-medium text-slate-300 pointer-events-none">
           <Users size={14} className="text-blue-400" />
           <span>{participants.length} Joined</span>
         </div>
 
-        {/* Main Stage: Screen Share or Teacher */}
+        {/* Main Stage: Screen Share or Full-Height Grid */}
         <div className="relative group bg-slate-950 rounded-xl overflow-hidden shadow-2xl flex-1 w-full h-full flex items-center justify-center ring-1 ring-slate-800">
           {isScreenSharing ? (
             <div className="absolute inset-0 bg-black flex items-center justify-center">
@@ -125,31 +125,74 @@ export default function VideoStage({
                 </div>
               )}
             </div>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-              {teacherParticipant ? (
+          ) : isLocalCameraActive && localParticipant ? (
+            /* Student has camera ON: 2-tile full-height grid (Teacher + Student Self-Preview) */
+            <div className="w-full h-full p-2 sm:p-3 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-stretch">
+              {/* Teacher Tile */}
+              <div className="w-full h-full min-h-0 relative rounded-xl overflow-hidden shadow-xl border border-slate-800 bg-slate-900">
+                {teacherParticipant ? (
+                  <ParticipantTile
+                    trackRef={teacherTrackRef}
+                    participant={teacherParticipant}
+                    isHost={true}
+                    viewerIsTeacher={false}
+                    isPiP={false}
+                    isHandRaised={raisedHands.includes(teacherParticipant.identity)}
+                    isModerationMuted={!!mutedParticipants[teacherParticipant.identity]}
+                    isModerationCameraDisabled={false}
+                    canModerate={false}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    <p className="text-slate-400 font-medium">Waiting for faculty to join...</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Student Self-View Tile */}
+              <div className="w-full h-full min-h-0 relative rounded-xl overflow-hidden shadow-xl border-2 border-blue-500/80 bg-slate-900 group">
                 <ParticipantTile
-                  trackRef={teacherTrackRef}
-                  participant={teacherParticipant}
-                  isHost={true}
+                  trackRef={localTrackRef}
+                  participant={localParticipant}
+                  isHost={false}
                   viewerIsTeacher={false}
-                  isPiP={true}
-                  isHandRaised={raisedHands.includes(teacherParticipant.identity)}
-                  isModerationMuted={!!mutedParticipants[teacherParticipant.identity]}
-                  isModerationCameraDisabled={false}
+                  isPiP={false}
                   canModerate={false}
                 />
-              ) : (
-                <div className="flex flex-col items-center justify-center">
-                  <p className="text-slate-400 font-medium">Waiting for faculty to join...</p>
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-blue-950/85 backdrop-blur-md px-3 py-1 rounded-full border border-blue-500/50 shadow-md text-xs font-medium text-blue-200 pointer-events-none">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                  <span>Your Camera (Visible to teacher only)</span>
                 </div>
-              )}
+              </div>
+            </div>
+          ) : (
+            /* Student has camera OFF: Teacher takes full stage */
+            <div className="w-full h-full p-2 sm:p-3 flex items-center justify-center">
+              <div className="w-full h-full relative rounded-xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900">
+                {teacherParticipant ? (
+                  <ParticipantTile
+                    trackRef={teacherTrackRef}
+                    participant={teacherParticipant}
+                    isHost={true}
+                    viewerIsTeacher={false}
+                    isPiP={false}
+                    isHandRaised={raisedHands.includes(teacherParticipant.identity)}
+                    isModerationMuted={!!mutedParticipants[teacherParticipant.identity]}
+                    isModerationCameraDisabled={false}
+                    canModerate={false}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    <p className="text-slate-400 font-medium">Waiting for faculty to join...</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {/* Floating Teacher PiP (when screen sharing and teacher camera is ON) */}
           {isScreenSharing && teacherParticipant?.isCameraEnabled && teacherTrackRef && (
-            <div className="absolute top-4 right-4 z-20 w-44 sm:w-56 aspect-video rounded-xl overflow-hidden shadow-2xl border border-slate-700/80 bg-slate-900">
+            <div className="absolute top-4 right-4 z-20 w-48 sm:w-60 aspect-video rounded-xl overflow-hidden shadow-2xl border border-slate-700/80 bg-slate-900">
               <ParticipantTile
                 trackRef={teacherTrackRef}
                 participant={teacherParticipant}
@@ -161,9 +204,9 @@ export default function VideoStage({
             </div>
           )}
 
-          {/* Floating Self-View PiP (when student turns on their own camera) */}
-          {isLocalCameraActive && localParticipant && localTrackRef && (
-            <div className="absolute bottom-4 left-4 z-20 w-36 sm:w-48 aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-blue-500/80 bg-slate-900 group">
+          {/* Floating Self-View PiP (when screen sharing and student turns on their camera) */}
+          {isScreenSharing && isLocalCameraActive && localParticipant && (
+            <div className="absolute bottom-4 left-4 z-20 w-48 sm:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-blue-500/80 bg-slate-900 group">
               <ParticipantTile
                 trackRef={localTrackRef}
                 participant={localParticipant}
@@ -172,8 +215,9 @@ export default function VideoStage({
                 isPiP={true}
                 canModerate={false}
               />
-              <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-[10px] text-blue-200 px-1.5 py-0.5 rounded text-center truncate pointer-events-none">
-                Visible to teacher only
+              <div className="absolute top-2 left-2 bg-blue-950/90 backdrop-blur-xs text-[10px] text-blue-200 px-2 py-0.5 rounded-full border border-blue-500/40 pointer-events-none flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span>Your Camera</span>
               </div>
             </div>
           )}

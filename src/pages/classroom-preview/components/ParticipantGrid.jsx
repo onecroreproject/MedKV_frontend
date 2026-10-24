@@ -75,7 +75,7 @@ function ParticipantGrid({
     );
   }
 
-  // ── Single participant: full-screen PiP ───────────────────────────────────
+  // ── Single participant: full-screen ───────────────────────────────────────
   if (count === 1) {
     const participant = sorted[0];
     const identity = participant.identity;
@@ -83,7 +83,7 @@ function ParticipantGrid({
     const isCoHost = coHosts ? coHosts.has(String(identity)) : false;
     const trackRef = cameraTrackRefs.find(t => t.participant.identity === identity);
     return (
-      <div className="flex-1 w-full h-full p-4 flex items-center justify-center bg-black rounded-xl">
+      <div className="flex-1 w-full h-full p-2 sm:p-4 flex items-center justify-center bg-black">
         <div className="w-full h-full max-h-full">
           <ParticipantTile
             trackRef={trackRef}
@@ -96,7 +96,7 @@ function ParticipantGrid({
             isHandRaised={raisedHands.includes(identity)}
             isModerationMuted={!!mutedParticipants[identity]}
             isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
-            isPiP={true}
+            isPiP={false}
             canModerate={canModerate && !isHost}
             onMuteClick={onMuteParticipant}
             onAllowUnmuteClick={onAllowUnmute}
@@ -109,35 +109,112 @@ function ParticipantGrid({
     );
   }
 
-  // ── Grid ──────────────────────────────────────────────────────────────────
+  // ── 2 Participants: Side-by-side full-height grid ──────────────────────────
+  if (count === 2) {
+    return (
+      <div className="flex-1 w-full h-full p-2 sm:p-3 flex items-center justify-center overflow-hidden bg-black">
+        <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 max-w-7xl mx-auto items-stretch">
+          {sorted.map((participant) => {
+            const identity = participant.identity;
+            const isHost = identity === teacherIdentity;
+            const isCoHost = coHosts ? coHosts.has(String(identity)) : false;
+            const trackRef = cameraTrackRefs.find(t => t.participant.identity === identity);
+            return (
+              <div key={identity} className="w-full h-full min-h-0 flex flex-col">
+                <ParticipantTile
+                  trackRef={trackRef}
+                  participant={participant}
+                  isHost={isHost}
+                  isCoHost={isCoHost}
+                  viewerIsTeacher={viewerIsTeacher || canModerate}
+                  isPinned={pinnedIdentity === identity}
+                  onTogglePin={makeTogglePin(identity)}
+                  isHandRaised={raisedHands.includes(identity)}
+                  isModerationMuted={!!mutedParticipants[identity]}
+                  isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
+                  canModerate={canModerate && !isHost}
+                  onMuteClick={onMuteParticipant}
+                  onAllowUnmuteClick={onAllowUnmute}
+                  onHostRequestUnmuteClick={onHostRequestUnmute}
+                  onRemoveClick={onRemoveParticipant}
+                  onDisableCameraClick={onDisableCamera}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── 3 or 4 Participants: 2x2 full-height grid ──────────────────────────────
+  if (count <= 4) {
+    return (
+      <div className="flex-1 w-full h-full p-2 sm:p-3 flex items-center justify-center overflow-hidden bg-black">
+        <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-3 sm:gap-4 max-w-7xl mx-auto items-stretch">
+          {sorted.map((participant) => {
+            const identity = participant.identity;
+            const isHost = identity === teacherIdentity;
+            const isCoHost = coHosts ? coHosts.has(String(identity)) : false;
+            const trackRef = cameraTrackRefs.find(t => t.participant.identity === identity);
+            return (
+              <div key={identity} className="w-full h-full min-h-0 flex flex-col">
+                <ParticipantTile
+                  trackRef={trackRef}
+                  participant={participant}
+                  isHost={isHost}
+                  isCoHost={isCoHost}
+                  viewerIsTeacher={viewerIsTeacher || canModerate}
+                  isPinned={pinnedIdentity === identity}
+                  onTogglePin={makeTogglePin(identity)}
+                  isHandRaised={raisedHands.includes(identity)}
+                  isModerationMuted={!!mutedParticipants[identity]}
+                  isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
+                  canModerate={canModerate && !isHost}
+                  onMuteClick={onMuteParticipant}
+                  onAllowUnmuteClick={onAllowUnmute}
+                  onHostRequestUnmuteClick={onHostRequestUnmute}
+                  onRemoveClick={onRemoveParticipant}
+                  onDisableCameraClick={onDisableCamera}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── 5+ Participants: Multi-row scrollable grid with generous row height ────
   return (
     <div className="flex-1 w-full h-full p-3 overflow-y-auto overscroll-contain" style={{ scrollbarWidth: 'thin', scrollbarColor: '#334155 transparent' }}>
-      <div className={`grid ${gridCols} gap-3 auto-rows-max max-w-7xl mx-auto`}>
+      <div className={`grid ${gridCols} gap-3 max-w-7xl mx-auto min-h-full auto-rows-[minmax(200px,1fr)] sm:auto-rows-[minmax(250px,1fr)]`}>
         {sorted.map((participant) => {
           const identity = participant.identity;
           const isHost = identity === teacherIdentity;
           const isCoHost = coHosts ? coHosts.has(String(identity)) : false;
           const trackRef = cameraTrackRefs.find(t => t.participant.identity === identity);
           return (
-            <ParticipantTile
-              key={identity}
-              trackRef={trackRef}
-              participant={participant}
-              isHost={isHost}
-              isCoHost={isCoHost}
-              viewerIsTeacher={viewerIsTeacher || canModerate}
-              isPinned={pinnedIdentity === identity}
-              onTogglePin={makeTogglePin(identity)}
-              isHandRaised={raisedHands.includes(identity)}
-              isModerationMuted={!!mutedParticipants[identity]}
-              isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
-              canModerate={canModerate && !isHost}
-              onMuteClick={onMuteParticipant}
-              onAllowUnmuteClick={onAllowUnmute}
-              onHostRequestUnmuteClick={onHostRequestUnmute}
-              onRemoveClick={onRemoveParticipant}
-              onDisableCameraClick={onDisableCamera}
-            />
+            <div key={identity} className="w-full h-full min-h-0 flex flex-col">
+              <ParticipantTile
+                trackRef={trackRef}
+                participant={participant}
+                isHost={isHost}
+                isCoHost={isCoHost}
+                viewerIsTeacher={viewerIsTeacher || canModerate}
+                isPinned={pinnedIdentity === identity}
+                onTogglePin={makeTogglePin(identity)}
+                isHandRaised={raisedHands.includes(identity)}
+                isModerationMuted={!!mutedParticipants[identity]}
+                isModerationCameraDisabled={!!cameraDisabledParticipants[identity]}
+                canModerate={canModerate && !isHost}
+                onMuteClick={onMuteParticipant}
+                onAllowUnmuteClick={onAllowUnmute}
+                onHostRequestUnmuteClick={onHostRequestUnmute}
+                onRemoveClick={onRemoveParticipant}
+                onDisableCameraClick={onDisableCamera}
+              />
+            </div>
           );
         })}
       </div>

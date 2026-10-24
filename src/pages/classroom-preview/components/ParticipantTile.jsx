@@ -171,14 +171,14 @@ function ParticipantTile({
 
   return (
     <div
-      className={`relative overflow-hidden bg-slate-800 rounded-xl flex items-center justify-center group ${outerRing} ${isPiP ? 'w-full h-full shadow-2xl' : 'w-full h-full aspect-video'}`}
+      className={`relative overflow-hidden bg-slate-800 rounded-xl flex items-center justify-center group ${outerRing} w-full h-full ${isPiP ? 'shadow-2xl' : ''}`}
       style={{ willChange: 'box-shadow' }}
     >
       {/* ── Video or Avatar ── */}
       {cameraEnabled && trackRef ? (
         <TrackRefContext.Provider value={trackRef}>
           <VideoTrack
-            className={`w-full h-full ${isPiP ? 'object-contain' : 'object-cover'} ${participant.isLocal ? '-scale-x-100' : ''}`}
+            className={`w-full h-full object-cover ${participant.isLocal ? '-scale-x-100' : ''}`}
           />
         </TrackRefContext.Provider>
       ) : (
@@ -268,6 +268,7 @@ function areEqual(prev, next) {
     prev.participant === next.participant &&
     prev.isHost === next.isHost &&
     prev.isCoHost === next.isCoHost &&
+    prev.viewerIsTeacher === next.viewerIsTeacher &&
     prev.isPiP === next.isPiP &&
     prev.isPinned === next.isPinned &&
     prev.isHandRaised === next.isHandRaised &&
