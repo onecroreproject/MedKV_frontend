@@ -403,37 +403,41 @@ export default function TeacherPipContent({
           style={{
             flexShrink: 0,
             margin: '6px 8px 0 8px',
-            padding: '6px 10px',
+            padding: '8px 12px',
             backgroundColor: '#f59e0b',
             color: '#0f172a',
             borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
             animation: 'bounce-subtle 1.8s ease-in-out infinite'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
-            <span style={{ fontSize: '13px', flexShrink: 0 }}>✋</span>
-            <div style={{ fontSize: '11px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {raisedStudentNames.length === 1
-                ? `${raisedStudentNames[0]} raised hand`
-                : `${raisedStudentNames[0]} +${raisedStudentNames.length - 1} others raised hand`}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>✋</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {raisedStudentNames[0]}
+              </span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>
+                {raisedStudentNames.length > 1 ? `+${raisedStudentNames.length - 1} more` : 'raised hand'}
+              </span>
             </div>
           </div>
           {onClearHand && (
             <button 
               onClick={() => onClearHand(raisedHands[0])}
               style={{
-                fontSize: '10px',
+                fontSize: '11px',
                 fontWeight: 700,
-                backgroundColor: 'rgba(15, 23, 42, 0.25)',
+                backgroundColor: 'rgba(15, 23, 42, 0.28)',
                 color: '#0f172a',
-                padding: '2px 8px',
-                borderRadius: '4px',
+                padding: '4px 10px',
+                borderRadius: '6px',
                 flexShrink: 0,
-                marginLeft: '6px'
+                marginLeft: '8px',
+                transition: 'background 0.15s ease'
               }}
               title="Lower hand"
             >
@@ -452,31 +456,34 @@ export default function TeacherPipContent({
             left: '8px',
             right: '8px',
             zIndex: 30,
-            backgroundColor: 'rgba(17, 24, 39, 0.97)',
-            border: '1px solid #3b82f6',
+            backgroundColor: 'rgba(15, 23, 42, 0.98)',
+            border: '2px solid #3b82f6',
             color: '#ffffff',
-            padding: '8px 10px',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(8px)'
+            padding: '10px 12px',
+            borderRadius: '10px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6), 0 0 14px rgba(59, 130, 246, 0.35)',
+            backdropFilter: 'blur(10px)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid #374151' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-              <MessageSquare size={12} style={{ color: '#60a5fa', flexShrink: 0 }} />
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#93c5fd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #1e293b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <MessageSquare size={16} style={{ color: '#60a5fa', flexShrink: 0 }} />
+              <span style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {latestChatPopup.name}
               </span>
-              <span style={{ fontSize: '9px', color: '#9ca3af' }}>question</span>
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#93c5fd', backgroundColor: 'rgba(59, 130, 246, 0.25)', padding: '1px 6px', borderRadius: '4px' }}>
+                message
+              </span>
             </div>
             <button 
               onClick={() => setLatestChatPopup(null)}
-              style={{ color: '#9ca3af', backgroundColor: 'transparent', padding: '2px' }}
+              style={{ color: '#94a3b8', backgroundColor: 'transparent', padding: '2px', cursor: 'pointer' }}
+              title="Dismiss"
             >
-              <X size={12} />
+              <X size={14} />
             </button>
           </div>
-          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.3', maxHeight: '40px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: '13px', fontWeight: 500, color: '#f1f5f9', lineHeight: '1.4', maxHeight: '48px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {latestChatPopup.message}
           </div>
         </div>
@@ -545,10 +552,10 @@ export default function TeacherPipContent({
                     <Mic size={11} />
                   </div>
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#f8fafc', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {resolveParticipantName(activeSpeaker.identity, participants, chatMessages, waitingStudents)}
+                <div style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '4px' }}>
+                  {resolveParticipantName(activeSpeaker.identity, participants, chatMessages, waitingStudents, userNames, asyncResolvedNames)}
                 </div>
-                <div style={{ fontSize: '10px', color: '#34d399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                <div style={{ fontSize: '11px', color: '#34d399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }}></span>
                   <span>Speaking...</span>
                 </div>
@@ -562,21 +569,21 @@ export default function TeacherPipContent({
                 bottom: '8px',
                 left: '8px',
                 zIndex: 10,
-                backgroundColor: 'rgba(0,0,0,0.75)',
-                padding: '4px 8px',
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: '5px 10px',
                 borderRadius: '6px',
-                fontSize: '10px',
-                fontWeight: 600,
+                fontSize: '12px',
+                fontWeight: 700,
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                border: '1px solid rgba(16, 185, 129, 0.4)'
+                border: '1px solid rgba(16, 185, 129, 0.5)'
               }}
             >
-              <Volume2 size={11} style={{ color: '#34d399' }} />
-              <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {resolveParticipantName(activeSpeaker.identity, participants, chatMessages, waitingStudents)}
+              <Volume2 size={13} style={{ color: '#34d399' }} />
+              <span style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {resolveParticipantName(activeSpeaker.identity, participants, chatMessages, waitingStudents, userNames, asyncResolvedNames)}
               </span>
             </div>
           </div>
