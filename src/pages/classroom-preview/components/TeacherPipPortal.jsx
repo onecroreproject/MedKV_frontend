@@ -170,7 +170,11 @@ export default function TeacherPipPortal({
       chatMessages={chatMessages}
       userNames={userNames}
       onFocusMainTab={() => {
-        window.focus();
+        if (pipWindow && !pipWindow.closed) {
+          try { pipWindow.close(); } catch (e) {}
+        }
+        try { window.focus(); } catch (e) {}
+        onClose();
       }}
       onClosePip={() => {
         if (pipWindow && !pipWindow.closed) {

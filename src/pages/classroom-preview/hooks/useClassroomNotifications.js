@@ -62,7 +62,17 @@ export const playNotificationSound = (type) => {
 
 const COOLDOWN_MS = 1500;
 
-export function useClassroomNotifications({ userRole, chatMessages, raisedHands, waitingStudents, isChatOpen, participants, unmuteRequests, cameraRequests }) {
+export function useClassroomNotifications({ 
+  userRole, 
+  chatMessages, 
+  raisedHands, 
+  waitingStudents, 
+  isChatOpen, 
+  participants, 
+  unmuteRequests, 
+  cameraRequests,
+  userNames = {} 
+}) {
   const [notifications, setNotifications] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try { return localStorage.getItem('classroom_sound') !== 'false'; } catch { return true; }
@@ -89,9 +99,7 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
 
   const addNotification = useCallback((type, title, message, extra) => {
     const id = `${type}-${Date.now()}-${Math.random()}`;
-    // Use an empty function for manual dismissals that don't auto-timeout, or a long timeout
-    // For hand raises, we use a 10s timeout, but other notifications can stay 5s
-    const timeout = type === 'hand' ? 10000 : 5000;
+    const timeout = type === 'hand' ? 10000 : 8000;
     setNotifications(prev => [...prev, { id, type, title, message, ts: Date.now(), ...(extra || {}) }].slice(-5));
     setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), timeout);
   }, []);
@@ -117,12 +125,17 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
     if (isChatOpen) return;
     if (newMsgs.length === 1) {
       const m = newMsgs[0];
-      addNotification('message', '💬 New Message', `${m.senderName || 'Student'}: "${(m.message || '').slice(0, 60)}"`);
+      const senderName = (m.name && !/^[0-9a-fA-F]{24}$/.test(m.name) ? m.name : null)
+        || (m.senderName && !/^[0-9a-fA-F]{24}$/.test(m.senderName) ? m.senderName : null)
+        || (m.userId && userNames[m.userId] && !/^[0-9a-fA-F]{24}$/.test(userNames[m.userId]) ? userNames[m.userId] : null)
+        || 'Student';
+
+      addNotification('message', `💬 ${senderName}`, `"${(m.message || m.text || '').slice(0, 80)}"`);
     } else {
       addNotification('message', '💬 New Messages', `${newMsgs.length} new messages`);
     }
     if (canPlaySound('message')) playNotificationSound('message');
-  }, [chatMessages, isHost, isChatOpen, addNotification, canPlaySound]);
+  }, [chatMessages, isHost, isChatOpen, addNotification, canPlaySound, userNames]);
 
   // React to Raised Hands (only LOWERED → RAISED transitions)
   useEffect(() => {
@@ -134,8 +147,14 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
     
     // Find names
     const names = newlyRaised.map(id => {
+      if (userNames && userNames[id] && !/^[0-9a-fA-F]{24}$/.test(userNames[id])) {
+        return userNames[id];
+      }
       const p = participants?.find(p => p.identity === id || p.identity.startsWith(id + '|'));
-      return p ? (p.name || p.identity.split('|')[0]) : 'A student';
+      if (p && p.name && !/^[0-9a-fA-F]{24}$/.test(p.name)) {
+        return p.name;
+      }
+      return 'A student';
     });
     
     const message = names.length === 1 
@@ -144,7 +163,7 @@ export function useClassroomNotifications({ userRole, chatMessages, raisedHands,
       
     addNotification('hand', '✋ Hand Raised', message);
     if (canPlaySound('hand')) playNotificationSound('hand');
-  }, [raisedHands, isHost, addNotification, canPlaySound, participants]);
+  }, [raisedHands, isHost, addNotification, canPlaySound, participants, userNames]);
 
   // React to Waiting Students (suppress initial sync)
   useEffect(() => {

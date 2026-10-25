@@ -341,6 +341,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     participants,
     unmuteRequests,
     cameraRequests,
+    userNames,
   });
 
   // Sync chat panel open state with the realtime hook (for unread counter)
