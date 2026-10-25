@@ -1045,15 +1045,33 @@ function ControlsManager({
   };
 
   const [pipWindow, setPipWindow] = useState(null);
+  const isAutoOpenedRef = useRef(false);
+  const pipOpeningRef = useRef(false);
+  const pipWindowRef = useRef(pipWindow);
+  const toggleMicRef = useRef(toggleMic);
+  const toggleCameraRef = useRef(toggleCamera);
+  const onEndClassRef = useRef(onEndClass);
+  const onLeaveRef = useRef(onLeave);
+
+  useEffect(() => {
+    pipWindowRef.current = pipWindow;
+  }, [pipWindow]);
+
+  useEffect(() => {
+    toggleMicRef.current = toggleMic;
+    toggleCameraRef.current = toggleCamera;
+    onEndClassRef.current = onEndClass;
+    onLeaveRef.current = onLeave;
+  }, [toggleMic, toggleCamera, onEndClass, onLeave]);
 
   // Close PiP window when unmounting
   useEffect(() => {
     return () => {
-      if (pipWindow && !pipWindow.closed) {
-        try { pipWindow.close(); } catch (e) {}
+      if (pipWindowRef.current && !pipWindowRef.current.closed) {
+        try { pipWindowRef.current.close(); } catch (e) {}
       }
     };
-  }, [pipWindow]);
+  }, []);
 
   const handleTogglePip = async () => {
     // If PiP is already open, clicking toggles it closed
@@ -1062,14 +1080,18 @@ function ControlsManager({
         pipWindow.close();
       } catch (e) {}
       setPipWindow(null);
+      isAutoOpenedRef.current = false;
       return;
     }
 
     try {
+      pipOpeningRef.current = true;
       const win = await openTeacherPipWindow('Live Lecture');
       if (win) {
+        isAutoOpenedRef.current = false; // Manually opened
         win.addEventListener('pagehide', () => {
           setPipWindow(null);
+          isAutoOpenedRef.current = false;
         });
         setPipWindow(win);
       }
@@ -1080,8 +1102,119 @@ function ControlsManager({
       } else {
         alert('Could not open Picture-in-Picture window: ' + (err?.message || 'Unknown error'));
       }
+    } finally {
+      pipOpeningRef.current = false;
     }
   };
+
+  // Automatic Document Picture-in-Picture when faculty switches to another tab or application
+  useEffect(() => {
+    const isTeacherRole = userRole === 'teacher' || userRole === 'cohost';
+    if (!isTeacherRole) return;
+
+    if (!('mediaSession' in navigator) || typeof navigator.mediaSession.setActionHandler !== 'function') {
+      return;
+    }
+
+    try {
+      navigator.mediaSession.playbackState = 'playing';
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Live Lecture — Classroom',
+        artist: user?.name || 'Faculty',
+        album: 'MediacalKV Classroom',
+      });
+    } catch (e) {}
+
+    const handleAutoEnterPip = async () => {
+      console.log('[PiP][Auto] MediaSession enterpictureinpicture triggered');
+      if (pipOpeningRef.current || (pipWindowRef.current && !pipWindowRef.current.closed)) {
+        return;
+      }
+
+      try {
+        pipOpeningRef.current = true;
+        const win = await openTeacherPipWindow('Live Lecture');
+        if (win) {
+          isAutoOpenedRef.current = true;
+          win.addEventListener('pagehide', () => {
+            setPipWindow(null);
+            isAutoOpenedRef.current = false;
+          });
+          setPipWindow(win);
+          console.log('[PiP][Auto] Successfully auto-opened PiP window');
+        }
+      } catch (err) {
+        console.warn('[PiP][Auto] Auto-open failed (check browser PiP permissions):', err);
+      } finally {
+        pipOpeningRef.current = false;
+      }
+    };
+
+    try {
+      navigator.mediaSession.setActionHandler('enterpictureinpicture', handleAutoEnterPip);
+      navigator.mediaSession.setActionHandler('togglemicrophone', () => {
+        toggleMicRef.current?.();
+      });
+      navigator.mediaSession.setActionHandler('togglecamera', () => {
+        toggleCameraRef.current?.();
+      });
+      navigator.mediaSession.setActionHandler('hangup', () => {
+        if (onEndClassRef.current) onEndClassRef.current();
+        else if (onLeaveRef.current) onLeaveRef.current();
+      });
+    } catch (err) {
+      console.warn('[PiP][MediaSession] Failed to set MediaSession handlers:', err);
+    }
+
+    return () => {
+      try {
+        navigator.mediaSession.setActionHandler('enterpictureinpicture', null);
+        navigator.mediaSession.setActionHandler('togglemicrophone', null);
+        navigator.mediaSession.setActionHandler('togglecamera', null);
+        navigator.mediaSession.setActionHandler('hangup', null);
+      } catch (e) {}
+    };
+  }, [userRole, user?.name]);
+
+  // Auto-close PiP when teacher returns to the classroom tab (Google Meet behavior)
+  useEffect(() => {
+    const isTeacherRole = userRole === 'teacher' || userRole === 'cohost';
+    if (!isTeacherRole) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if (isAutoOpenedRef.current && pipWindowRef.current && !pipWindowRef.current.closed) {
+          console.log('[PiP][Auto] Teacher returned to classroom tab, auto-closing PiP window');
+          try {
+            pipWindowRef.current.close();
+          } catch (e) {}
+          setPipWindow(null);
+          isAutoOpenedRef.current = false;
+        }
+      } else if (document.visibilityState === 'hidden') {
+        // Fallback attempt: if transient activation exists and PiP is not yet open
+        if (!pipOpeningRef.current && (!pipWindowRef.current || pipWindowRef.current.closed)) {
+          openTeacherPipWindow('Live Lecture').then((win) => {
+            if (win) {
+              isAutoOpenedRef.current = true;
+              win.addEventListener('pagehide', () => {
+                setPipWindow(null);
+                isAutoOpenedRef.current = false;
+              });
+              setPipWindow(win);
+            }
+          }).catch(() => {
+            // Expected NotAllowedError in visibilitychange if no user activation
+          });
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userRole]);
 
   const screenShareTracks = useTracks([Track.Source.ScreenShare]);
   const activeScreenShareTrack = screenShareTracks.find(t => t.participant.isLocal) || screenShareTracks[0];
@@ -1134,6 +1267,7 @@ function ControlsManager({
               try { pipWindow.close(); } catch (e) {}
             }
             setPipWindow(null);
+            isAutoOpenedRef.current = false;
           }}
           user={user}
           title="Live Lecture"

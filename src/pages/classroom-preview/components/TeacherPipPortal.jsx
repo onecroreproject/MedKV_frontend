@@ -58,6 +58,10 @@ export function copyStylesToPip(targetDoc) {
 export async function openTeacherPipWindow(title = 'Live Lecture') {
   // 1. Modern Chromium Document Picture-in-Picture API
   if ('documentPictureInPicture' in window) {
+    if (window.documentPictureInPicture.window && !window.documentPictureInPicture.window.closed) {
+      return window.documentPictureInPicture.window;
+    }
+
     const pipWin = await window.documentPictureInPicture.requestWindow({
       width: 400,
       height: 340,
