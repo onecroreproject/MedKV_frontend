@@ -245,6 +245,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
     clearParticipantHand,
     waitingStudents,
     admitStudent,
+    admitAll,
     rejectStudent,
     coHosts,
     assignCoHost,
@@ -612,6 +613,7 @@ function ClassroomInner({ user, userRole, roomId, admissionService }) {
             onHostRequestCamera={hostRequestCamera}
             waitingStudents={waitingStudents}
             onAdmitStudent={admitStudent}
+            onAdmitAll={admitAll}
             onRejectStudent={rejectStudent}
           />
         )}
@@ -760,7 +762,7 @@ function PeoplePanelManager({
   onMuteParticipant, onDisableCamera, onRemoveParticipant,
   unmuteRequests, cameraRequests, onAllowUnmute, onHostRequestUnmute,
   onAllowCamera, onHostRequestCamera,
-  waitingStudents = [], onAdmitStudent, onRejectStudent
+  waitingStudents = [], onAdmitStudent, onAdmitAll, onRejectStudent
 }) {
   console.log('[PEOPLE PANEL] waitingStudents:', waitingStudents);
   const participants = useParticipants();
@@ -799,6 +801,7 @@ function PeoplePanelManager({
       coHosts={coHosts}
       waitingStudents={waitingStudents}
       onAdmit={onAdmitStudent}
+      onAdmitAll={onAdmitAll}
       onReject={onRejectStudent}
       raisedHands={raisedHands}
       onClearHand={onClearHand}

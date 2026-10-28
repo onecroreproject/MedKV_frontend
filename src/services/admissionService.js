@@ -81,6 +81,13 @@ class AdmissionService {
     }
   }
 
+  // Faculty admits all waiting students
+  admitAll(roomId) {
+    if (this.socket) {
+      this.socket.emit('class:admit-all', { roomId });
+    }
+  }
+
   // Faculty rejects a student
   rejectStudent(roomId, targetUserId) {
     if (this.socket) {

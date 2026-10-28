@@ -405,6 +405,12 @@ export function useClassroomRealtime(roomId, user) {
     socket.emit('class:admit-student', { roomId, targetUserId });
   }, [socket, roomId]);
 
+  const admitAll = useCallback(() => {
+    if (!socket) return;
+    socket.emit('class:admit-all', { roomId });
+    socket.emit('admit-all', { roomId });
+  }, [socket, roomId]);
+
   const rejectStudent = useCallback((targetUserId) => {
     if (!socket) return;
     socket.emit('class:reject-student', { roomId, targetUserId });
@@ -452,6 +458,7 @@ export function useClassroomRealtime(roomId, user) {
     // Admission / Waiting Room
     waitingStudents,
     admitStudent,
+    admitAll,
     rejectStudent,
     // Co-host
     coHosts,
